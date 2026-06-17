@@ -10,12 +10,12 @@ class Person(Base):
     __tablename__ = "persons"
 
     id = Column(Uuid, primary_key=True, default=uuid.uuid4)
-    cedula = Column(String(20), unique=True, nullable=False, index=True)
-    first_name = Column(String(100), nullable=False)
-    middle_name = Column(String(100), nullable=True)
-    last_name = Column(String(100), nullable=False)
+    cedula = Column(String(10), unique=True, nullable=False, index=True)
+    first_name = Column(String(50), nullable=False)
+    middle_name = Column(String(50), nullable=True)
+    last_name = Column(String(50), nullable=False)
     email = Column(String(150), unique=True, nullable=False, index=True)
-    phone = Column(String(20), nullable=True)
+    phone = Column(String(10), nullable=True)
     address = Column(String(255), nullable=True)
     nationality = Column(String(100), nullable=True)
     active = Column(Boolean, nullable=False, default=True)

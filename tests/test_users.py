@@ -24,6 +24,7 @@ def test_update_user_username(client, admin_headers, role_ids):
         json={
             "cedula": "1313131313",
             "first_name": "Update",
+            "middle_name": "Username",
             "last_name": "Username",
             "email": "updateuser@example.com",
             "password": "Password123",
@@ -44,6 +45,7 @@ def test_update_user_duplicate_username(client, admin_headers, role_ids):
         json={
             "cedula": "1414141414",
             "first_name": "First",
+            "middle_name": "User",
             "last_name": "User",
             "email": "firstuser@example.com",
             "password": "Password123",
@@ -56,6 +58,7 @@ def test_update_user_duplicate_username(client, admin_headers, role_ids):
         json={
             "cedula": "1515151515",
             "first_name": "Second",
+            "middle_name": "User",
             "last_name": "User",
             "email": "seconduser@example.com",
             "password": "Password123",
@@ -75,6 +78,7 @@ def test_activate_user_blocked_when_person_inactive(client, admin_headers, role_
         json={
             "cedula": "7777777777",
             "first_name": "Block",
+            "middle_name": "Activate",
             "last_name": "Activate",
             "email": "block@example.com",
             "password": "Password123",
@@ -96,6 +100,7 @@ def test_deactivate_and_activate_user(client, admin_headers, role_ids):
         json={
             "cedula": "1616161616",
             "first_name": "Toggle",
+            "middle_name": "User",
             "last_name": "User",
             "email": "toggleuser@example.com",
             "password": "Password123",
@@ -120,6 +125,7 @@ def test_assign_and_remove_role(client, admin_headers, role_ids):
         json={
             "cedula": "8888888888",
             "first_name": "Role",
+            "middle_name": "Test",
             "last_name": "Test",
             "email": "roletest@example.com",
             "password": "Password123",
@@ -153,6 +159,7 @@ def test_assign_duplicate_role(client, admin_headers, role_ids):
         json={
             "cedula": "1717171717",
             "first_name": "Duplicate",
+            "middle_name": "Role",
             "last_name": "Role",
             "email": "duprole@example.com",
             "password": "Password123",
@@ -176,6 +183,7 @@ def test_remove_role_not_assigned(client, admin_headers, role_ids):
         json={
             "cedula": "1818181818",
             "first_name": "NoRole",
+            "middle_name": "Remove",
             "last_name": "Remove",
             "email": "norole@example.com",
             "password": "Password123",
@@ -198,6 +206,7 @@ def test_assign_role_requires_admin(client, admin_headers, role_ids):
         json={
             "cedula": "1919191919",
             "first_name": "NonAdmin",
+            "middle_name": "Assign",
             "last_name": "Assign",
             "email": "nonadminassign@example.com",
             "password": "Password123",
@@ -207,7 +216,7 @@ def test_assign_role_requires_admin(client, admin_headers, role_ids):
     )
     person_id = create_response.json()["id"]
 
-    login_response = client.post("/auth/login", data={"username": "nonadminassign", "password": "Password123"})
+    login_response = client.post("/auth/login", data={"username": "naassign", "password": "Password123"})
     self_token = login_response.json()["access_token"]
     self_headers = {"Authorization": f"Bearer {self_token}"}
 

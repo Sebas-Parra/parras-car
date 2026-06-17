@@ -36,8 +36,9 @@ def _first_token(value: str) -> str:
 
 def _build_username_base(data: UserCreate) -> str:
     first_name = _normalize_username_part(_first_token(data.first_name))
+    middle_name = _normalize_username_part(_first_token(data.middle_name))
     last_name = _normalize_username_part(_first_token(data.last_name))
-    return f"{first_name[:2]}{last_name}"
+    return f"{first_name[:1]}{middle_name[:1]}{last_name}"
 
 
 def _generate_unique_username(db: Session, data: UserCreate) -> str:

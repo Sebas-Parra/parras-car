@@ -1,10 +1,10 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class PersonBase(BaseModel):
-    cedula: str
+    cedula: str = Field(pattern=r"^\d{10}$")
     first_name: str
     middle_name: str | None = None
     last_name: str

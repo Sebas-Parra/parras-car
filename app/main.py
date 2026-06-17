@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from app.routers import auth, persons, roles, users
+from app.controllers import auth, persons, roles, users
 
 app = FastAPI(title="Auth Service", version="1.0.0")
 

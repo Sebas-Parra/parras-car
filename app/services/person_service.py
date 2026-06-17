@@ -1,68 +1,41 @@
-import re
-import unicodedata
-
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.core.security import hash_password
-from app.models.person import Person
-from app.models.role import Role
-from app.models.user import User
-from app.schemas.person import PersonUpdate
-from app.schemas.user import UserCreate
+from app.dto.person import PersonUpdate
+from app.dto.user import UserCreate
+from app.entities.person import Person
+from app.entities.user import User
+from app.repositories import person_repository, role_repository, user_repository
+from app.utils import username as username_util
+from app.utils.security import hash_password
 
 
 def get_person(db: Session, person_id: int) -> Person:
-    person = db.get(Person, person_id)
+    person = person_repository.get_by_id(db, person_id)
     if person is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Person not found")
     return person
 
 
 def list_persons(db: Session, skip: int = 0, limit: int = 100) -> list[Person]:
-    return db.query(Person).order_by(Person.id).offset(skip).limit(limit).all()
-
-
-def _normalize_username_part(value: str) -> str:
-    normalized = unicodedata.normalize("NFKD", value)
-    without_accents = normalized.encode("ascii", "ignore").decode("ascii")
-    return re.sub(r"[^a-z0-9]", "", without_accents.lower())
-
-
-def _first_token(value: str) -> str:
-    parts = value.split()
-    return parts[0] if parts else ""
-
-
-def _build_username_base(data: UserCreate) -> str:
-    first_name = _normalize_username_part(_first_token(data.first_name))
-    middle_name = _normalize_username_part(_first_token(data.middle_name))
-    last_name = _normalize_username_part(_first_token(data.last_name))
-    return f"{first_name[:1]}{middle_name[:1]}{last_name}"
-
-
-def _generate_unique_username(db: Session, data: UserCreate) -> str:
-    base_username = _build_username_base(data)
-    username = base_username
-    suffix = 1
-
-    while db.query(User).filter(User.username == username).first():
-        username = f"{base_username}{suffix}"
-        suffix += 1
-
-    return username
+    return person_repository.list_all(db, skip, limit)
 
 
 def create_person_with_user(db: Session, data: UserCreate) -> Person:
-    if db.query(Person).filter(Person.cedula == data.cedula).first():
+    if person_repository.get_by_cedula(db, data.cedula):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Cedula already registered")
 
-    roles = db.query(Role).filter(Role.id.in_(data.role_ids)).all()
+    roles = role_repository.get_by_ids(db, data.role_ids)
     if len(roles) != len(set(data.role_ids)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="One or more roles not found")
 
-    username = _generate_unique_username(db, data)
-    email = f"{username}@parras-car.com"
+    generated_username = username_util.generate_unique_username(
+        data.first_name,
+        data.middle_name,
+        data.last_name,
+        lambda u: user_repository.username_exists(db, u),
+    )
+    email = f"{generated_username}@parras-car.com"
 
     person = Person(
         cedula=data.cedula,
@@ -79,7 +52,7 @@ def create_person_with_user(db: Session, data: UserCreate) -> Person:
 
     user = User(
         id_person=person.id,
-        username=username,
+        username=generated_username,
         password_hash=hash_password(data.password),
     )
     user.roles = roles
@@ -94,7 +67,7 @@ def update_person(db: Session, person_id: int, data: PersonUpdate) -> Person:
     update_data = data.model_dump(exclude_unset=True)
 
     if "email" in update_data and update_data["email"] != person.email:
-        if db.query(Person).filter(Person.email == update_data["email"]).first():
+        if person_repository.get_by_email(db, update_data["email"]):
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
 
     for field, value in update_data.items():

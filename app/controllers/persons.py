@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from app.core.deps import get_db, require_role, require_self_or_admin_person
-from app.schemas.person import PersonRead, PersonUpdate
-from app.schemas.user import PersonWithUserRead, UserCreate
+from app.dto.person import PersonRead, PersonUpdate
+from app.dto.user import PersonWithUserRead, UserCreate
 from app.services import person_service
 
 router = APIRouter(prefix="/persons", tags=["persons"])

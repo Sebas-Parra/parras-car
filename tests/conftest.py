@@ -5,12 +5,12 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.core.deps import get_db
-from app.core.security import hash_password
 from app.db.base import Base
+from app.entities.person import Person
+from app.entities.role import Role
+from app.entities.user import User
 from app.main import app
-from app.models.person import Person
-from app.models.role import Role
-from app.models.user import User
+from app.utils.security import hash_password
 
 SQLALCHEMY_TEST_DATABASE_URL = "sqlite://"
 

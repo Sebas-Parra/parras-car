@@ -2,8 +2,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
-from app.schemas.person import PersonBase, PersonRead
-from app.schemas.role import RoleRead
+from app.dto.person import PersonBase, PersonRead
+from app.dto.role import RoleRead
 
 
 class UserCreate(PersonBase):

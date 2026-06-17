@@ -176,7 +176,7 @@ def test_update_person(client, admin_headers, role_ids):
 
 
 def test_deactivate_person_cascades_to_user(client, admin_headers, db_session, role_ids):
-    from app.models.user import User
+    from app.entities.user import User
 
     create_response = client.post(
         "/persons",
@@ -202,7 +202,7 @@ def test_deactivate_person_cascades_to_user(client, admin_headers, db_session, r
 
 
 def test_activate_person_does_not_reactivate_user(client, admin_headers, db_session, role_ids):
-    from app.models.user import User
+    from app.entities.user import User
 
     create_response = client.post(
         "/persons",

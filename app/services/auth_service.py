@@ -4,12 +4,13 @@ import jwt
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.core.security import create_access_token, create_refresh_token, decode_token, verify_password
-from app.models.user import User
+from app.entities.user import User
+from app.repositories import user_repository
+from app.utils.security import create_access_token, create_refresh_token, decode_token, verify_password
 
 
 def authenticate_user(db: Session, username: str, password: str) -> User:
-    user = db.query(User).filter(User.username == username).first()
+    user = user_repository.get_by_username(db, username)
     if user is None or not verify_password(password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -42,7 +43,7 @@ def refresh_access_token(db: Session, refresh_token: str) -> dict:
     except (jwt.PyJWTError, KeyError, ValueError):
         raise credentials_exception
 
-    user = db.get(User, user_id)
+    user = user_repository.get_by_id(db, user_id)
     if user is None or not user.active or not user.person.active:
         raise credentials_exception
 

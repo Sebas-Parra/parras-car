@@ -25,6 +25,9 @@ def create_person_with_user(db: Session, data: UserCreate) -> Person:
     if person_repository.get_by_cedula(db, data.cedula):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Cedula already registered")
 
+    if person_repository.get_by_email(db, data.email):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"El correo '{data.email}' ya está registrado, por favor ingrese uno diferente")
+
     roles = role_repository.get_by_ids(db, data.role_ids)
     if len(roles) != len(set(data.role_ids)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="One or more roles not found")
@@ -35,14 +38,13 @@ def create_person_with_user(db: Session, data: UserCreate) -> Person:
         data.last_name,
         lambda u: user_repository.username_exists(db, u),
     )
-    email = f"{generated_username}@parras-car.com"
 
     person = Person(
         cedula=data.cedula,
         first_name=data.first_name,
         middle_name=data.middle_name,
         last_name=data.last_name,
-        email=email,
+        email=data.email,
         phone=data.phone,
         address=data.address,
         nationality=data.nationality,

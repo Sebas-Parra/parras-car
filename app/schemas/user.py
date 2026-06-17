@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.schemas.person import PersonBase, PersonRead
 from app.schemas.role import RoleRead
@@ -8,6 +8,7 @@ from app.schemas.role import RoleRead
 
 class UserCreate(PersonBase):
     middle_name: str
+    email: EmailStr | None = None
     password: str = Field(min_length=8)
     role_ids: list[int] = Field(min_length=1)
 

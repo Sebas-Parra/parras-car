@@ -56,19 +56,20 @@ def _generate_unique_username(db: Session, data: UserCreate) -> str:
 def create_person_with_user(db: Session, data: UserCreate) -> Person:
     if db.query(Person).filter(Person.cedula == data.cedula).first():
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Cedula already registered")
-    if db.query(Person).filter(Person.email == data.email).first():
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
 
     roles = db.query(Role).filter(Role.id.in_(data.role_ids)).all()
     if len(roles) != len(set(data.role_ids)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="One or more roles not found")
+
+    username = _generate_unique_username(db, data)
+    email = f"{username}@parras-car.com"
 
     person = Person(
         cedula=data.cedula,
         first_name=data.first_name,
         middle_name=data.middle_name,
         last_name=data.last_name,
-        email=data.email,
+        email=email,
         phone=data.phone,
         address=data.address,
         nationality=data.nationality,
@@ -78,7 +79,7 @@ def create_person_with_user(db: Session, data: UserCreate) -> Person:
 
     user = User(
         id_person=person.id,
-        username=_generate_unique_username(db, data),
+        username=username,
         password_hash=hash_password(data.password),
     )
     user.roles = roles

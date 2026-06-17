@@ -17,6 +17,7 @@ def test_create_person_with_user(client, admin_headers, role_ids):
     assert body["cedula"] == "3333333333"
     assert body["user"]["username"] == "pmdiaz"
     assert body["id"] == body["user"]["id_person"]
+    assert body["email"] == "pmdiaz@parras-car.com"
 
 
 def test_create_person_with_user_generates_sequential_username(client, admin_headers, role_ids):

@@ -60,7 +60,7 @@ La API queda disponible en `http://localhost:8000`. Documentación interactiva
 - `POST /auth/login` — login (form OAuth2: `username`, `password`)
 - `POST /auth/refresh` — renueva el access token a partir de un refresh token
 - `GET /auth/me` — datos del usuario autenticado
-- `POST /persons` *(admin)* — crea persona + usuario + roles
+- `POST /persons` *(admin)* — crea persona + usuario + roles; el `username` se genera automáticamente
 - `GET /persons`, `GET /persons/{id}`, `PUT /persons/{id}`
 - `PATCH /persons/{id}/deactivate` — desactiva persona y usuario (cascada)
 - `PATCH /persons/{id}/activate`

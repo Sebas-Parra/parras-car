@@ -6,7 +6,6 @@ def test_create_person_with_user(client, admin_headers, role_ids):
             "first_name": "Carlos",
             "last_name": "Diaz",
             "email": "carlos@example.com",
-            "username": "carlosd",
             "password": "Password123",
             "role_ids": [role_ids["estudiante"]],
         },
@@ -15,8 +14,37 @@ def test_create_person_with_user(client, admin_headers, role_ids):
     assert response.status_code == 201
     body = response.json()
     assert body["cedula"] == "3333333333"
-    assert body["user"]["username"] == "carlosd"
+    assert body["user"]["username"] == "cadiaz"
     assert body["id"] == body["user"]["id_person"]
+
+
+def test_create_person_with_user_generates_sequential_username(client, admin_headers, role_ids):
+    payload = {
+        "cedula": "4444444444",
+        "first_name": "Mario",
+        "last_name": "Perez",
+        "email": "mario@example.com",
+        "password": "Password123",
+        "role_ids": [role_ids["estudiante"]],
+    }
+    first_response = client.post("/persons", json=payload, headers=admin_headers)
+    assert first_response.status_code == 201
+    assert first_response.json()["user"]["username"] == "maperez"
+
+    payload["cedula"] = "4444444445"
+    payload["email"] = "marco@example.com"
+    payload["first_name"] = "Marco"
+    second_response = client.post("/persons", json=payload, headers=admin_headers)
+    assert second_response.status_code == 201
+    assert second_response.json()["user"]["username"] == "maperez1"
+
+    payload["cedula"] = "4444444446"
+    payload["email"] = "maria@example.com"
+    payload["first_name"] = "María José"
+    payload["last_name"] = "Pérez Gómez"
+    third_response = client.post("/persons", json=payload, headers=admin_headers)
+    assert third_response.status_code == 201
+    assert third_response.json()["user"]["username"] == "maperez2"
 
 
 def test_create_person_duplicate_cedula(client, admin_headers, role_ids):
@@ -25,14 +53,12 @@ def test_create_person_duplicate_cedula(client, admin_headers, role_ids):
         "first_name": "Dup",
         "last_name": "User",
         "email": "dup1@example.com",
-        "username": "dupuser1",
         "password": "Password123",
         "role_ids": [role_ids["estudiante"]],
     }
     client.post("/persons", json=payload, headers=admin_headers)
 
     payload["email"] = "dup2@example.com"
-    payload["username"] = "dupuser2"
     response = client.post("/persons", json=payload, headers=admin_headers)
     assert response.status_code == 409
 
@@ -45,7 +71,6 @@ def test_create_person_requires_admin(client, role_ids):
             "first_name": "No",
             "last_name": "Admin",
             "email": "noadmin@example.com",
-            "username": "noadmin",
             "password": "Password123",
             "role_ids": [role_ids["visitante"]],
         },
@@ -76,7 +101,6 @@ def test_update_person(client, admin_headers, role_ids):
             "first_name": "Update",
             "last_name": "Me",
             "email": "updateme@example.com",
-            "username": "updateme",
             "password": "Password123",
             "role_ids": [role_ids["estudiante"]],
         },
@@ -103,7 +127,6 @@ def test_deactivate_person_cascades_to_user(client, admin_headers, db_session, r
             "first_name": "Cascade",
             "last_name": "Test",
             "email": "cascade@example.com",
-            "username": "cascadeuser",
             "password": "Password123",
             "role_ids": [role_ids["estudiante"]],
         },
@@ -129,7 +152,6 @@ def test_activate_person_does_not_reactivate_user(client, admin_headers, db_sess
             "first_name": "Reactivate",
             "last_name": "Test",
             "email": "reactivate@example.com",
-            "username": "reactivateuser",
             "password": "Password123",
             "role_ids": [role_ids["estudiante"]],
         },
@@ -155,7 +177,6 @@ def test_deactivate_person_requires_admin(client, admin_headers, role_ids):
             "first_name": "Self",
             "last_name": "Test",
             "email": "selftest@example.com",
-            "username": "selftestuser",
             "password": "Password123",
             "role_ids": [role_ids["estudiante"]],
         },

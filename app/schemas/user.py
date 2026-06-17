@@ -7,7 +7,6 @@ from app.schemas.role import RoleRead
 
 
 class UserCreate(PersonBase):
-    username: str
     password: str = Field(min_length=8)
     role_ids: list[int] = Field(min_length=1)
 

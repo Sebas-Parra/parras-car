@@ -7,8 +7,8 @@ Create Date: 2026-06-15 00:00:00.000000
 """
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 revision: str = "0001"
 down_revision: Union[str, None] = None
@@ -19,7 +19,7 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     op.create_table(
         "persons",
-        sa.Column("id", sa.Integer(), primary_key=True, autoincrement=True),
+        sa.Column("id", sa.Uuid(), primary_key=True),
         sa.Column("cedula", sa.String(length=20), nullable=False),
         sa.Column("first_name", sa.String(length=100), nullable=False),
         sa.Column("middle_name", sa.String(length=100), nullable=True),
@@ -37,7 +37,7 @@ def upgrade() -> None:
 
     op.create_table(
         "users",
-        sa.Column("id_person", sa.Integer(), sa.ForeignKey("persons.id"), primary_key=True),
+        sa.Column("id_person", sa.Uuid(), sa.ForeignKey("persons.id"), primary_key=True),
         sa.Column("username", sa.String(length=50), nullable=False),
         sa.Column("password_hash", sa.String(length=255), nullable=False),
         sa.Column("active", sa.Boolean(), nullable=False, server_default=sa.true()),
@@ -49,7 +49,7 @@ def upgrade() -> None:
 
     op.create_table(
         "roles",
-        sa.Column("id", sa.Integer(), primary_key=True, autoincrement=True),
+        sa.Column("id", sa.Uuid(), primary_key=True),
         sa.Column("name", sa.String(length=50), nullable=False),
         sa.Column("description", sa.String(length=255), nullable=True),
     )
@@ -57,8 +57,8 @@ def upgrade() -> None:
 
     op.create_table(
         "user_roles",
-        sa.Column("id_user", sa.Integer(), sa.ForeignKey("users.id_person"), primary_key=True),
-        sa.Column("id_role", sa.Integer(), sa.ForeignKey("roles.id"), primary_key=True),
+        sa.Column("id_user", sa.Uuid(), sa.ForeignKey("users.id_person"), primary_key=True),
+        sa.Column("id_role", sa.Uuid(), sa.ForeignKey("roles.id"), primary_key=True),
         sa.Column("assigned_at", sa.DateTime(), nullable=False, server_default=sa.func.now()),
     )
 

@@ -1,4 +1,5 @@
 from collections.abc import Generator
+from uuid import UUID
 
 import jwt
 from fastapi import Depends, HTTPException, status
@@ -33,7 +34,7 @@ def get_current_user(
         payload = decode_token(token)
         if payload.get("type") != "access":
             raise credentials_exception
-        user_id = int(payload["sub"])
+        user_id = UUID(payload["sub"])
     except (jwt.PyJWTError, KeyError, ValueError):
         raise credentials_exception
 
@@ -57,7 +58,7 @@ def require_role(role_name: str):
 
 
 def require_self_or_admin_person(
-    person_id: int,
+    person_id: UUID,
     current_user: User = Depends(get_current_user),
 ) -> User:
     role_names = {role.name for role in current_user.roles}
@@ -67,7 +68,7 @@ def require_self_or_admin_person(
 
 
 def require_self_or_admin_user(
-    user_id: int,
+    user_id: UUID,
     current_user: User = Depends(get_current_user),
 ) -> User:
     role_names = {role.name for role in current_user.roles}

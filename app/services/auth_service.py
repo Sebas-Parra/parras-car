@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from uuid import UUID
 
 import jwt
 from fastapi import HTTPException, status
@@ -39,7 +40,7 @@ def refresh_access_token(db: Session, refresh_token: str) -> dict:
         payload = decode_token(refresh_token)
         if payload.get("type") != "refresh":
             raise credentials_exception
-        user_id = int(payload["sub"])
+        user_id = UUID(payload["sub"])
     except (jwt.PyJWTError, KeyError, ValueError):
         raise credentials_exception
 

@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
@@ -20,20 +22,20 @@ def list_persons(skip: int = 0, limit: int = 100, db: Session = Depends(get_db))
 
 
 @router.get("/{person_id}", response_model=PersonRead)
-def get_person(person_id: int, db: Session = Depends(get_db), _=Depends(require_self_or_admin_person)):
+def get_person(person_id: UUID, db: Session = Depends(get_db), _=Depends(require_self_or_admin_person)):
     return person_service.get_person(db, person_id)
 
 
 @router.put("/{person_id}", response_model=PersonRead)
-def update_person(person_id: int, data: PersonUpdate, db: Session = Depends(get_db), _=Depends(require_self_or_admin_person)):
+def update_person(person_id: UUID, data: PersonUpdate, db: Session = Depends(get_db), _=Depends(require_self_or_admin_person)):
     return person_service.update_person(db, person_id, data)
 
 
 @router.patch("/{person_id}/deactivate", response_model=PersonRead, dependencies=[Depends(require_role("administrador"))])
-def deactivate_person(person_id: int, db: Session = Depends(get_db)):
+def deactivate_person(person_id: UUID, db: Session = Depends(get_db)):
     return person_service.deactivate_person(db, person_id)
 
 
 @router.patch("/{person_id}/activate", response_model=PersonRead, dependencies=[Depends(require_role("administrador"))])
-def activate_person(person_id: int, db: Session = Depends(get_db)):
+def activate_person(person_id: UUID, db: Session = Depends(get_db)):
     return person_service.activate_person(db, person_id)

@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -19,7 +21,7 @@ class RefreshRequest(BaseModel):
 class MeResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id: int
+    id: UUID
     cedula: str
     first_name: str
     middle_name: str | None = None

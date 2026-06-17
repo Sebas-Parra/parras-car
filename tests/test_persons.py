@@ -197,7 +197,8 @@ def test_deactivate_person_cascades_to_user(client, admin_headers, db_session, r
     assert response.status_code == 200
     assert response.json()["active"] is False
 
-    user = db_session.query(User).filter(User.id_person == person_id).one()
+    from uuid import UUID
+    user = db_session.query(User).filter(User.id_person == UUID(person_id)).one()
     assert user.active is False
 
 
@@ -225,7 +226,8 @@ def test_activate_person_does_not_reactivate_user(client, admin_headers, db_sess
     assert response.status_code == 200
     assert response.json()["active"] is True
 
-    user = db_session.query(User).filter(User.id_person == person_id).one()
+    from uuid import UUID
+    user = db_session.query(User).filter(User.id_person == UUID(person_id)).one()
     assert user.active is False
 
 

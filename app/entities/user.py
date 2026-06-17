@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, func
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, String, Uuid, func
 from sqlalchemy.orm import relationship
 
 from app.db.base import Base
@@ -7,7 +7,7 @@ from app.db.base import Base
 class User(Base):
     __tablename__ = "users"
 
-    id_person = Column(Integer, ForeignKey("persons.id"), primary_key=True)
+    id_person = Column(Uuid, ForeignKey("persons.id"), primary_key=True)
     username = Column(String(50), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
     active = Column(Boolean, nullable=False, default=True)

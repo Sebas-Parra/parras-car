@@ -1,4 +1,6 @@
-from sqlalchemy import Boolean, Column, DateTime, Integer, String, func
+import uuid
+
+from sqlalchemy import Boolean, Column, DateTime, String, Uuid, func
 from sqlalchemy.orm import relationship
 
 from app.db.base import Base
@@ -7,7 +9,7 @@ from app.db.base import Base
 class Person(Base):
     __tablename__ = "persons"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Uuid, primary_key=True, default=uuid.uuid4)
     cedula = Column(String(20), unique=True, nullable=False, index=True)
     first_name = Column(String(100), nullable=False)
     middle_name = Column(String(100), nullable=True)

@@ -5,6 +5,7 @@ Revises: 0001
 Create Date: 2026-06-15 00:00:01.000000
 
 """
+import uuid
 from datetime import datetime, timezone
 from typing import Sequence, Union
 
@@ -20,22 +21,27 @@ depends_on: Union[str, Sequence[str], None] = None
 ROLES = ["estudiante", "profesor", "administrador", "visitante"]
 ADMIN_CEDULA = "0000000000"
 
+ROLE_IDS = {name: uuid.uuid4() for name in ROLES}
+ADMIN_PERSON_ID = uuid.uuid4()
+
 
 def upgrade() -> None:
+    now = datetime.now(timezone.utc)
+
     roles_table = sa.table(
         "roles",
-        sa.column("id", sa.Integer),
+        sa.column("id", sa.Uuid()),
         sa.column("name", sa.String),
         sa.column("description", sa.String),
     )
     op.bulk_insert(
         roles_table,
-        [{"name": name, "description": name.capitalize()} for name in ROLES],
+        [{"id": ROLE_IDS[name], "name": name, "description": name.capitalize()} for name in ROLES],
     )
 
     persons_table = sa.table(
         "persons",
-        sa.column("id", sa.Integer),
+        sa.column("id", sa.Uuid()),
         sa.column("cedula", sa.String),
         sa.column("first_name", sa.String),
         sa.column("middle_name", sa.String),
@@ -48,16 +54,16 @@ def upgrade() -> None:
         sa.column("created_at", sa.DateTime),
         sa.column("updated_at", sa.DateTime),
     )
-    now = datetime.now(timezone.utc)
     op.bulk_insert(
         persons_table,
         [
             {
+                "id": ADMIN_PERSON_ID,
                 "cedula": ADMIN_CEDULA,
                 "first_name": "Admin",
                 "middle_name": None,
                 "last_name": "System",
-                "email": "admin@example.com",
+                "email": "admin@parras-car.com",
                 "phone": None,
                 "address": None,
                 "nationality": None,
@@ -68,21 +74,11 @@ def upgrade() -> None:
         ],
     )
 
-    connection = op.get_bind()
-    admin_person_id = connection.execute(
-        sa.text("SELECT id FROM persons WHERE cedula = :cedula"),
-        {"cedula": ADMIN_CEDULA},
-    ).scalar_one()
-    admin_role_id = connection.execute(
-        sa.text("SELECT id FROM roles WHERE name = :name"),
-        {"name": "administrador"},
-    ).scalar_one()
-
     password_hash = bcrypt.hashpw(b"Admin123!", bcrypt.gensalt()).decode("utf-8")
 
     users_table = sa.table(
         "users",
-        sa.column("id_person", sa.Integer),
+        sa.column("id_person", sa.Uuid()),
         sa.column("username", sa.String),
         sa.column("password_hash", sa.String),
         sa.column("active", sa.Boolean),
@@ -94,7 +90,7 @@ def upgrade() -> None:
         users_table,
         [
             {
-                "id_person": admin_person_id,
+                "id_person": ADMIN_PERSON_ID,
                 "username": "admin",
                 "password_hash": password_hash,
                 "active": True,
@@ -107,31 +103,25 @@ def upgrade() -> None:
 
     user_roles_table = sa.table(
         "user_roles",
-        sa.column("id_user", sa.Integer),
-        sa.column("id_role", sa.Integer),
+        sa.column("id_user", sa.Uuid()),
+        sa.column("id_role", sa.Uuid()),
         sa.column("assigned_at", sa.DateTime),
     )
     op.bulk_insert(
         user_roles_table,
-        [{"id_user": admin_person_id, "id_role": admin_role_id, "assigned_at": now}],
+        [{"id_user": ADMIN_PERSON_ID, "id_role": ROLE_IDS["administrador"], "assigned_at": now}],
     )
 
 
 def downgrade() -> None:
     connection = op.get_bind()
     connection.execute(
-        sa.text(
-            "DELETE FROM user_roles WHERE id_user = "
-            "(SELECT id FROM persons WHERE cedula = :cedula)"
-        ),
-        {"cedula": ADMIN_CEDULA},
+        sa.text("DELETE FROM user_roles WHERE id_user = :id"),
+        {"id": str(ADMIN_PERSON_ID)},
     )
     connection.execute(
-        sa.text(
-            "DELETE FROM users WHERE id_person = "
-            "(SELECT id FROM persons WHERE cedula = :cedula)"
-        ),
-        {"cedula": ADMIN_CEDULA},
+        sa.text("DELETE FROM users WHERE id_person = :id"),
+        {"id": str(ADMIN_PERSON_ID)},
     )
     connection.execute(sa.text("DELETE FROM persons WHERE cedula = :cedula"), {"cedula": ADMIN_CEDULA})
     connection.execute(sa.text("DELETE FROM roles WHERE name IN :names").bindparams(sa.bindparam("names", expanding=True)), {"names": ROLES})

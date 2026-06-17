@@ -75,7 +75,7 @@ def client(db_session):
 
 @pytest.fixture()
 def role_ids(db_session):
-    return {role.name: role.id for role in db_session.query(Role).all()}
+    return {role.name: str(role.id) for role in db_session.query(Role).all()}
 
 
 @pytest.fixture()

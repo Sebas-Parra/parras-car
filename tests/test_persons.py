@@ -84,6 +84,23 @@ def test_create_person_rejects_invalid_cedula_length(client, admin_headers, role
     assert response.status_code == 422
 
 
+def test_create_person_rejects_names_outside_2_to_50_chars(client, admin_headers, role_ids):
+    response = client.post(
+        "/persons",
+        json={
+            "cedula": "2222222222",
+            "first_name": "A",
+            "middle_name": "Mario",
+            "last_name": "B" * 51,
+            "email": "invalidname@example.com",
+            "password": "Password123",
+            "role_ids": [role_ids["estudiante"]],
+        },
+        headers=admin_headers,
+    )
+    assert response.status_code == 422
+
+
 def test_create_person_duplicate_cedula(client, admin_headers, role_ids):
     payload = {
         "cedula": "4444444444",

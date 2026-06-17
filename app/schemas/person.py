@@ -2,12 +2,15 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
+NAME_FIELD = Field(min_length=2, max_length=50)
+OPTIONAL_NAME_FIELD = Field(default=None, min_length=2, max_length=50)
+
 
 class PersonBase(BaseModel):
     cedula: str = Field(pattern=r"^\d{10}$")
-    first_name: str
-    middle_name: str | None = None
-    last_name: str
+    first_name: str = NAME_FIELD
+    middle_name: str | None = OPTIONAL_NAME_FIELD
+    last_name: str = NAME_FIELD
     email: EmailStr
     phone: str | None = None
     address: str | None = None
@@ -15,9 +18,9 @@ class PersonBase(BaseModel):
 
 
 class PersonUpdate(BaseModel):
-    first_name: str | None = None
-    middle_name: str | None = None
-    last_name: str | None = None
+    first_name: str | None = OPTIONAL_NAME_FIELD
+    middle_name: str | None = OPTIONAL_NAME_FIELD
+    last_name: str | None = OPTIONAL_NAME_FIELD
     email: EmailStr | None = None
     phone: str | None = None
     address: str | None = None

@@ -37,21 +37,21 @@ public class PlaceServiceImpl implements PlaceService {
     }
 
     @Override
-    @Transactional()
+    @Transactional
     public PlaceResponseDto createPlace(PlaceRequestDto request) {
-        if (placeRepository.existsByCode(request.getCode())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Place code already exists");
-        }
-
         Zone objZona = zoneRepository.findById(request.getIdZone())
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Zone not found"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Zona no encontrada"));
 
         long currentPlaces = placeRepository.countByZone(objZona);
         if (currentPlaces >= objZona.getCapacity()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Zone capacity exceeded");
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "La zona ha alcanzado su capacidad máxima (" + objZona.getCapacity() + ")");
         }
 
+        String generatedCode = generatePlaceCode(objZona, currentPlaces);
+
         Place newPlace = mappers.toEntityPlace(request);
+        newPlace.setCode(generatedCode);
         newPlace.setZone(objZona);
         newPlace.setStatus(StatusOfPlace.AVAILABLE);
         newPlace.setActive(true);
@@ -59,26 +59,17 @@ public class PlaceServiceImpl implements PlaceService {
         newPlace.setUpdatedAt(LocalDateTime.now());
 
         Place savedPlace = placeRepository.save(newPlace);
-
-        return mappers.toPlaceResponseDto(savedPlace);  
+        return mappers.toPlaceResponseDto(savedPlace);
     }
 
     @Override
     @Transactional
     public PlaceResponseDto updatePlace(PlaceRequestDto request, UUID id) {
         Place existing = placeRepository.findById(id)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Place not found"));
-
-        String newCode = request.getCode();
-        if (newCode != null && !newCode.equals(existing.getCode())) {
-            if (placeRepository.existsByCode(newCode)) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Place code already in use");
-            }
-            existing.setCode(newCode);
-        }
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lugar no encontrado"));
 
         if (request.getDescription() != null) {
-            existing.setDescription(request.getDescription());
+            existing.setDescription(request.getDescription().trim().isEmpty() ? null : request.getDescription().trim());
         }
 
         if (request.getType() != null) {
@@ -89,18 +80,18 @@ public class PlaceServiceImpl implements PlaceService {
             existing.setStatus(request.getStatus());
         }
 
-        if (request.getIdZone() != null && (!request.getIdZone().equals(existing.getZone().getId()))) {
+        if (request.getIdZone() != null && !request.getIdZone().equals(existing.getZone().getId())) {
             Zone newZone = zoneRepository.findById(request.getIdZone())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Zone not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Zona no encontrada"));
             long currentPlaces = placeRepository.countByZone(newZone);
             if (currentPlaces >= newZone.getCapacity()) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Target zone capacity exceeded");
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "La zona destino ha alcanzado su capacidad máxima (" + newZone.getCapacity() + ")");
             }
             existing.setZone(newZone);
         }
 
         existing.setUpdatedAt(LocalDateTime.now());
-
         Place saved = placeRepository.save(existing);
         return mappers.toPlaceResponseDto(saved);
     }
@@ -109,7 +100,11 @@ public class PlaceServiceImpl implements PlaceService {
     @Transactional
     public void deletePlaceById(UUID id) {
         Place place = placeRepository.findById(id)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Place not found"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lugar no encontrado"));
+        if (place.getStatus() == StatusOfPlace.OCCUPIED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "No se puede eliminar un lugar que está ocupado");
+        }
         placeRepository.delete(place);
     }
 
@@ -117,7 +112,7 @@ public class PlaceServiceImpl implements PlaceService {
     @Transactional
     public PlaceResponseDto changeStatus(StatusOfPlace status, UUID id) {
         Place place = placeRepository.findById(id)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Place not found"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lugar no encontrado"));
         place.setStatus(status);
         place.setUpdatedAt(LocalDateTime.now());
         Place saved = placeRepository.save(place);
@@ -137,10 +132,18 @@ public class PlaceServiceImpl implements PlaceService {
     @Transactional(readOnly = true)
     public List<PlaceResponseDto> getPlacesByZoneAndStatus(UUID idZone, StatusOfPlace status) {
         Zone zone = zoneRepository.findById(idZone)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Zone not found"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Zona no encontrada"));
         return placeRepository.findByZoneAndStatus(zone, status)
             .stream()
             .map(mappers::toPlaceResponseDto)
             .toList();
+    }
+
+    private String generatePlaceCode(Zone zone, long currentPlaces) {
+        String typePrefix = zone.getType().name()
+            .substring(0, Math.min(2, zone.getType().name().length()))
+            .toUpperCase();
+        String zoneSeq = zone.getCode().substring(zone.getCode().length() - 2);
+        return typePrefix + zoneSeq + "-" + String.format("%02d", currentPlaces + 1);
     }
 }

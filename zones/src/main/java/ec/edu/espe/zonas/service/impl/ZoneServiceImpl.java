@@ -30,7 +30,7 @@ public class ZoneServiceImpl implements ZoneService {
     private PlaceRepository placeRepository;
 
     @Override
-    @Transactional()
+    @Transactional(readOnly = true)
     public List<ZoneResponseDto> getAllZones() {
         return zoneRepository.findAll()
             .stream()
@@ -39,17 +39,23 @@ public class ZoneServiceImpl implements ZoneService {
     }
 
     @Override
-    public ZoneResponseDto createZone(ZoneRequestDto request) {
+    @Transactional(readOnly = true)
+    public ZoneResponseDto getZoneById(UUID idZone) {
+        Zone zone = zoneRepository.findById(idZone)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Zona no encontrada"));
+        return toResponseDto(zone);
+    }
 
-        if(zoneRepository.existsByName(request.getName())){
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "This name already exist" );
+    @Override
+    public ZoneResponseDto createZone(ZoneRequestDto request) {
+        if (zoneRepository.existsByName(request.getName().trim())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe una zona con ese nombre");
         }
 
         Zone objZone = new Zone();
-
-        objZone.setName(request.getName());
+        objZone.setName(request.getName().trim());
         objZone.setCode(codeGenerator(request));
-        objZone.setDescription(request.getDescription());
+        objZone.setDescription(request.getDescription() != null ? request.getDescription().trim() : null);
         objZone.setCapacity(request.getCapacity());
         objZone.setType(request.getType());
         objZone.setStatus(1);
@@ -64,20 +70,21 @@ public class ZoneServiceImpl implements ZoneService {
     @Transactional
     public ZoneResponseDto updateZone(UUID idZone, ZoneRequestDto request) {
         Zone zone = zoneRepository.findById(idZone)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Zone not found"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Zona no encontrada"));
 
-        if (!zone.getName().equals(request.getName()) && zoneRepository.existsByName(request.getName())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "This name already exists");
+        String trimmedName = request.getName().trim();
+        if (!zone.getName().equals(trimmedName) && zoneRepository.existsByName(trimmedName)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe una zona con ese nombre");
         }
 
         long existingPlaces = placeRepository.countByZone(zone);
         if (request.getCapacity() < existingPlaces) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
-                "Cannot set capacity below existing places count (" + existingPlaces + ")");
+                "No se puede reducir la capacidad por debajo del número de lugares existentes (" + existingPlaces + ")");
         }
 
-        zone.setName(request.getName());
-        zone.setDescription(request.getDescription());
+        zone.setName(trimmedName);
+        zone.setDescription(request.getDescription() != null ? request.getDescription().trim() : null);
         zone.setCapacity(request.getCapacity());
         zone.setType(request.getType());
         zone.setUpdatedAt(LocalDateTime.now());
@@ -90,7 +97,7 @@ public class ZoneServiceImpl implements ZoneService {
     @Transactional
     public void changeStatus(UUID idZone) {
         Zone zone = zoneRepository.findById(idZone)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Zone not found"));
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Zona no encontrada"));
 
         int newStatus = (zone.getStatus() == 1) ? 0 : 1;
 
@@ -98,14 +105,13 @@ public class ZoneServiceImpl implements ZoneService {
             boolean hasOccupiedPlaces = placeRepository.existsByZoneAndStatus(zone, StatusOfPlace.OCCUPIED);
             if (hasOccupiedPlaces) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "Cannot deactivate zone: there are occupied places");
+                    "No se puede desactivar la zona: existen lugares ocupados");
             }
-
             for (Place place : zone.getPlaces()) {
                 place.setActive(false);
             }
             placeRepository.saveAll(zone.getPlaces());
-        } else if (newStatus == 1) {
+        } else {
             for (Place place : zone.getPlaces()) {
                 place.setActive(true);
             }
@@ -133,10 +139,11 @@ public class ZoneServiceImpl implements ZoneService {
     }
 
     private String codeGenerator(ZoneRequestDto request) {
-        String typeAbbrev = request.getType().name().substring(0, Math.min(3, request.getType().name().length())).toUpperCase();
+        String typeAbbrev = request.getType().name()
+            .substring(0, Math.min(3, request.getType().name().length()))
+            .toUpperCase();
         long zoneCount = zoneRepository.count();
         String sequentialNumber = String.format("%02d", zoneCount + 1);
-        String code = "ZON-" + typeAbbrev + "-" + sequentialNumber;
-        return code;
+        return "ZON-" + typeAbbrev + "-" + sequentialNumber;
     }
 }

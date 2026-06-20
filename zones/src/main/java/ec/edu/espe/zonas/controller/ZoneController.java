@@ -9,6 +9,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,25 +19,28 @@ import ec.edu.espe.zonas.dtos.ZoneResponseDto;
 import ec.edu.espe.zonas.service.ZoneService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PutMapping;
-
 
 @RestController
 @RequestMapping("/api/v1/zones")
 @Validated
 @RequiredArgsConstructor
 public class ZoneController {
-    
+
     private final ZoneService zoneService;
 
     @GetMapping
     public ResponseEntity<List<ZoneResponseDto>> getAllZones() {
-        return ResponseEntity.ok(zoneService.getAllZones()); //200
+        return ResponseEntity.ok(zoneService.getAllZones());
+    }
+
+    @GetMapping("/{idZone}")
+    public ResponseEntity<ZoneResponseDto> getZoneById(@PathVariable UUID idZone) {
+        return ResponseEntity.ok(zoneService.getZoneById(idZone));
     }
 
     @PostMapping
     public ResponseEntity<ZoneResponseDto> createZone(@Valid @RequestBody ZoneRequestDto request) {
-        return new ResponseEntity<>(zoneService.createZone(request), HttpStatus.CREATED); //201
+        return new ResponseEntity<>(zoneService.createZone(request), HttpStatus.CREATED);
     }
 
     @PutMapping("/{idZone}")

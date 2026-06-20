@@ -1,3 +1,4 @@
+import { BadRequestException } from '@nestjs/common';
 import { CreateVehicleDto } from '../dto/create-vehicle.dto';
 import { Car } from '../entities/car.entity';
 import { Motorcycle } from '../entities/motorcycle.entity';
@@ -7,20 +8,25 @@ import { Vehicle } from '../entities/vehicle.entity';
 export class FactoryVehiculos {
   static create(dto: CreateVehicleDto): Vehicle {
     switch (dto.tipo) {
-      case 'car':
+      case 'car': {
         const car = new Car();
         Object.assign(car, dto.datos);
         return car;
-      case 'motocicleta':
+      }
+      case 'motocicleta': {
         const motorcycle = new Motorcycle();
         Object.assign(motorcycle, dto.datos);
         return motorcycle;
-      case 'pickupTruck':
+      }
+      case 'pickupTruck': {
         const pickupTruck = new PickupTruck();
         Object.assign(pickupTruck, dto.datos);
         return pickupTruck;
+      }
       default:
-        throw new Error(`Type of vehicle not supported: ${dto.tipo}`);
+        throw new BadRequestException(
+          `Tipo de vehículo no soportado: ${dto.tipo}`,
+        );
     }
   }
 }

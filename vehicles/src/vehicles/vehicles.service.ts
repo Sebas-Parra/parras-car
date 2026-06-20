@@ -1,6 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm/browser/repository/Repository.js';
+import { Repository } from 'typeorm';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { Vehicle } from './entities/vehicle.entity';
@@ -18,8 +22,8 @@ export class VehiclesService {
       where: { plate: createVehicleDto.datos.plate },
     });
     if (exist) {
-      throw new Error(
-        `Vehicle with plate ${createVehicleDto.datos.plate} already exists`,
+      throw new ConflictException(
+        `Ya existe un vehículo con la placa '${createVehicleDto.datos.plate}'`,
       );
     }
     const vehicle = FactoryVehiculos.create(createVehicleDto);
@@ -31,16 +35,30 @@ export class VehiclesService {
   }
 
   async findOne(id: string): Promise<Vehicle> {
-    const exist = await this.repositoryVehicle.findOne({ where: { id } });
-    if (!exist) {
-      throw new Error(`Vehicle with id ${id} not found`);
+    const vehicle = await this.repositoryVehicle.findOne({ where: { id } });
+    if (!vehicle) {
+      throw new NotFoundException(`Vehículo con id '${id}' no encontrado`);
     }
-    return exist;
+    return vehicle;
   }
 
-  async update(id: string, updateVehicleDto: UpdateVehicleDto): Promise<Vehicle> {
+  async update(
+    id: string,
+    updateVehicleDto: UpdateVehicleDto,
+  ): Promise<Vehicle> {
     const vehicle = await this.findOne(id);
-    Object.assign(vehicle, updateVehicleDto);
+    const newPlate = updateVehicleDto.datos?.plate;
+    if (newPlate && newPlate !== vehicle.plate) {
+      const plateConflict = await this.repositoryVehicle.findOne({
+        where: { plate: newPlate },
+      });
+      if (plateConflict) {
+        throw new ConflictException(
+          `Ya existe un vehículo con la placa '${newPlate}'`,
+        );
+      }
+    }
+    Object.assign(vehicle, updateVehicleDto.datos ?? {});
     return this.repositoryVehicle.save(vehicle);
   }
 

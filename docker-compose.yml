@@ -1,0 +1,131 @@
+services:
+  users-db:
+    image: postgres:16-alpine
+    container_name: parras-users-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: auth_db
+    ports:
+      - '5433:5432'
+    volumes:
+      - users_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d auth_db']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - parras_network
+
+  vehicles-db:
+    image: postgres:16-alpine
+    container_name: parras-vehicles-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: vehicles_db
+    ports:
+      - '5434:5432'
+    volumes:
+      - vehicles_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d vehicles_db']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - parras_network
+
+  zones-db:
+    image: postgres:16-alpine
+    container_name: parras-zones-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: zonas_db
+    ports:
+      - '5432:5432'
+    volumes:
+      - zones_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d zonas_db']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - parras_network
+
+  # ─── Microservices ────────────────────────────────────────────
+
+  users:
+    build:
+      context: ./users
+      dockerfile: Dockerfile
+    container_name: parras-users
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@users-db:5432/auth_db
+    ports:
+      - '8000:8000'
+    depends_on:
+      users-db:
+        condition: service_healthy
+    networks:
+      - parras_network
+    command: >
+      sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+
+  vehicles:
+    build:
+      context: ./vehicles
+      dockerfile: Dockerfile
+    container_name: parras-vehicles
+    restart: unless-stopped
+    environment:
+      DB_HOST: vehicles-db
+      DB_PORT: 5432
+      DB_USUARIO: postgres
+      DB_CONTRASENA: postgres
+      DB_NOMBRE: vehicles_db
+      PORT: 3000
+    ports:
+      - '3000:3000'
+    depends_on:
+      vehicles-db:
+        condition: service_healthy
+    networks:
+      - parras_network
+
+  zones:
+    build:
+      context: ./zones
+      dockerfile: Dockerfile
+    container_name: parras-zones
+    restart: unless-stopped
+    environment:
+      DB_HOST: zones-db
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: zonas_db
+      SERVER_PORT: 8080
+    ports:
+      - '8080:8080'
+    depends_on:
+      zones-db:
+        condition: service_healthy
+    networks:
+      - parras_network
+
+volumes:
+  users_db_data:
+  vehicles_db_data:
+  zones_db_data:
+
+networks:
+  parras_network:
+    driver: bridge

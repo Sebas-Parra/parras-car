@@ -6,8 +6,8 @@ import ec.edu.espe.zonas.entidades.enums.StatusOfPlace;
 import ec.edu.espe.zonas.entidades.enums.TypeOfPlace;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,17 +19,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PlaceRequestDto {
-    @NotNull(message = "Zone ID is required")
+
+    @NotNull(message = "El ID de la zona es obligatorio")
     private UUID idZone;
 
-    @NotBlank(message = "Code is required")
-    @Size(min = 1, max = 15, message = "Code must be between 1 and 15 characters")
-    private String code;
-
+    @Size(max = 255, message = "La descripción no puede superar los 255 caracteres")
+    @Pattern(regexp = "^$|^.*\\S.*$", message = "La descripción no puede contener solo espacios")
     private String description;
 
     @Enumerated(EnumType.STRING)
-    @NotNull(message = "Type of place is required")
+    @NotNull(message = "El tipo de lugar es obligatorio")
     private TypeOfPlace type;
 
     @Enumerated(EnumType.STRING)

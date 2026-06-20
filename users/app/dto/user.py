@@ -15,6 +15,13 @@ class UserCreate(PersonBase):
     password: str = Field(min_length=8)
     role_ids: list[UUID] = Field(min_length=1)
 
+    @field_validator("password", mode="before")
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("La contraseña no puede contener solo espacios")
+        return v
+
     @field_validator("middle_name", mode="before")
     @classmethod
     def validate_middle_name(cls, v: str) -> str:

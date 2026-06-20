@@ -28,7 +28,6 @@ public class UtilsMappers {
             return null;
         }
         return Place.builder()
-                .code(placeRequestDto.getCode())
                 .description(placeRequestDto.getDescription())
                 .type(placeRequestDto.getType())
                 .status(placeRequestDto.getStatus())

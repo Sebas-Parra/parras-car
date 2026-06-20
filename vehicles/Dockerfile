@@ -7,7 +7,7 @@ ENV CI=true
 RUN npm install -g pnpm
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-RUN pnpm install --frozen-lockfile --ignore-scripts
+RUN pnpm install --ignore-scripts
 
 COPY . .
 RUN node_modules/.bin/nest build

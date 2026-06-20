@@ -121,6 +121,45 @@ services:
     networks:
       - parras_network
 
+  # ─── API Gateway ──────────────────────────────────────────────
+
+  kong:
+    image: kong:3.9
+    container_name: parras-gateway
+    restart: unless-stopped
+    environment:
+      KONG_DATABASE: 'off'
+      KONG_DECLARATIVE_CONFIG: /kong/declarative/kong.yml
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: '0.0.0.0:8001'
+    ports:
+      - '9000:8000'
+      - '9001:8001'
+    volumes:
+      - ./gateway:/kong/declarative
+    depends_on:
+      - users
+      - vehicles
+      - zones
+    networks:
+      - parras_network
+
+  swagger-ui:
+    image: swaggerapi/swagger-ui:latest
+    container_name: parras-swagger-ui
+    restart: unless-stopped
+    environment:
+      BASE_URL: /docs
+      URLS: >-
+        [{"url":"/users/openapi.json","name":"Users"},{"url":"/vehicles/api-json","name":"Vehicles"},{"url":"/zones/v3/api-docs","name":"Zones"}]
+    depends_on:
+      - kong
+    networks:
+      - parras_network
+
 volumes:
   users_db_data:
   vehicles_db_data:

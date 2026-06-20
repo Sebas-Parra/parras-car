@@ -1,0 +1,34 @@
+_format_version: "3.0"
+
+services:
+  - name: users-service
+    url: http://users:8000
+    routes:
+      - name: users-route
+        paths:
+          - /users
+        strip_path: true
+
+  - name: vehicles-service
+    url: http://vehicles:3000
+    routes:
+      - name: vehicles-route
+        paths:
+          - /vehicles
+        strip_path: true
+
+  - name: zones-service
+    url: http://zones:8080
+    routes:
+      - name: zones-route
+        paths:
+          - /zones
+        strip_path: true
+
+  - name: swagger-ui-service
+    url: http://swagger-ui:8080
+    routes:
+      - name: docs-route
+        paths:
+          - /docs
+        strip_path: false

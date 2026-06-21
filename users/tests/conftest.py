@@ -78,12 +78,3 @@ def role_ids(db_session):
     return {role.name: str(role.id) for role in db_session.query(Role).all()}
 
 
-@pytest.fixture()
-def admin_token(client):
-    response = client.post("/auth/login", data={"username": "admin", "password": ADMIN_PASSWORD})
-    return response.json()["access_token"]
-
-
-@pytest.fixture()
-def admin_headers(admin_token):
-    return {"Authorization": f"Bearer {admin_token}"}

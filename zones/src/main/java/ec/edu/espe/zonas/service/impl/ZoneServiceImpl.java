@@ -123,6 +123,21 @@ public class ZoneServiceImpl implements ZoneService {
         zoneRepository.save(zone);
     }
 
+    @Override
+    @Transactional
+    public void deleteZone(UUID idZone) {
+        Zone zone = zoneRepository.findById(idZone)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Zona no encontrada"));
+
+        boolean hasOccupiedPlaces = placeRepository.existsByZoneAndStatus(zone, StatusOfPlace.OCCUPIED);
+        if (hasOccupiedPlaces) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "No se puede eliminar la zona: existen lugares ocupados");
+        }
+
+        zoneRepository.delete(zone);
+    }
+
     private ZoneResponseDto toResponseDto(Zone zone) {
         return ZoneResponseDto.builder()
                 .id(zone.getId())

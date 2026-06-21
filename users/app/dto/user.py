@@ -3,17 +3,22 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.dto.person import PersonBase, PersonRead, _NAME_REGEX, _PHONE_REGEX, _validate_name
+from app.dto.person import PersonBase, PersonRead, _NAME_REGEX, _validate_name, _validate_ecuadorian_cedula
 from app.dto.role import RoleRead
 
 
 class UserCreate(PersonBase):
     middle_name: str = Field(min_length=2, max_length=50)
-    phone: str
+    phone: str = Field(max_length=20)
     address: str
     nationality: str
     password: str = Field(min_length=8)
     role_ids: list[UUID] = Field(min_length=1)
+
+    @field_validator("cedula", mode="after")
+    @classmethod
+    def validate_cedula(cls, v: str) -> str:
+        return _validate_ecuadorian_cedula(v)
 
     @field_validator("password", mode="before")
     @classmethod
@@ -34,15 +39,6 @@ class UserCreate(PersonBase):
             raise ValueError("La nacionalidad no puede contener solo espacios")
         if not _NAME_REGEX.match(v.strip()):
             raise ValueError("La nacionalidad no puede contener números ni caracteres especiales")
-        return v.strip()
-
-    @field_validator("phone", mode="before")
-    @classmethod
-    def validate_phone(cls, v: str) -> str:
-        if not v.strip():
-            raise ValueError("El teléfono no puede contener solo espacios")
-        if not _PHONE_REGEX.match(v.strip()):
-            raise ValueError("El teléfono solo puede contener dígitos, espacios y los caracteres: + - ( )")
         return v.strip()
 
     @field_validator("address", mode="before")

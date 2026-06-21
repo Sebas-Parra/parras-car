@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -6,7 +8,7 @@ from app.entities.user import User
 from app.repositories import role_repository, user_repository
 
 
-def get_user(db: Session, user_id: int) -> User:
+def get_user(db: Session, user_id: UUID) -> User:
     user = user_repository.get_by_id(db, user_id)
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
@@ -17,7 +19,7 @@ def list_users(db: Session, skip: int = 0, limit: int = 100) -> list[User]:
     return user_repository.list_all(db, skip, limit)
 
 
-def update_user(db: Session, user_id: int, data: UserUpdate) -> User:
+def update_user(db: Session, user_id: UUID, data: UserUpdate) -> User:
     user = get_user(db, user_id)
     update_data = data.model_dump(exclude_unset=True)
 
@@ -33,7 +35,7 @@ def update_user(db: Session, user_id: int, data: UserUpdate) -> User:
     return user
 
 
-def deactivate_user(db: Session, user_id: int) -> User:
+def deactivate_user(db: Session, user_id: UUID) -> User:
     user = get_user(db, user_id)
     user.active = False
     db.commit()
@@ -41,7 +43,7 @@ def deactivate_user(db: Session, user_id: int) -> User:
     return user
 
 
-def activate_user(db: Session, user_id: int) -> User:
+def activate_user(db: Session, user_id: UUID) -> User:
     user = get_user(db, user_id)
     if not user.person.active:
         raise HTTPException(
@@ -54,7 +56,7 @@ def activate_user(db: Session, user_id: int) -> User:
     return user
 
 
-def assign_role(db: Session, user_id: int, role_id: int) -> User:
+def assign_role(db: Session, user_id: UUID, role_id: UUID) -> User:
     user = get_user(db, user_id)
     role = role_repository.get_by_id(db, role_id)
     if role is None:
@@ -67,7 +69,7 @@ def assign_role(db: Session, user_id: int, role_id: int) -> User:
     return user
 
 
-def remove_role(db: Session, user_id: int, role_id: int) -> User:
+def remove_role(db: Session, user_id: UUID, role_id: UUID) -> User:
     user = get_user(db, user_id)
     role = role_repository.get_by_id(db, role_id)
     if role is None or role not in user.roles:

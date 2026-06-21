@@ -35,6 +35,11 @@ export class VehiclesController {
     return this.vehiclesService.update(id, updateVehicleDto);
   }
 
+  @Patch(':id/activate')
+  activate(@Param('id') id: string) {
+    return this.vehiclesService.activate(id);
+  }
+
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.vehiclesService.remove(id);

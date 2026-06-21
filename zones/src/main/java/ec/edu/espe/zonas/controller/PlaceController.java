@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ec.edu.espe.zonas.dtos.PlaceRequestDto;
 import ec.edu.espe.zonas.dtos.PlaceResponseDto;
+import ec.edu.espe.zonas.dtos.UpdatePlaceStatusDto;
 import ec.edu.espe.zonas.entidades.enums.StatusOfPlace;
 import ec.edu.espe.zonas.service.PlaceService;
 import jakarta.validation.Valid;
@@ -64,7 +65,7 @@ public class PlaceController {
 
     @PatchMapping("/{id}/status")
     public ResponseEntity<PlaceResponseDto> changeStatus(@PathVariable UUID id,
-            @RequestParam StatusOfPlace status) {
-        return ResponseEntity.ok(placeService.changeStatus(status, id));
+            @Valid @RequestBody UpdatePlaceStatusDto body) {
+        return ResponseEntity.ok(placeService.changeStatus(body.getStatus(), id));
     }
 }

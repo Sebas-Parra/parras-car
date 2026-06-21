@@ -15,7 +15,7 @@ class Person(Base):
     middle_name = Column(String(50), nullable=True)
     last_name = Column(String(50), nullable=False)
     email = Column(String(150), unique=True, nullable=False, index=True)
-    phone = Column(String(10), nullable=True)
+    phone = Column(String(20), nullable=True)
     address = Column(String(255), nullable=True)
     nationality = Column(String(100), nullable=True)
     active = Column(Boolean, nullable=False, default=True)

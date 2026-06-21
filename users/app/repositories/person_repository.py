@@ -1,9 +1,11 @@
+from uuid import UUID
+
 from sqlalchemy.orm import Session
 
 from app.entities.person import Person
 
 
-def get_by_id(db: Session, person_id: int) -> Person | None:
+def get_by_id(db: Session, person_id: UUID) -> Person | None:
     return db.get(Person, person_id)
 
 

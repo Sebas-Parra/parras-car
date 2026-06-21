@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -10,7 +12,7 @@ from app.utils import username as username_util
 from app.utils.security import hash_password
 
 
-def get_person(db: Session, person_id: int) -> Person:
+def get_person(db: Session, person_id: UUID) -> Person:
     person = person_repository.get_by_id(db, person_id)
     if person is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Person not found")
@@ -64,7 +66,7 @@ def create_person_with_user(db: Session, data: UserCreate) -> Person:
     return person
 
 
-def update_person(db: Session, person_id: int, data: PersonUpdate) -> Person:
+def update_person(db: Session, person_id: UUID, data: PersonUpdate) -> Person:
     person = get_person(db, person_id)
     update_data = data.model_dump(exclude_unset=True)
 
@@ -80,7 +82,7 @@ def update_person(db: Session, person_id: int, data: PersonUpdate) -> Person:
     return person
 
 
-def deactivate_person(db: Session, person_id: int) -> Person:
+def deactivate_person(db: Session, person_id: UUID) -> Person:
     person = get_person(db, person_id)
     if person.user is not None:
         person.user.active = False
@@ -90,7 +92,7 @@ def deactivate_person(db: Session, person_id: int) -> Person:
     return person
 
 
-def activate_person(db: Session, person_id: int) -> Person:
+def activate_person(db: Session, person_id: UUID) -> Person:
     person = get_person(db, person_id)
     person.active = True
     db.commit()

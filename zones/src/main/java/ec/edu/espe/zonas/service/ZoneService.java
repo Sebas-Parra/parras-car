@@ -17,4 +17,6 @@ public interface ZoneService {
     ZoneResponseDto updateZone(UUID idZone, ZoneRequestDto request);
 
     void changeStatus(UUID idZone);
+
+    void deleteZone(UUID idZone);
 }

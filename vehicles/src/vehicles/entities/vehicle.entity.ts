@@ -15,6 +15,9 @@ export abstract class Vehicle {
   @Column({ unique: true })
   plate!: string;
 
+  @Column({ default: true })
+  active!: boolean;
+
   @Column()
   brand!: string;
 

@@ -12,7 +12,7 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { TypeOfMotorbike } from '../entities/enum/TypeOfMotorbike';
 import { Clasification } from '../entities/enum/Clasification';
 
@@ -78,6 +78,7 @@ class BaseVehicleDto {
   })
   year!: number;
 
+  @Transform(({ value }) => (typeof value === 'string' ? value.toUpperCase() : value))
   @IsNotEmpty()
   @IsEnum(Clasification, {
     message: 'Clasification must be one of: ELECTRIC, HYBRID, GASOLINE, DIESEL',
@@ -121,6 +122,7 @@ class MotorcycleDto extends BaseVehicleDto {
   })
   declare plate: string;
 
+  @Transform(({ value }) => (typeof value === 'string' ? value.toUpperCase() : value))
   @IsNotEmpty()
   @IsEnum(TypeOfMotorbike, {
     message:

@@ -1,228 +1,179 @@
-def test_list_users_requires_admin(client):
+BASE_PERSON = {
+    "phone": "0991234567",
+    "address": "Calle Falsa 123",
+    "nationality": "Ecuatoriana",
+    "password": "Password123",
+}
+
+
+def test_list_users(client):
     response = client.get("/users")
-    assert response.status_code == 401
-
-
-def test_list_users_as_admin(client, admin_headers):
-    response = client.get("/users", headers=admin_headers)
     assert response.status_code == 200
     assert any(user["username"] == "admin" for user in response.json())
 
 
-def test_get_own_user(client, admin_headers):
-    me_response = client.get("/auth/me", headers=admin_headers)
-    person_id = me_response.json()["id"]
-
-    response = client.get(f"/users/{person_id}", headers=admin_headers)
-    assert response.status_code == 200
-    assert response.json()["username"] == "admin"
-
-
-def test_update_user_username(client, admin_headers, role_ids):
+def test_update_user_username(client, role_ids):
     create_response = client.post(
         "/persons",
         json={
-            "cedula": "1313131313",
+            **BASE_PERSON,
+            "cedula": "1710000090",
             "first_name": "Update",
             "middle_name": "Username",
             "last_name": "Username",
             "email": "updateuser@example.com",
-            "password": "Password123",
             "role_ids": [role_ids["estudiante"]],
         },
-        headers=admin_headers,
     )
     person_id = create_response.json()["id"]
 
-    response = client.put(f"/users/{person_id}", json={"username": "newusername"}, headers=admin_headers)
+    response = client.put(f"/users/{person_id}", json={"username": "newusername"})
     assert response.status_code == 200
     assert response.json()["username"] == "newusername"
 
 
-def test_update_user_duplicate_username(client, admin_headers, role_ids):
+def test_update_user_duplicate_username(client, role_ids):
     client.post(
         "/persons",
         json={
+            **BASE_PERSON,
             "cedula": "1414141414",
             "first_name": "First",
             "middle_name": "User",
             "last_name": "User",
             "email": "firstuser@example.com",
-            "password": "Password123",
             "role_ids": [role_ids["estudiante"]],
         },
-        headers=admin_headers,
     )
     create_response = client.post(
         "/persons",
         json={
-            "cedula": "1515151515",
+            **BASE_PERSON,
+            "cedula": "1710000108",
             "first_name": "Second",
             "middle_name": "User",
             "last_name": "User",
             "email": "seconduser@example.com",
-            "password": "Password123",
             "role_ids": [role_ids["estudiante"]],
         },
-        headers=admin_headers,
     )
     person_id = create_response.json()["id"]
 
-    response = client.put(f"/users/{person_id}", json={"username": "firstusername"}, headers=admin_headers)
+    # "fuuser" is the auto-generated username of the first user (First User User)
+    response = client.put(f"/users/{person_id}", json={"username": "fuuser"})
     assert response.status_code == 409
 
 
-def test_activate_user_blocked_when_person_inactive(client, admin_headers, role_ids):
+def test_activate_user_blocked_when_person_inactive(client, role_ids):
     create_response = client.post(
         "/persons",
         json={
-            "cedula": "7777777777",
+            **BASE_PERSON,
+            "cedula": "1710000116",
             "first_name": "Block",
             "middle_name": "Activate",
             "last_name": "Activate",
             "email": "block@example.com",
-            "password": "Password123",
             "role_ids": [role_ids["estudiante"]],
         },
-        headers=admin_headers,
     )
     person_id = create_response.json()["id"]
 
-    client.patch(f"/persons/{person_id}/deactivate", headers=admin_headers)
+    client.patch(f"/persons/{person_id}/deactivate")
 
-    response = client.patch(f"/users/{person_id}/activate", headers=admin_headers)
+    response = client.patch(f"/users/{person_id}/activate")
     assert response.status_code == 409
 
 
-def test_deactivate_and_activate_user(client, admin_headers, role_ids):
+def test_deactivate_and_activate_user(client, role_ids):
     create_response = client.post(
         "/persons",
         json={
+            **BASE_PERSON,
             "cedula": "1616161616",
             "first_name": "Toggle",
             "middle_name": "User",
             "last_name": "User",
             "email": "toggleuser@example.com",
-            "password": "Password123",
             "role_ids": [role_ids["estudiante"]],
         },
-        headers=admin_headers,
     )
     person_id = create_response.json()["id"]
 
-    deactivate_response = client.patch(f"/users/{person_id}/deactivate", headers=admin_headers)
+    deactivate_response = client.patch(f"/users/{person_id}/deactivate")
     assert deactivate_response.status_code == 200
     assert deactivate_response.json()["active"] is False
 
-    activate_response = client.patch(f"/users/{person_id}/activate", headers=admin_headers)
+    activate_response = client.patch(f"/users/{person_id}/activate")
     assert activate_response.status_code == 200
     assert activate_response.json()["active"] is True
 
 
-def test_assign_and_remove_role(client, admin_headers, role_ids):
+def test_assign_and_remove_role(client, role_ids):
     create_response = client.post(
         "/persons",
         json={
-            "cedula": "8888888888",
+            **BASE_PERSON,
+            "cedula": "1710000124",
             "first_name": "Role",
             "middle_name": "Test",
             "last_name": "Test",
             "email": "roletest@example.com",
-            "password": "Password123",
             "role_ids": [role_ids["estudiante"]],
         },
-        headers=admin_headers,
     )
     person_id = create_response.json()["id"]
 
     assign_response = client.post(
         f"/users/{person_id}/roles",
         json={"role_id": role_ids["profesor"]},
-        headers=admin_headers,
     )
     assert assign_response.status_code == 200
     role_names = {role["name"] for role in assign_response.json()["roles"]}
     assert role_names == {"estudiante", "profesor"}
 
-    remove_response = client.delete(
-        f"/users/{person_id}/roles/{role_ids['profesor']}",
-        headers=admin_headers,
-    )
+    remove_response = client.delete(f"/users/{person_id}/roles/{role_ids['profesor']}")
     assert remove_response.status_code == 200
     role_names = {role["name"] for role in remove_response.json()["roles"]}
     assert role_names == {"estudiante"}
 
 
-def test_assign_duplicate_role(client, admin_headers, role_ids):
+def test_assign_duplicate_role(client, role_ids):
     create_response = client.post(
         "/persons",
         json={
-            "cedula": "1717171717",
+            **BASE_PERSON,
+            "cedula": "1710000132",
             "first_name": "Duplicate",
             "middle_name": "Role",
             "last_name": "Role",
             "email": "duprole@example.com",
-            "password": "Password123",
             "role_ids": [role_ids["estudiante"]],
         },
-        headers=admin_headers,
     )
     person_id = create_response.json()["id"]
 
     response = client.post(
         f"/users/{person_id}/roles",
         json={"role_id": role_ids["estudiante"]},
-        headers=admin_headers,
     )
     assert response.status_code == 409
 
 
-def test_remove_role_not_assigned(client, admin_headers, role_ids):
+def test_remove_role_not_assigned(client, role_ids):
     create_response = client.post(
         "/persons",
         json={
+            **BASE_PERSON,
             "cedula": "1818181818",
             "first_name": "NoRole",
             "middle_name": "Remove",
             "last_name": "Remove",
             "email": "norole@example.com",
-            "password": "Password123",
             "role_ids": [role_ids["estudiante"]],
         },
-        headers=admin_headers,
     )
     person_id = create_response.json()["id"]
 
-    response = client.delete(
-        f"/users/{person_id}/roles/{role_ids['profesor']}",
-        headers=admin_headers,
-    )
+    response = client.delete(f"/users/{person_id}/roles/{role_ids['profesor']}")
     assert response.status_code == 404
-
-
-def test_assign_role_requires_admin(client, admin_headers, role_ids):
-    create_response = client.post(
-        "/persons",
-        json={
-            "cedula": "1919191919",
-            "first_name": "NonAdmin",
-            "middle_name": "Assign",
-            "last_name": "Assign",
-            "email": "nonadminassign@example.com",
-            "password": "Password123",
-            "role_ids": [role_ids["estudiante"]],
-        },
-        headers=admin_headers,
-    )
-    person_id = create_response.json()["id"]
-
-    login_response = client.post("/auth/login", data={"username": "naassign", "password": "Password123"})
-    self_token = login_response.json()["access_token"]
-    self_headers = {"Authorization": f"Bearer {self_token}"}
-
-    response = client.post(
-        f"/users/{person_id}/roles",
-        json={"role_id": role_ids["profesor"]},
-        headers=self_headers,
-    )
-    assert response.status_code == 403

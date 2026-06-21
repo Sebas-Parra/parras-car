@@ -7,8 +7,17 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
+import { Car } from './entities/car.entity';
+import { Motorcycle } from './entities/motorcycle.entity';
+import { PickupTruck } from './entities/pickupTrucks.entity';
 import { Vehicle } from './entities/vehicle.entity';
 import { FactoryVehiculos } from './factory/factory-vehicle';
+
+const TIPO_ENTITY_MAP: Record<string, new (...args: unknown[]) => Vehicle> = {
+  car: Car,
+  motocicleta: Motorcycle,
+  pickupTruck: PickupTruck,
+};
 
 @Injectable()
 export class VehiclesService {
@@ -31,7 +40,7 @@ export class VehiclesService {
   }
 
   findAll(): Promise<Vehicle[]> {
-    return this.repositoryVehicle.find();
+    return this.repositoryVehicle.find({ where: { active: true } });
   }
 
   async findOne(id: string): Promise<Vehicle> {
@@ -42,11 +51,18 @@ export class VehiclesService {
     return vehicle;
   }
 
-  async update(
-    id: string,
-    updateVehicleDto: UpdateVehicleDto,
-  ): Promise<Vehicle> {
+  async update(id: string, updateVehicleDto: UpdateVehicleDto): Promise<Vehicle> {
     const vehicle = await this.findOne(id);
+    if (!vehicle.active) {
+      throw new ConflictException(
+        `No se puede actualizar un vehículo inactivo`,
+      );
+    }
+    if (!(vehicle instanceof TIPO_ENTITY_MAP[updateVehicleDto.tipo])) {
+      throw new ConflictException(
+        `No se puede cambiar el tipo de vehículo`,
+      );
+    }
     const newPlate = updateVehicleDto.datos?.plate;
     if (newPlate && newPlate !== vehicle.plate) {
       const plateConflict = await this.repositoryVehicle.findOne({
@@ -64,6 +80,16 @@ export class VehiclesService {
 
   async remove(id: string): Promise<void> {
     const vehicle = await this.findOne(id);
-    await this.repositoryVehicle.remove(vehicle);
+    if (!vehicle.active) {
+      throw new ConflictException(`El vehículo ya está inactivo`);
+    }
+    vehicle.active = false;
+    await this.repositoryVehicle.save(vehicle);
+  }
+
+  async activate(id: string): Promise<Vehicle> {
+    const vehicle = await this.findOne(id);
+    vehicle.active = true;
+    return this.repositoryVehicle.save(vehicle);
   }
 }

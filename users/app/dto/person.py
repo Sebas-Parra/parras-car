@@ -19,13 +19,31 @@ def _validate_name(v: str, label: str) -> str:
     return v.strip()
 
 
+def _validate_ecuadorian_cedula(v: str) -> str:
+    province = int(v[:2])
+    if not (1 <= province <= 24 or province == 30):
+        raise ValueError("La cédula no corresponde a una provincia ecuatoriana válida")
+    if int(v[2]) > 5:
+        raise ValueError("La cédula no es válida para una persona natural")
+    coefficients = [2, 1, 2, 1, 2, 1, 2, 1, 2]
+    total = 0
+    for i in range(9):
+        val = int(v[i]) * coefficients[i]
+        if val >= 10:
+            val -= 9
+        total += val
+    if (10 - total % 10) % 10 != int(v[9]):
+        raise ValueError("El dígito verificador de la cédula no es válido")
+    return v
+
+
 class PersonBase(BaseModel):
     cedula: str = Field(pattern=r"^\d{10}$")
     first_name: str = NAME_FIELD
     middle_name: str | None = OPTIONAL_NAME_FIELD
     last_name: str = NAME_FIELD
     email: EmailStr
-    phone: str | None = None
+    phone: str | None = Field(default=None, max_length=20)
     address: str | None = None
     nationality: str | None = None
 
@@ -46,13 +64,24 @@ class PersonBase(BaseModel):
             return v
         return _validate_name(v, "El segundo nombre")
 
+    @field_validator("phone", mode="before")
+    @classmethod
+    def validate_phone(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        if not v.strip():
+            raise ValueError("El teléfono no puede contener solo espacios")
+        if not _PHONE_REGEX.match(v.strip()):
+            raise ValueError("El teléfono solo puede contener dígitos, espacios y los caracteres: + - ( )")
+        return v.strip()
+
 
 class PersonUpdate(BaseModel):
     first_name: str | None = OPTIONAL_NAME_FIELD
     middle_name: str | None = OPTIONAL_NAME_FIELD
     last_name: str | None = OPTIONAL_NAME_FIELD
     email: EmailStr | None = None
-    phone: str | None = None
+    phone: str | None = Field(default=None, max_length=20)
     address: str | None = None
     nationality: str | None = None
 

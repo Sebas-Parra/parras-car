@@ -38,8 +38,20 @@ def _validate_ecuadorian_cedula(v: str) -> str:
     return v
 
 
+def _validate_ecuadorian_id(v: str) -> str:
+    """Acepta una cédula (10 dígitos) o un RUC de persona natural (13 dígitos).
+
+    """
+    if not v.isdigit() or len(v) not in (10, 13):
+        raise ValueError("El identificador debe ser una cédula (10 dígitos) o un RUC (13 dígitos)")
+    _validate_ecuadorian_cedula(v[:10])
+    if len(v) == 13 and v[10:] == "000":
+        raise ValueError("El RUC debe terminar en un código de establecimiento válido (001-999)")
+    return v
+
+
 class PersonBase(BaseModel):
-    cedula: str = Field(pattern=r"^\d{10}$")
+    cedula: str = Field(pattern=r"^\d{10}(\d{3})?$")
     first_name: str = NAME_FIELD
     middle_name: str | None = OPTIONAL_NAME_FIELD
     last_name: str = NAME_FIELD

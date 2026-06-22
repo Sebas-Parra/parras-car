@@ -10,7 +10,7 @@ class Person(Base):
     __tablename__ = "persons"
 
     id = Column(Uuid, primary_key=True, default=uuid.uuid4)
-    cedula = Column(String(10), unique=True, nullable=False, index=True)
+    cedula = Column(String(13), unique=True, nullable=False, index=True)
     first_name = Column(String(50), nullable=False)
     middle_name = Column(String(50), nullable=True)
     last_name = Column(String(50), nullable=False)

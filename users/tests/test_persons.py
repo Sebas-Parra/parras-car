@@ -106,6 +106,39 @@ def test_create_person_rejects_invalid_cedula_algorithm(client, role_ids):
     assert response.status_code == 422
 
 
+def test_create_person_accepts_valid_ruc(client, role_ids):
+    response = client.post(
+        "/persons",
+        json={
+            **BASE_PERSON,
+            "cedula": "1710000017001",  # cédula válida + establecimiento 001
+            "first_name": "Ruc",
+            "middle_name": "Natural",
+            "last_name": "Person",
+            "email": "ruc@example.com",
+            "role_ids": [role_ids["estudiante"]],
+        },
+    )
+    assert response.status_code == 201
+    assert response.json()["cedula"] == "1710000017001"
+
+
+def test_create_person_rejects_ruc_with_invalid_cedula(client, role_ids):
+    response = client.post(
+        "/persons",
+        json={
+            **BASE_PERSON,
+            "cedula": "1714863161001",  # dígito verificador de la cédula incorrecto
+            "first_name": "Bad",
+            "middle_name": "Ruc",
+            "last_name": "Person",
+            "email": "badruc@example.com",
+            "role_ids": [role_ids["estudiante"]],
+        },
+    )
+    assert response.status_code == 422
+
+
 def test_create_person_rejects_invalid_cedula_province(client, role_ids):
     response = client.post(
         "/persons",

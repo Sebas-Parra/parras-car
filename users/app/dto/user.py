@@ -3,7 +3,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.dto.person import PersonBase, PersonRead, _NAME_REGEX, _ADDRESS_REGEX, _validate_name, _validate_ecuadorian_cedula
+from app.dto.person import PersonBase, PersonRead, _NAME_REGEX, _ADDRESS_REGEX, _validate_name, _validate_ecuadorian_id
 from app.dto.role import RoleRead
 
 
@@ -18,7 +18,7 @@ class UserCreate(PersonBase):
     @field_validator("cedula", mode="after")
     @classmethod
     def validate_cedula(cls, v: str) -> str:
-        return _validate_ecuadorian_cedula(v)
+        return _validate_ecuadorian_id(v)
 
     @field_validator("password", mode="before")
     @classmethod

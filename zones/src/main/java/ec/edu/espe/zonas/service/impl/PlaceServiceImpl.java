@@ -42,6 +42,11 @@ public class PlaceServiceImpl implements PlaceService {
         Zone objZona = zoneRepository.findById(request.getIdZone())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Zona no encontrada"));
 
+        if (objZona.getStatus() == 0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "No se puede crear un lugar en una zona inactiva");
+        }
+
         long currentPlaces = placeRepository.countByZone(objZona);
         if (currentPlaces >= objZona.getCapacity()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
@@ -88,6 +93,10 @@ public class PlaceServiceImpl implements PlaceService {
         if (request.getIdZone() != null && !request.getIdZone().equals(existing.getZone().getId())) {
             Zone newZone = zoneRepository.findById(request.getIdZone())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Zona no encontrada"));
+            if (newZone.getStatus() == 0) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "No se puede mover un lugar a una zona inactiva");
+            }
             long currentPlaces = placeRepository.countByZone(newZone);
             if (currentPlaces >= newZone.getCapacity()) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT,

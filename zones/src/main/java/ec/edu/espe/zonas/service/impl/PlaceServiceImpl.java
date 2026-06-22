@@ -48,7 +48,12 @@ public class PlaceServiceImpl implements PlaceService {
                 "La zona ha alcanzado su capacidad máxima (" + objZona.getCapacity() + ")");
         }
 
-        String generatedCode = generatePlaceCode(objZona, currentPlaces);
+        long seq = currentPlaces + 1;
+        String generatedCode = generatePlaceCode(objZona, seq);
+        while (placeRepository.existsByCode(generatedCode)) {
+            seq++;
+            generatedCode = generatePlaceCode(objZona, seq);
+        }
 
         Place newPlace = mappers.toEntityPlace(request);
         newPlace.setCode(generatedCode);
@@ -139,11 +144,11 @@ public class PlaceServiceImpl implements PlaceService {
             .toList();
     }
 
-    private String generatePlaceCode(Zone zone, long currentPlaces) {
+    private String generatePlaceCode(Zone zone, long seq) {
         String typePrefix = zone.getType().name()
             .substring(0, Math.min(2, zone.getType().name().length()))
             .toUpperCase();
         String zoneSeq = zone.getCode().substring(zone.getCode().length() - 2);
-        return typePrefix + zoneSeq + "-" + String.format("%02d", currentPlaces + 1);
+        return typePrefix + zoneSeq + "-" + String.format("%02d", seq);
     }
 }

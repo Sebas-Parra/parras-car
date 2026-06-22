@@ -23,7 +23,7 @@ public class PlaceRequestDto {
     @NotNull(message = "El ID de la zona es obligatorio")
     private UUID idZone;
 
-    @Size(max = 255, message = "La descripción no puede superar los 255 caracteres")
+    @Size(max = 31, message = "La descripción no puede superar los 31 caracteres")
     @Pattern(regexp = "^$|^.*\\S.*$", message = "La descripción no puede contener solo espacios")
     @Pattern(regexp = "^[^<>]*$", message = "La descripción no puede contener caracteres HTML (< o >)")
     private String description;

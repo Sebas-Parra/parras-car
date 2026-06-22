@@ -32,7 +32,7 @@ export class VehiclesService {
   }
 
   findAll(): Promise<Vehicle[]> {
-    return this.repositoryVehicle.find({ where: { active: true } });
+    return this.repositoryVehicle.find();
   }
 
   async findOne(id: string): Promise<Vehicle> {

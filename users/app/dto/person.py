@@ -48,6 +48,11 @@ class PersonBase(BaseModel):
     address: str | None = None
     nationality: str | None = None
 
+    @field_validator("email", mode="after")
+    @classmethod
+    def normalize_email(cls, v: str) -> str:
+        return v.lower()
+
     @field_validator("first_name", mode="before")
     @classmethod
     def validate_first_name(cls, v: str) -> str:
@@ -85,6 +90,11 @@ class PersonUpdate(BaseModel):
     phone: str | None = Field(default=None, max_length=20)
     address: str | None = None
     nationality: str | None = None
+
+    @field_validator("email", mode="after")
+    @classmethod
+    def normalize_email(cls, v: str | None) -> str | None:
+        return v.lower() if v is not None else v
 
     @field_validator("first_name", mode="before")
     @classmethod

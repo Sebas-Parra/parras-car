@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.entities.role import Role
@@ -14,7 +15,7 @@ def get_by_ids(db: Session, role_ids: list[UUID]) -> list[Role]:
 
 
 def get_by_name(db: Session, name: str) -> Role | None:
-    return db.query(Role).filter(Role.name == name).first()
+    return db.query(Role).filter(func.lower(Role.name) == name.lower()).first()
 
 
 def list_all(db: Session) -> list[Role]:

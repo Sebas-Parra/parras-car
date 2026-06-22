@@ -16,7 +16,17 @@ import { Transform, Type } from 'class-transformer';
 import { TypeOfMotorbike } from '../entities/enum/TypeOfMotorbike';
 import { Clasification } from '../entities/enum/Clasification';
 
-class BaseVehicleDto {
+export const TIPOS_VEHICULO = ['car', 'motocicleta', 'pickupTruck'] as const;
+
+export function normalizeTipoVehiculo(value: unknown): unknown {
+  if (typeof value !== 'string') return value;
+  const match = TIPOS_VEHICULO.find(
+    (tipo) => tipo.toLowerCase() === value.toLowerCase(),
+  );
+  return match ?? value;
+}
+
+export class BaseVehicleDto {
   @IsString()
   @IsNotEmpty()
   @Matches(/^[A-Z]{3}-\d{4}$/, {
@@ -42,15 +52,15 @@ class BaseVehicleDto {
   @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
   @IsNotEmpty()
-  @MinLength(1, {
-    message: 'Model must be at least 1 character long',
+  @MinLength(2, {
+    message: 'Model must be at least 2 characters long',
   })
-  @MaxLength(150, {
-    message: 'Model must be at most 150 characters long',
+  @MaxLength(50, {
+    message: 'Model must be at most 50 characters long',
   })
   @Matches(/^[\p{L}\p{N}\s-]+$/u, {
     message:
-      'Model can only contain letters, numbers, spaces, and hyphens (e.g. CX-5, F-150, 3)',
+      'Model can only contain letters, numbers, spaces, and hyphens (e.g. CX-5, F-150, Corolla)',
   })
   model!: string;
 
@@ -89,7 +99,7 @@ class BaseVehicleDto {
   clasification!: Clasification;
 }
 
-class CarDto extends BaseVehicleDto {
+export class CarDto extends BaseVehicleDto {
   @IsNotEmpty()
   @IsInt({
     message: 'Number of doors must be an integer',
@@ -118,7 +128,7 @@ class CarDto extends BaseVehicleDto {
   trunkCapacity!: number;
 }
 
-class MotorcycleDto extends BaseVehicleDto {
+export class MotorcycleDto extends BaseVehicleDto {
   @IsNotEmpty()
   @Matches(/^[A-Z]{2}-\d{3}[A-Z]$/, {
     message: 'Plate must be in the format AB-123C',
@@ -134,7 +144,7 @@ class MotorcycleDto extends BaseVehicleDto {
   typeOfMotorbike!: TypeOfMotorbike;
 }
 
-class PickupTruckDto extends BaseVehicleDto {
+export class PickupTruckDto extends BaseVehicleDto {
   @IsNumber(
     {},
     {
@@ -166,7 +176,8 @@ class PickupTruckDto extends BaseVehicleDto {
 }
 
 export class CreateVehicleDto {
-  @IsIn(['car', 'motocicleta', 'pickupTruck'])
+  @Transform(({ value }) => normalizeTipoVehiculo(value))
+  @IsIn(TIPOS_VEHICULO)
   tipo!: string;
 
   @ValidateNested()
@@ -174,7 +185,7 @@ export class CreateVehicleDto {
     const object = opts?.object as CreateVehicleDto;
     if (!object) return BaseVehicleDto;
 
-    switch (object.tipo) {
+    switch (normalizeTipoVehiculo(object.tipo)) {
       case 'car':
         return CarDto;
       case 'motocicleta':

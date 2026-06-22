@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -21,12 +23,19 @@ import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationErrors(MethodArgumentNotValidException ex) {
-        List<String> errors = ex.getBindingResult()
+        List<Map<String, String>> errors = ex.getBindingResult()
             .getFieldErrors()
             .stream()
-            .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
+            .map(fe -> {
+                Map<String, String> fieldError = new LinkedHashMap<>();
+                fieldError.put("field", fe.getField());
+                fieldError.put("message", fe.getDefaultMessage());
+                return fieldError;
+            })
             .toList();
 
         Map<String, Object> body = new LinkedHashMap<>();
@@ -83,17 +92,19 @@ public class GlobalExceptionHandler {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", ex.getStatusCode().value());
-        body.put("error", ex.getReason());
+        body.put("error", ex.getReason() != null ? ex.getReason() : "Ocurrió un error al procesar la solicitud");
 
         return ResponseEntity.status(ex.getStatusCode()).body(body);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneric(Exception ex) {
+        log.error("Error no controlado: {}", ex.getMessage(), ex);
+
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
-        body.put("error", ex.getClass().getSimpleName() + ": " + ex.getMessage());
+        body.put("error", "Ha ocurrido un error inesperado. Por favor intente nuevamente más tarde");
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
     }

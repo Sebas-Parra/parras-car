@@ -9,7 +9,7 @@ export class PickupTruck extends Vehicle {
   @Column()
   cab!: string;
 
-  getType(): string {
-    return 'PickupTruck';
+  get tipo(): string {
+    return 'pickupTruck';
   }
 }

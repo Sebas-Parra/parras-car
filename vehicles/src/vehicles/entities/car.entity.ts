@@ -7,7 +7,7 @@ export class Car extends Vehicle {
   numberOfDoors!: number;
   @Column()
   trunkCapacity!: number;
-  getType(): string {
-    return 'Car';
+  get tipo(): string {
+    return 'car';
   }
 }

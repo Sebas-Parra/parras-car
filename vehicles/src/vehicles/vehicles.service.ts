@@ -4,20 +4,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryFailedError, Repository } from 'typeorm';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
-import { Car } from './entities/car.entity';
-import { Motorcycle } from './entities/motorcycle.entity';
-import { PickupTruck } from './entities/pickupTrucks.entity';
 import { Vehicle } from './entities/vehicle.entity';
 import { FactoryVehiculos } from './factory/factory-vehicle';
 
-const TIPO_ENTITY_MAP: Record<string, new (...args: unknown[]) => Vehicle> = {
-  car: Car,
-  motocicleta: Motorcycle,
-  pickupTruck: PickupTruck,
-};
 
 @Injectable()
 export class VehiclesService {
@@ -54,14 +46,10 @@ export class VehiclesService {
   async update(id: string, updateVehicleDto: UpdateVehicleDto): Promise<Vehicle> {
     const vehicle = await this.findOne(id);
     if (!vehicle.active) {
-      throw new ConflictException(
-        `No se puede actualizar un vehículo inactivo`,
-      );
+      throw new ConflictException(`No se puede actualizar un vehículo inactivo`);
     }
-    if (!(vehicle instanceof TIPO_ENTITY_MAP[updateVehicleDto.tipo])) {
-      throw new ConflictException(
-        `No se puede cambiar el tipo de vehículo`,
-      );
+    if (vehicle.tipo !== updateVehicleDto.tipo) {
+      throw new ConflictException(`No se puede cambiar el tipo de vehículo`);
     }
     const newPlate = updateVehicleDto.datos?.plate;
     if (newPlate && newPlate !== vehicle.plate) {
@@ -75,7 +63,14 @@ export class VehiclesService {
       }
     }
     Object.assign(vehicle, updateVehicleDto.datos ?? {});
-    return this.repositoryVehicle.save(vehicle);
+    try {
+      return await this.repositoryVehicle.manager.save(vehicle);
+    } catch (error) {
+      if (error instanceof QueryFailedError) {
+        throw new ConflictException(`Error al guardar el vehículo: ${(error as QueryFailedError).message}`);
+      }
+      throw error;
+    }
   }
 
   async remove(id: string): Promise<void> {

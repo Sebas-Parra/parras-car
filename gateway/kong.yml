@@ -1,13 +1,27 @@
 _format_version: "3.0"
 
+consumers:
+  - username: parras-app
+    jwt_secrets:
+      - key: parras-app-key
+        algorithm: HS256
+        secret: 6f2f368a76edefcc1859716acadb5cd68ac14bd4186334c03ba341da97dff77c
+
 services:
   - name: users-service
     url: http://users:8000
     routes:
+      - name: users-health-route
+        paths:
+          - /users/health
+        strip_path: true
+
       - name: users-route
         paths:
           - /users
         strip_path: true
+        plugins:
+          - name: jwt
 
   - name: vehicles-service
     url: http://vehicles:3000
@@ -16,6 +30,8 @@ services:
         paths:
           - /vehicles
         strip_path: true
+        plugins:
+          - name: jwt
 
   - name: zones-service
     url: http://zones:8080
@@ -24,6 +40,8 @@ services:
         paths:
           - /zones
         strip_path: true
+        plugins:
+          - name: jwt
 
   - name: swagger-ui-service
     url: http://swagger-ui:8080

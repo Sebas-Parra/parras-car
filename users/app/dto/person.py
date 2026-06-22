@@ -9,6 +9,7 @@ OPTIONAL_NAME_FIELD = Field(default=None, min_length=2, max_length=50)
 
 _NAME_REGEX = re.compile(r"^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ\s]+$")
 _PHONE_REGEX = re.compile(r"^[\d\s\+\-\(\)]+$")
+_ADDRESS_REGEX = re.compile(r"^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ0-9\s,.\-#/()]+$")
 
 
 def _validate_name(v: str, label: str) -> str:
@@ -127,9 +128,14 @@ class PersonUpdate(BaseModel):
     def validate_address(cls, v: str | None) -> str | None:
         if v is None:
             return v
-        if not v.strip():
+        v = v.strip()
+        if not v:
             raise ValueError("La dirección no puede contener solo espacios")
-        return v.strip()
+        if not _ADDRESS_REGEX.match(v):
+            raise ValueError(
+                "La dirección solo puede contener letras, números, espacios y los caracteres: , . - # / ( )"
+            )
+        return v
 
 
 class PersonRead(PersonBase):

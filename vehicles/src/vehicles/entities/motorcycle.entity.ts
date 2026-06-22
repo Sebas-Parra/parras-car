@@ -6,7 +6,7 @@ import { Vehicle } from './vehicle.entity';
 export class Motorcycle extends Vehicle {
   @Column({ type: 'enum', enum: TypeOfMotorbike })
   typeOfMotorbike!: TypeOfMotorbike;
-  getType(): string {
-    return 'Motorcycle';
+  get tipo(): string {
+    return 'motocicleta';
   }
 }

@@ -24,6 +24,7 @@ class BaseVehicleDto {
   })
   plate!: string;
 
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
   @IsNotEmpty()
   @MinLength(2, {
@@ -38,6 +39,7 @@ class BaseVehicleDto {
   })
   brand!: string;
 
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
   @IsNotEmpty()
   @MinLength(1, {
@@ -52,6 +54,7 @@ class BaseVehicleDto {
   })
   model!: string;
 
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
   @IsNotEmpty()
   @MinLength(2, {
@@ -153,6 +156,7 @@ class PickupTruckDto extends BaseVehicleDto {
   })
   payloadCapacity!: number;
 
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsNotEmpty()
   @Matches(/^[\p{L}\s-]+$/u, {
     message:

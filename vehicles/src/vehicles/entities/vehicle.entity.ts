@@ -33,5 +33,11 @@ export abstract class Vehicle {
   @Column({ type: 'enum', enum: Clasification })
   clasification!: Clasification;
 
-  abstract getType(): string;
+  abstract get tipo(): string;
+
+  toJSON(): Record<string, unknown> {
+    const obj = Object.assign({}, this) as Record<string, unknown>;
+    obj['tipo'] = this.tipo;
+    return obj;
+  }
 }

@@ -14,13 +14,14 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addConverterFactory(new CaseInsensitiveEnumConverterFactory());
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
     private static final class CaseInsensitiveEnumConverterFactory
             implements ConverterFactory<String, Enum<?>> {
 
         @Override
+        @SuppressWarnings({"unchecked", "rawtypes"})
         public <T extends Enum<?>> Converter<String, T> getConverter(Class<T> targetType) {
-            return source -> (T) Enum.valueOf((Class<Enum>) targetType, source.trim().toUpperCase());
+            Class rawType = targetType;
+            return source -> (T) Enum.valueOf(rawType, source.trim().toUpperCase());
         }
     }
 }

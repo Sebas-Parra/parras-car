@@ -3,7 +3,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.dto.person import PersonBase, PersonRead, _NAME_REGEX, _validate_name, _validate_ecuadorian_cedula
+from app.dto.person import PersonBase, PersonRead, _NAME_REGEX, _ADDRESS_REGEX, _validate_name, _validate_ecuadorian_cedula
 from app.dto.role import RoleRead
 
 
@@ -44,9 +44,14 @@ class UserCreate(PersonBase):
     @field_validator("address", mode="before")
     @classmethod
     def validate_address(cls, v: str) -> str:
-        if not v.strip():
+        v = v.strip()
+        if not v:
             raise ValueError("La dirección no puede contener solo espacios")
-        return v.strip()
+        if not _ADDRESS_REGEX.match(v):
+            raise ValueError(
+                "La dirección solo puede contener letras, números, espacios y los caracteres: , . - # / ( )"
+            )
+        return v
 
 
 class UserUpdate(BaseModel):

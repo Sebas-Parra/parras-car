@@ -9,6 +9,11 @@ class AssignmentCreate(BaseModel):
     vehicle_id: UUID
 
 
+class AssignmentTransfer(BaseModel):
+    from_user_id: UUID
+    to_user_id: UUID
+
+
 class AssignmentRead(BaseModel):
     user_id: UUID
     vehicle_id: UUID

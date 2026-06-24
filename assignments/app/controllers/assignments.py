@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.core.deps import get_db
-from app.dto.assignment import AssignmentCreate, AssignmentRead, FleetResponse
+from app.dto.assignment import AssignmentCreate, AssignmentRead, AssignmentTransfer, FleetResponse
 from app.dto.audit import AuditRead
 from app.services.assignment_service import AssignmentService
 from app.services.assignment_validator import AssignmentValidator
@@ -34,6 +34,28 @@ def delete_assignment(
     svc: AssignmentService = Depends(get_assignment_service),
 ):
     return svc.delete(db, user_id, vehicle_id)
+
+
+@router.patch("/{vehicle_id}/transfer", response_model=AssignmentRead)
+def transfer_assignment(
+    vehicle_id: UUID,
+    data: AssignmentTransfer,
+    db: Session = Depends(get_db),
+    svc: AssignmentService = Depends(get_assignment_service),
+):
+    return svc.transfer(db, vehicle_id, data)
+
+
+@router.get("/by-vehicle/{vehicle_id}", response_model=AssignmentRead)
+def get_active_by_vehicle(
+    vehicle_id: UUID,
+    db: Session = Depends(get_db),
+    svc: AssignmentService = Depends(get_assignment_service),
+):
+    """Returns the active assignment for a vehicle.
+    404 means the vehicle has no active owner and is safe to delete.
+    """
+    return svc.get_active_by_vehicle(db, vehicle_id)
 
 
 @router.get("/audit", response_model=list[AuditRead])

@@ -45,6 +45,13 @@ class TestCreateAssignment:
         assert data["vehicle_id"] == VEHICLE_ID
         assert data["active"] is True
 
+    def test_create_assignment_invalid_uuid(self, client):
+        response = client.post(
+            "/assignments",
+            json={"user_id": "not-a-uuid", "vehicle_id": VEHICLE_ID},
+        )
+        assert response.status_code == 422
+
     def test_create_assignment_user_not_found(self, client):
         with (
             patch("app.services.vehicles_client.get_user", return_value=None),
@@ -102,6 +109,19 @@ class TestCreateAssignment:
         assert "already assigned to another active owner" in response.json()["detail"]
 
 
+    def test_create_assignment_reactivates_inactive_relation(self, client):
+        with (
+            patch("app.services.vehicles_client.get_user", return_value=MOCK_USER),
+            patch("app.services.vehicles_client.get_vehicle", return_value=MOCK_VEHICLE),
+        ):
+            client.post("/assignments", json={"user_id": USER_ID, "vehicle_id": VEHICLE_ID})
+            client.delete(f"/assignments/{USER_ID}/{VEHICLE_ID}")
+            response = client.post("/assignments", json={"user_id": USER_ID, "vehicle_id": VEHICLE_ID})
+
+        assert response.status_code == 201
+        assert response.json()["active"] is True
+
+
 class TestDeleteAssignment:
     def test_delete_assignment_success(self, client):
         with (
@@ -115,6 +135,17 @@ class TestDeleteAssignment:
         assert response.json()["active"] is False
 
     def test_delete_nonexistent_assignment(self, client):
+        response = client.delete(f"/assignments/{USER_ID}/{VEHICLE_ID}")
+        assert response.status_code == 404
+
+    def test_delete_inactive_assignment_returns_not_found(self, client):
+        with (
+            patch("app.services.vehicles_client.get_user", return_value=MOCK_USER),
+            patch("app.services.vehicles_client.get_vehicle", return_value=MOCK_VEHICLE),
+        ):
+            client.post("/assignments", json={"user_id": USER_ID, "vehicle_id": VEHICLE_ID})
+            client.delete(f"/assignments/{USER_ID}/{VEHICLE_ID}")
+
         response = client.delete(f"/assignments/{USER_ID}/{VEHICLE_ID}")
         assert response.status_code == 404
 
@@ -164,6 +195,23 @@ class TestAudit:
         audits = response.json()
         actions = [a["action"] for a in audits]
         assert "MODIFICACION" in actions
+
+
+    def test_assignment_audit_is_filtered_by_user_and_vehicle(self, client):
+        with (
+            patch("app.services.vehicles_client.get_user", return_value=MOCK_USER),
+            patch("app.services.vehicles_client.get_vehicle", side_effect=[MOCK_VEHICLE, MOCK_VEHICLE_2]),
+        ):
+            client.post("/assignments", json={"user_id": USER_ID, "vehicle_id": VEHICLE_ID})
+            client.post("/assignments", json={"user_id": USER_ID, "vehicle_id": VEHICLE_ID_2})
+
+        response = client.get(f"/assignments/{USER_ID}/{VEHICLE_ID}/audit")
+
+        assert response.status_code == 200
+        audits = response.json()
+        assert len(audits) == 1
+        assert audits[0]["user_id"] == USER_ID
+        assert audits[0]["vehicle_id"] == VEHICLE_ID
 
 
 class TestTransfer:
@@ -379,6 +427,35 @@ class TestFleet:
         assert data["total"] == 1
         assert data["vehicles"][0]["plate"] == "ABC123"
         assert data["vehicles"][0]["clasification"] == "GASOLINE"
+
+    def test_get_fleet_uses_type_when_tipo_is_missing(self, client):
+        vehicle = {**MOCK_VEHICLE, "tipo": None, "type": "car"}
+        with (
+            patch("app.services.vehicles_client.get_user", return_value=MOCK_USER),
+            patch("app.services.vehicles_client.get_vehicle", return_value=vehicle),
+        ):
+            client.post("/assignments", json={"user_id": USER_ID, "vehicle_id": VEHICLE_ID})
+
+        with patch("app.services.vehicles_client.get_vehicle", return_value=vehicle):
+            response = client.get(f"/assignments/{USER_ID}/fleet")
+
+        assert response.status_code == 200
+        assert response.json()["vehicles"][0]["tipo"] == "car"
+
+    def test_get_fleet_skips_vehicle_details_when_vehicle_service_has_no_data(self, client):
+        with (
+            patch("app.services.vehicles_client.get_user", return_value=MOCK_USER),
+            patch("app.services.vehicles_client.get_vehicle", return_value=MOCK_VEHICLE),
+        ):
+            client.post("/assignments", json={"user_id": USER_ID, "vehicle_id": VEHICLE_ID})
+
+        with patch("app.services.vehicles_client.get_vehicle", return_value=None):
+            response = client.get(f"/assignments/{USER_ID}/fleet")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total"] == 0
+        assert data["vehicles"] == []
 
     def test_get_fleet_empty(self, client):
         response = client.get(f"/assignments/{USER_ID}/fleet")

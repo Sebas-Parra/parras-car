@@ -48,7 +48,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: zonas_db
     ports:
-      - '5432:5432'
+      - '5436:5432'
     volumes:
       - zones_db_data:/var/lib/postgresql/data
     healthcheck:

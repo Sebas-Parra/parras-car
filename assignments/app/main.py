@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from app.controllers import assignments
+from app.db import listeners  # noqa: F401 — registers SQLAlchemy audit interceptors
 
 app = FastAPI(
     title="Assignments & Traceability Service",

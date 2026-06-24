@@ -5,6 +5,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.core.deps import get_db
+from app.db import listeners  # noqa: F401 — registers audit interceptors
 from app.db.base import Base
 from app.entities import vehicle_assignment, assignment_audit  # noqa: F401
 from app.main import app

@@ -1,0 +1,1616 @@
+{
+  "info": {
+    "name": "Parras Car API",
+    "_postman_id": "parras-car-collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:9000"
+    },
+    {
+      "key": "token",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJwYXJyYXMtYXBwLWtleSIsImV4cCI6OTk5OTk5OTk5OX0.u7vdo0i7V3Ap5Y04ZaryLpTfbnntudXwOxPhYVTSoDk"
+    },
+    {
+      "key": "role_id_estudiante",
+      "value": "PEGAR_ID_AQUI"
+    },
+    {
+      "key": "role_id_profesor",
+      "value": "PEGAR_ID_AQUI"
+    },
+    {
+      "key": "role_id_admin",
+      "value": "PEGAR_ID_AQUI"
+    },
+    {
+      "key": "person_id",
+      "value": "PEGAR_ID_AQUI"
+    },
+    {
+      "key": "vehicle_id",
+      "value": "PEGAR_ID_AQUI"
+    },
+    {
+      "key": "zone_id",
+      "value": "PEGAR_ID_AQUI"
+    },
+    {
+      "key": "place_id",
+      "value": "PEGAR_ID_AQUI"
+    },
+    {
+      "key": "user_id",
+      "value": "PEGAR_ID_AQUI"
+    }
+  ],
+  "item": [
+    {
+      "name": "00 - Health & Auth",
+      "item": [
+        {
+          "name": "Health check (sin token - público)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/users/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "health"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Sin token → 401",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/users/persons",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "persons"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Con token → 200",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/users/persons",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "persons"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "01 - Users / Roles",
+      "item": [
+        {
+          "name": "Listar roles (copiar IDs a variables)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/users/roles",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "roles"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obtener rol por ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/users/roles/{{role_id_estudiante}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "roles",
+                "{{role_id_estudiante}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear rol",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/roles",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "roles"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"supervisor\",\n  \"description\": \"Rol de supervisión general\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Actualizar rol",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/roles/{{role_id_estudiante}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "roles",
+                "{{role_id_estudiante}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"estudiante\",\n  \"description\": \"Rol para estudiantes del sistema\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Eliminar rol",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/users/roles/{{role_id_estudiante}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "roles",
+                "{{role_id_estudiante}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Users / Persons",
+      "item": [
+        {
+          "name": "Crear persona 1 (estudiante)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/persons",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "persons"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cedula\": \"1710000017\",\n  \"first_name\": \"Juan\",\n  \"middle_name\": \"Carlos\",\n  \"last_name\": \"Perez\",\n  \"email\": \"jcperez@gmail.com\",\n  \"phone\": \"0991234567\",\n  \"address\": \"Av. República 123, Quito\",\n  \"nationality\": \"Ecuatoriana\",\n  \"password\": \"Password123\",\n  \"role_ids\": [\"{{role_id_estudiante}}\"]\n}"
+            }
+          }
+        },
+        {
+          "name": "Crear persona 2 (dos roles)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/persons",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "persons"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cedula\": \"1710000025\",\n  \"first_name\": \"Maria\",\n  \"middle_name\": \"Elena\",\n  \"last_name\": \"Torres\",\n  \"email\": \"metorres@gmail.com\",\n  \"phone\": \"+593 99 765 4321\",\n  \"address\": \"Calle Sucre 456, Quito\",\n  \"nationality\": \"Ecuatoriana\",\n  \"password\": \"Segura456!\",\n  \"role_ids\": [\"{{role_id_estudiante}}\", \"{{role_id_profesor}}\"]\n}"
+            }
+          }
+        },
+        {
+          "name": "Listar personas",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/users/persons",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "persons"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obtener persona por ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/users/persons/{{person_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "persons",
+                "{{person_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Actualizar persona (cualquier campo es opcional)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/persons/{{person_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "persons",
+                "{{person_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Juan\",\n  \"middle_name\": \"Carlos\",\n  \"last_name\": \"Perez\",\n  \"email\": \"nuevo@gmail.com\",\n  \"phone\": \"+593 99 123 4567\",\n  \"address\": \"Av. Amazonas 456, Quito\",\n  \"nationality\": \"Ecuatoriana\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Desactivar persona (cascada al usuario)",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{base_url}}/users/persons/{{person_id}}/deactivate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "persons",
+                "{{person_id}}",
+                "deactivate"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Activar persona",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{base_url}}/users/persons/{{person_id}}/activate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "persons",
+                "{{person_id}}",
+                "activate"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Users / Users",
+      "item": [
+        {
+          "name": "Listar usuarios",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/users/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "users"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Cambiar username",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/users/{{person_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "users",
+                "{{person_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"juancarlos_nuevo\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Desactivar usuario",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{base_url}}/users/users/{{person_id}}/deactivate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "users",
+                "{{person_id}}",
+                "deactivate"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Activar usuario",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{base_url}}/users/users/{{person_id}}/activate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "users",
+                "{{person_id}}",
+                "activate"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Asignar rol extra",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/users/{{person_id}}/roles",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "users",
+                "{{person_id}}",
+                "roles"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role_id\": \"{{role_id_admin}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Quitar rol",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/users/users/{{person_id}}/roles/{{role_id_admin}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "users",
+                "{{person_id}}",
+                "roles",
+                "{{role_id_admin}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Vehicles / Crear",
+      "item": [
+        {
+          "name": "Crear auto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/vehicles/vehicles",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vehicles",
+                "vehicles"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"car\",\n  \"datos\": {\n    \"plate\": \"ABC-1234\",\n    \"brand\": \"Toyota\",\n    \"model\": \"Corolla\",\n    \"color\": \"Blanco\",\n    \"year\": 2022,\n    \"clasification\": \"GASOLINE\",\n    \"numberOfDoors\": 4,\n    \"trunkCapacity\": 371\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Crear auto (enum en minúsculas)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/vehicles/vehicles",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vehicles",
+                "vehicles"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"car\",\n  \"datos\": {\n    \"plate\": \"DEF-5678\",\n    \"brand\": \"Chevrolet\",\n    \"model\": \"Aveo\",\n    \"color\": \"Rojo\",\n    \"year\": 2020,\n    \"clasification\": \"gasoline\",\n    \"numberOfDoors\": 4,\n    \"trunkCapacity\": 295\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Crear motocicleta",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/vehicles/vehicles",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vehicles",
+                "vehicles"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"motocicleta\",\n  \"datos\": {\n    \"plate\": \"AB-123C\",\n    \"brand\": \"Honda\",\n    \"model\": \"CBR600\",\n    \"color\": \"Rojo\",\n    \"year\": 2021,\n    \"clasification\": \"GASOLINE\",\n    \"typeOfMotorbike\": \"sport\"\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Crear camioneta",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/vehicles/vehicles",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vehicles",
+                "vehicles"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"pickupTruck\",\n  \"datos\": {\n    \"plate\": \"XYZ-9999\",\n    \"brand\": \"Ford\",\n    \"model\": \"F-150\",\n    \"color\": \"Negro\",\n    \"year\": 2023,\n    \"clasification\": \"DIESEL\",\n    \"payloadCapacity\": 1000,\n    \"cab\": \"Crew\"\n  }\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - Vehicles / Operaciones",
+      "item": [
+        {
+          "name": "Listar vehículos activos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/vehicles/vehicles",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vehicles",
+                "vehicles"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obtener vehículo por ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/vehicles/vehicles/{{vehicle_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vehicles",
+                "vehicles",
+                "{{vehicle_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Actualizar vehículo (mismo tipo)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/vehicles/vehicles/{{vehicle_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vehicles",
+                "vehicles",
+                "{{vehicle_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"car\",\n  \"datos\": {\n    \"plate\": \"ABC-1234\",\n    \"brand\": \"Toyota\",\n    \"model\": \"Camry\",\n    \"color\": \"Gris Perla\",\n    \"year\": 2022,\n    \"clasification\": \"HYBRID\",\n    \"numberOfDoors\": 4,\n    \"trunkCapacity\": 400\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Soft-delete (desactivar)",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/vehicles/vehicles/{{vehicle_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vehicles",
+                "vehicles",
+                "{{vehicle_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reactivar vehículo",
+          "request": {
+            "method": "PATCH",
+            "url": {
+              "raw": "{{base_url}}/vehicles/vehicles/{{vehicle_id}}/activate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vehicles",
+                "vehicles",
+                "{{vehicle_id}}",
+                "activate"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - Zones / Zonas",
+      "item": [
+        {
+          "name": "Listar zonas",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/zones",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "zones"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Obtener zona por ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/zones/{{zone_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "zones",
+                "{{zone_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear zona VIP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/zones",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "zones"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Zona VIP Norte\",\n  \"description\": \"Zona exclusiva planta baja norte\",\n  \"capacity\": 5,\n  \"type\": \"VIP\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Crear zona Regular (enum minúsculas)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/zones",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "zones"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Zona Regular Sur\",\n  \"description\": \"Zona estándar planta baja\",\n  \"capacity\": 20,\n  \"type\": \"regular\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Crear zona sin descripción",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/zones",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "zones"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Zona Interna\",\n  \"capacity\": 10,\n  \"type\": \"INTERNAL\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Actualizar zona",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/zones/{{zone_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "zones",
+                "{{zone_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Zona VIP Norte Premium\",\n  \"description\": \"Descripción actualizada\",\n  \"capacity\": 8,\n  \"type\": \"VIP\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Toggle status zona (activa ↔ inactiva)",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/zones/{{zone_id}}/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "zones",
+                "{{zone_id}}",
+                "status"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Eliminar zona",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/zones/{{zone_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "zones",
+                "{{zone_id}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 - Zones / Places",
+      "item": [
+        {
+          "name": "Listar todos los places",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/places",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "places"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filtrar por status",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/places?status=AVAILABLE",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "places"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "AVAILABLE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filtrar por zona y status",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/places?zone={{zone_id}}&status=available",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "places"
+              ],
+              "query": [
+                {
+                  "key": "zone",
+                  "value": "{{zone_id}}"
+                },
+                {
+                  "key": "status",
+                  "value": "available"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear place tipo CAR",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/places",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "places"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idZone\": \"{{zone_id}}\",\n  \"description\": \"Lugar para auto compacto\",\n  \"type\": \"CAR\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Crear place tipo BIKE",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/places",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "places"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idZone\": \"{{zone_id}}\",\n  \"type\": \"BIKE\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Actualizar place",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/places/{{place_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "places",
+                "{{place_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idZone\": \"{{zone_id}}\",\n  \"description\": \"Descripción actualizada\",\n  \"type\": \"CAR\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Cambiar status → OCCUPIED",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/places/{{place_id}}/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "places",
+                "{{place_id}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"OCCUPIED\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Cambiar status → AVAILABLE",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/places/{{place_id}}/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "places",
+                "{{place_id}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"AVAILABLE\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Cambiar status (minúsculas)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/places/{{place_id}}/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "places",
+                "{{place_id}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"maintenance\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Eliminar place",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/places/{{place_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "places",
+                "{{place_id}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 - Validaciones (deben fallar)",
+      "item": [
+        {
+          "name": "[401] Sin token",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/users/persons",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "persons"
+              ]
+            }
+          }
+        },
+        {
+          "name": "[422] Cédula provincia inválida (99)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/persons",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "persons"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cedula\": \"9900000009\",\n  \"first_name\": \"Test\",\n  \"middle_name\": \"Test\",\n  \"last_name\": \"Test\",\n  \"email\": \"test_provincia@x.com\",\n  \"phone\": \"0991234567\",\n  \"address\": \"Calle 1\",\n  \"nationality\": \"Ecuatoriana\",\n  \"password\": \"Password123\",\n  \"role_ids\": [\"{{role_id_estudiante}}\"]\n}"
+            }
+          }
+        },
+        {
+          "name": "[422] Cédula dígito verificador malo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/persons",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "persons"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cedula\": \"1714863161\",\n  \"first_name\": \"Test\",\n  \"middle_name\": \"Test\",\n  \"last_name\": \"Test\",\n  \"email\": \"test_digito@x.com\",\n  \"phone\": \"0991234567\",\n  \"address\": \"Calle 1\",\n  \"nationality\": \"Ecuatoriana\",\n  \"password\": \"Password123\",\n  \"role_ids\": [\"{{role_id_estudiante}}\"]\n}"
+            }
+          }
+        },
+        {
+          "name": "[422] Teléfono inválido (letras)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/persons",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "persons"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cedula\": \"1710000033\",\n  \"first_name\": \"Test\",\n  \"middle_name\": \"Test\",\n  \"last_name\": \"Test\",\n  \"email\": \"test_phone@x.com\",\n  \"phone\": \"abc-invalid\",\n  \"address\": \"Calle 1\",\n  \"nationality\": \"Ecuatoriana\",\n  \"password\": \"Password123\",\n  \"role_ids\": [\"{{role_id_estudiante}}\"]\n}"
+            }
+          }
+        },
+        {
+          "name": "[422] Nombre con números",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/persons",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "persons"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cedula\": \"1710000033\",\n  \"first_name\": \"Juan123\",\n  \"middle_name\": \"Carlos\",\n  \"last_name\": \"Perez\",\n  \"email\": \"test_name@x.com\",\n  \"phone\": \"0991234567\",\n  \"address\": \"Calle 1\",\n  \"nationality\": \"Ecuatoriana\",\n  \"password\": \"Password123\",\n  \"role_ids\": [\"{{role_id_estudiante}}\"]\n}"
+            }
+          }
+        },
+        {
+          "name": "[409] Cédula duplicada",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/persons",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "persons"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cedula\": \"1710000017\",\n  \"first_name\": \"Duplicado\",\n  \"middle_name\": \"Test\",\n  \"last_name\": \"Test\",\n  \"email\": \"duplicado@x.com\",\n  \"phone\": \"0991234567\",\n  \"address\": \"Calle 1\",\n  \"nationality\": \"Ecuatoriana\",\n  \"password\": \"Password123\",\n  \"role_ids\": [\"{{role_id_estudiante}}\"]\n}"
+            }
+          }
+        },
+        {
+          "name": "[400] Vehicle enum inválido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/vehicles/vehicles",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vehicles",
+                "vehicles"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"car\",\n  \"datos\": {\n    \"plate\": \"AAA-0001\",\n    \"brand\": \"Toyota\",\n    \"model\": \"Corolla\",\n    \"color\": \"Blanco\",\n    \"year\": 2022,\n    \"clasification\": \"NAFTA\",\n    \"numberOfDoors\": 4,\n    \"trunkCapacity\": 371\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "[409] Vehicle cambiar tipo",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/vehicles/vehicles/{{vehicle_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vehicles",
+                "vehicles",
+                "{{vehicle_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"motocicleta\",\n  \"datos\": {\n    \"plate\": \"AB-999Z\",\n    \"brand\": \"Honda\",\n    \"model\": \"CBR\",\n    \"color\": \"Rojo\",\n    \"year\": 2022,\n    \"clasification\": \"GASOLINE\",\n    \"typeOfMotorbike\": \"SPORT\"\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "[400] Zone enum inválido en body",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/zones",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "zones"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Zona Inválida\",\n  \"capacity\": 5,\n  \"type\": \"INVALIDO\"\n}"
+            }
+          }
+        },
+        {
+          "name": "[400] Place status inválido en body",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/places/{{place_id}}/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "places",
+                "{{place_id}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"INVALIDO\"\n}"
+            }
+          }
+        },
+        {
+          "name": "[409] Eliminar zona con place OCCUPIED",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/zones/{{zone_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "zones",
+                "{{zone_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "[409] Zona superar capacidad",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/zones/{{zone_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "zones",
+                "{{zone_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Zona VIP Norte\",\n  \"capacity\": 1,\n  \"type\": \"VIP\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 - Assignments / Asignaciones",
+      "item": [
+        {
+          "name": "Health check (sin token)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/assignments/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assignments",
+                "health"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Crear asignación",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/assignments/assignments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assignments",
+                "assignments"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{user_id}}\",\n  \"vehicle_id\": \"{{vehicle_id}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Ver flota del propietario",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/assignments/assignments/{{user_id}}/fleet",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assignments",
+                "assignments",
+                "{{user_id}}",
+                "fleet"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Eliminar asignación (soft delete)",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/assignments/assignments/{{user_id}}/{{vehicle_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assignments",
+                "assignments",
+                "{{user_id}}",
+                "{{vehicle_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Ver toda la auditoría",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/assignments/assignments/audit",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assignments",
+                "assignments",
+                "audit"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Ver auditoría de una asignación",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/assignments/assignments/{{user_id}}/{{vehicle_id}}/audit",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assignments",
+                "assignments",
+                "{{user_id}}",
+                "{{vehicle_id}}",
+                "audit"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

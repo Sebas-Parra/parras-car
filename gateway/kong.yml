@@ -43,6 +43,21 @@ services:
         plugins:
           - name: jwt
 
+  - name: assignments-service
+    url: http://assignments:8001
+    routes:
+      - name: assignments-health-route
+        paths:
+          - /assignments/health
+        strip_path: true
+
+      - name: assignments-route
+        paths:
+          - /assignments
+        strip_path: true
+        plugins:
+          - name: jwt
+
   - name: swagger-ui-service
     url: http://swagger-ui:8080
     routes:

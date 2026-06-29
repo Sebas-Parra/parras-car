@@ -1,2 +1,13 @@
 .atl
 .claude
+.env
+.coverage
+htmlcov/
+*/.coverage
+*/htmlcov/
+.venv/
+*/.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+htmlcov/

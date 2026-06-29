@@ -10,6 +10,7 @@ import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { Vehicle } from './entities/vehicle.entity';
 import { FactoryVehiculos } from './factory/factory-vehicle';
 
+const ASSIGNMENTS_URL = process.env.ASSIGNMENTS_SERVICE_URL ?? 'http://assignments:8001';
 
 @Injectable()
 export class VehiclesService {
@@ -77,6 +78,12 @@ export class VehiclesService {
     const vehicle = await this.findOne(id);
     if (!vehicle.active) {
       throw new ConflictException(`El vehículo ya está inactivo`);
+    }
+    const res = await fetch(`${ASSIGNMENTS_URL}/assignments/by-vehicle/${id}`);
+    if (res.ok) {
+      throw new ConflictException(
+        'No se puede eliminar el vehículo porque tiene un propietario activo asignado',
+      );
     }
     vehicle.active = false;
     await this.repositoryVehicle.save(vehicle);

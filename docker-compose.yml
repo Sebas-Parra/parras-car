@@ -48,11 +48,31 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: zonas_db
     ports:
-      - '5432:5432'
+      - '5436:5432'
     volumes:
       - zones_db_data:/var/lib/postgresql/data
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U postgres -d zonas_db']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - parras_network
+
+  assignments-db:
+    image: postgres:16-alpine
+    container_name: parras-assignments-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: assignments_db
+    ports:
+      - '5435:5432'
+    volumes:
+      - assignments_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d assignments_db']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -121,6 +141,30 @@ services:
     networks:
       - parras_network
 
+  assignments:
+    build:
+      context: ./assignments
+      dockerfile: Dockerfile
+    container_name: parras-assignments
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@assignments-db:5432/assignments_db
+      VEHICLES_SERVICE_URL: http://vehicles:3000
+      USERS_SERVICE_URL: http://users:8000
+    ports:
+      - '8001:8001'
+    depends_on:
+      assignments-db:
+        condition: service_healthy
+      users:
+        condition: service_started
+      vehicles:
+        condition: service_started
+    networks:
+      - parras_network
+    command: >
+      sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8001"
+
   # ─── API Gateway ──────────────────────────────────────────────
 
   kong:
@@ -144,6 +188,7 @@ services:
       - users
       - vehicles
       - zones
+      - assignments
     networks:
       - parras_network
 
@@ -154,7 +199,7 @@ services:
     environment:
       BASE_URL: /docs
       URLS: >-
-        [{"url":"/users/openapi.json","name":"Users"},{"url":"/vehicles/api-json","name":"Vehicles"},{"url":"/zones/v3/api-docs","name":"Zones"}]
+        [{"url":"/users/openapi.json","name":"Users"},{"url":"/vehicles/api-json","name":"Vehicles"},{"url":"/zones/v3/api-docs","name":"Zones"},{"url":"/assignments/openapi.json","name":"Assignments"}]
     depends_on:
       - kong
     networks:
@@ -164,6 +209,7 @@ volumes:
   users_db_data:
   vehicles_db_data:
   zones_db_data:
+  assignments_db_data:
 
 networks:
   parras_network:

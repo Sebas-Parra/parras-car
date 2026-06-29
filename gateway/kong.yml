@@ -8,6 +8,7 @@ consumers:
         secret: 6f2f368a76edefcc1859716acadb5cd68ac14bd4186334c03ba341da97dff77c
 
 services:
+  # ── Users — rutas protegidas (JWT) ────────────────────────────────────────
   - name: users-service
     url: http://users:8000
     routes:
@@ -23,6 +24,31 @@ services:
         plugins:
           - name: jwt
 
+  # ── Users — rutas públicas (sin JWT) ──────────────────────────────────────
+  # Servicios separados para controlar el path base y evitar que strip_path
+  # borre demasiado. El service.url incluye el path destino en el upstream.
+
+  - name: users-login-service
+    url: http://users:8000/auth/login
+    routes:
+      - name: users-login-route
+        paths:
+          - /users/auth/login
+        methods:
+          - POST
+        strip_path: true
+
+  - name: users-register-service
+    url: http://users:8000/persons
+    routes:
+      - name: users-register-route
+        paths:
+          - /users/persons
+        methods:
+          - POST
+        strip_path: true
+
+  # ── Vehicles ──────────────────────────────────────────────────────────────
   - name: vehicles-service
     url: http://vehicles:3000
     routes:
@@ -33,6 +59,7 @@ services:
         plugins:
           - name: jwt
 
+  # ── Zones ─────────────────────────────────────────────────────────────────
   - name: zones-service
     url: http://zones:8080
     routes:
@@ -43,6 +70,7 @@ services:
         plugins:
           - name: jwt
 
+  # ── Assignments ───────────────────────────────────────────────────────────
   - name: assignments-service
     url: http://assignments:8001
     routes:
@@ -58,6 +86,7 @@ services:
         plugins:
           - name: jwt
 
+  # ── Swagger UI ────────────────────────────────────────────────────────────
   - name: swagger-ui-service
     url: http://swagger-ui:8080
     routes:

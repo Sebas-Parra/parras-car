@@ -9,7 +9,9 @@ def _normalize_part(value: str) -> str:
     return re.sub(r"[^a-z0-9]", "", without_accents.lower())
 
 
-def _first_token(value: str) -> str:
+def _first_token(value: str | None) -> str:
+    if not value:
+        return ""
     parts = value.split()
     return parts[0] if parts else ""
 

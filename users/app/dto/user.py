@@ -3,17 +3,17 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.dto.person import PersonBase, PersonRead, _NAME_REGEX, _ADDRESS_REGEX, _validate_name, _validate_ecuadorian_id
+from app.dto.person import PersonBase, PersonRead, _ADDRESS_REGEX, _NAME_REGEX, _validate_ecuadorian_id, _validate_name
 from app.dto.role import RoleRead
 
 
 class UserCreate(PersonBase):
-    middle_name: str = Field(min_length=2, max_length=50)
-    phone: str = Field(max_length=20)
-    address: str
-    nationality: str
+    """Datos para el registro de un nuevo cliente.
+
+    El rol 'cliente' se asigna automáticamente — el usuario no elige su rol.
+    """
+
     password: str = Field(min_length=8)
-    role_ids: list[UUID] = Field(min_length=1)
 
     @field_validator("cedula", mode="after")
     @classmethod
@@ -27,14 +27,11 @@ class UserCreate(PersonBase):
             raise ValueError("La contraseña no puede contener solo espacios")
         return v
 
-    @field_validator("middle_name", mode="before")
-    @classmethod
-    def validate_middle_name(cls, v: str) -> str:
-        return _validate_name(v, "El segundo nombre")
-
     @field_validator("nationality", mode="before")
     @classmethod
-    def validate_nationality(cls, v: str) -> str:
+    def validate_nationality(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
         if not v.strip():
             raise ValueError("La nacionalidad no puede contener solo espacios")
         if not _NAME_REGEX.match(v.strip()):
@@ -43,7 +40,9 @@ class UserCreate(PersonBase):
 
     @field_validator("address", mode="before")
     @classmethod
-    def validate_address(cls, v: str) -> str:
+    def validate_address(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
         v = v.strip()
         if not v:
             raise ValueError("La dirección no puede contener solo espacios")

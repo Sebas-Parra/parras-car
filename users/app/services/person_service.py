@@ -28,11 +28,18 @@ def create_person_with_user(db: Session, data: UserCreate) -> Person:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Cedula already registered")
 
     if person_repository.get_by_email(db, data.email):
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"El correo '{data.email}' ya está registrado, por favor ingrese uno diferente")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"El correo '{data.email}' ya está registrado, por favor ingrese uno diferente",
+        )
 
-    roles = role_repository.get_by_ids(db, data.role_ids)
-    if len(roles) != len(set(data.role_ids)):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="One or more roles not found")
+    # Self-registration always gets the 'cliente' role
+    cliente_role = role_repository.get_by_name(db, "cliente")
+    if cliente_role is None:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="El rol 'cliente' no está configurado en el sistema. Contacte al administrador.",
+        )
 
     generated_username = username_util.generate_unique_username(
         data.first_name,
@@ -59,7 +66,7 @@ def create_person_with_user(db: Session, data: UserCreate) -> Person:
         username=generated_username,
         password_hash=hash_password(data.password),
     )
-    user.roles = roles
+    user.roles = [cliente_role]
     db.add(user)
     db.commit()
     db.refresh(person)

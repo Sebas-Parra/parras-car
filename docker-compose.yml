@@ -79,6 +79,26 @@ services:
     networks:
       - parras_network
 
+  tickets-db:
+    image: postgres:16-alpine
+    container_name: parras-tickets-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: tickets_db
+    ports:
+      - '5437:5432'
+    volumes:
+      - tickets_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d tickets_db']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - parras_network
+
   # ─── Microservices ────────────────────────────────────────────
 
   users:
@@ -167,6 +187,38 @@ services:
     command: >
       sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8001"
 
+  tickets:
+    build:
+      context: ./tickets
+      dockerfile: Dockerfile
+    container_name: parras-tickets
+    restart: unless-stopped
+    environment:
+      DB_HOST: tickets-db
+      DB_PORT: 5432
+      DB_USUARIO: postgres
+      DB_CONTRASENA: postgres
+      DB_NOMBRE: tickets_db
+      PORT: 3000
+      JWT_SECRET: 6f2f368a76edefcc1859716acadb5cd68ac14bd4186334c03ba341da97dff77c
+      ZONES_SERVICE_URL: http://zones:8080
+      VEHICLES_SERVICE_URL: http://vehicles:3000
+      ASSIGNMENTS_SERVICE_URL: http://assignments:8001
+      TICKET_PRICE: 1.00
+    ports:
+      - '3001:3000'
+    depends_on:
+      tickets-db:
+        condition: service_healthy
+      zones:
+        condition: service_started
+      vehicles:
+        condition: service_started
+      assignments:
+        condition: service_started
+    networks:
+      - parras_network
+
   # ─── API Gateway ──────────────────────────────────────────────
 
   kong:
@@ -191,6 +243,7 @@ services:
       - vehicles
       - zones
       - assignments
+      - tickets
     networks:
       - parras_network
 
@@ -201,7 +254,7 @@ services:
     environment:
       BASE_URL: /docs
       URLS: >-
-        [{"url":"/users/openapi.json","name":"Users"},{"url":"/vehicles/api-json","name":"Vehicles"},{"url":"/zones/v3/api-docs","name":"Zones"},{"url":"/assignments/openapi.json","name":"Assignments"}]
+        [{"url":"/users/openapi.json","name":"Users"},{"url":"/vehicles/api-json","name":"Vehicles"},{"url":"/zones/v3/api-docs","name":"Zones"},{"url":"/assignments/openapi.json","name":"Assignments"},{"url":"/tickets/api-json","name":"Tickets"}]
     depends_on:
       - kong
     networks:
@@ -212,6 +265,7 @@ volumes:
   vehicles_db_data:
   zones_db_data:
   assignments_db_data:
+  tickets_db_data:
 
 networks:
   parras_network:

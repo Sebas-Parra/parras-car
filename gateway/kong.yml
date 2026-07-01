@@ -106,6 +106,17 @@ services:
         plugins:
           - name: jwt
 
+  # ── Tickets ───────────────────────────────────────────────────────────────
+  - name: tickets-service
+    url: http://tickets:3000
+    routes:
+      - name: tickets-route
+        paths:
+          - /tickets
+        strip_path: true
+        plugins:
+          - name: jwt
+
   # ── Swagger UI ────────────────────────────────────────────────────────────
   - name: swagger-ui-service
     url: http://swagger-ui:8080

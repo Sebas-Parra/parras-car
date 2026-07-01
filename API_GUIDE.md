@@ -19,7 +19,73 @@
 | `/users/*` | FastAPI `:8000` | path without `/users` |
 | `/vehicles/*` | NestJS `:3000` | path without `/vehicles` |
 | `/zones/*` | Spring Boot `:8080` | path without `/zones` |
+| `/assignments/*` | FastAPI `:8001` | path without `/assignments` |
+| `/tickets/*` | NestJS `:3000` | path without `/tickets` |
 | `/docs` | Swagger UI | unchanged |
+
+`/users/auth/login`, `/users/auth/refresh`, `/users/auth/logout` and `/users/persons` (POST only) are public — no JWT plugin. Every other route requires a Bearer token (`Authorization: Bearer <token>`), obtained from `POST /users/auth/login`.
+
+---
+
+## Roles & Permissions
+
+Roles: `cliente`, `recaudador`, `admin`, `root` (`root` = `admin` + physical deletes).
+
+### Users Service
+
+| Endpoint | Method | Allowed |
+|---|---|---|
+| `/auth/login`, `/auth/refresh`, `/auth/logout` | POST | public |
+| `/persons` | POST | public (self-registration, auto-assigns `cliente`) |
+| `/persons` | GET | admin/root |
+| `/persons/{id}`, `/persons/{id}` | GET, PUT | owner or admin/root |
+| `/persons/{id}/deactivate`, `/activate` | PATCH | admin/root |
+| `/users` | GET | admin/root |
+| `/users/{id}` | GET, PUT | owner or admin/root |
+| `/users/{id}/deactivate`, `/activate` | PATCH | admin/root |
+| `/users/{id}/roles` | POST, DELETE | admin/root |
+| `/roles`, `/roles/{id}` | GET, POST, PUT | admin/root |
+| `/roles/{id}` | DELETE | **root only** (physical delete) |
+
+### Vehicles Service
+
+| Endpoint | Method | Allowed |
+|---|---|---|
+| `/vehicles`, `/vehicles/{id}` | GET | any authenticated user |
+| `/vehicles` | POST | admin/root |
+| `/vehicles/{id}` | PATCH | admin/root |
+| `/vehicles/{id}/activate` | PATCH | admin/root |
+| `/vehicles/{id}` | DELETE | admin/root |
+
+### Zones Service
+
+| Endpoint | Method | Allowed |
+|---|---|---|
+| `/api/v1/zones`, `/api/v1/places` (incl. filters/by id) | GET | any authenticated user |
+| `/api/v1/zones`, `/api/v1/places` | POST, PUT | admin/root |
+| `/api/v1/places/{id}/status` | PATCH | admin/root/**recaudador** |
+| `/api/v1/zones`, `/api/v1/places` | DELETE | **root only** |
+
+### Assignments Service
+
+| Endpoint | Method | Allowed |
+|---|---|---|
+| `/assignments` | POST | admin/root |
+| `/assignments/{user_id}/{vehicle_id}` | DELETE | admin/root |
+| `/assignments/{vehicle_id}/transfer` | PATCH | admin/root |
+| `/assignments/by-vehicle/{id}` | GET | no auth (internal, called by vehicles service) |
+| `/assignments/audit` | GET | admin/root |
+| `/assignments/{user_id}/fleet` | GET | owner or admin/root |
+| `/assignments/{user_id}/{vehicle_id}/audit` | GET | owner or admin/root |
+
+### Tickets Service
+
+| Endpoint | Method | Allowed |
+|---|---|---|
+| `/tickets` | POST | recaudador/admin/root |
+| `/tickets`, `/tickets/{id}` | GET | any authenticated user |
+| `/tickets/{id}/pay` | PATCH | recaudador/admin/root |
+| `/tickets/{id}/cancel` | PATCH | recaudador/admin/root |
 
 ---
 

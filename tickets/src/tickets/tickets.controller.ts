@@ -31,7 +31,11 @@ export class TicketsController {
     @Body() createTicketDto: CreateTicketDto,
     @Req() req: AuthenticatedRequest,
   ) {
-    return this.ticketsService.create(createTicketDto, req.user.userId);
+    return this.ticketsService.create(
+      createTicketDto,
+      req.user.userId,
+      req.headers.authorization ?? '',
+    );
   }
 
   // Cualquier usuario autenticado — consultar tickets
@@ -50,13 +54,21 @@ export class TicketsController {
   @Patch(':id/pay')
   @Roles('recaudador', 'admin', 'root')
   pay(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
-    return this.ticketsService.pay(id, req.user.userId);
+    return this.ticketsService.pay(
+      id,
+      req.user.userId,
+      req.headers.authorization ?? '',
+    );
   }
 
   // Empleado (recaudador) o admin/root — anular ticket y liberar espacio
   @Patch(':id/cancel')
   @Roles('recaudador', 'admin', 'root')
   cancel(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
-    return this.ticketsService.cancel(id, req.user.userId);
+    return this.ticketsService.cancel(
+      id,
+      req.user.userId,
+      req.headers.authorization ?? '',
+    );
   }
 }

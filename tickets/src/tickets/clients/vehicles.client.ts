@@ -12,10 +12,12 @@ export interface VehicleDto {
 // Se filtra en memoria por placa.
 @Injectable()
 export class VehiclesClient {
-  async findByPlate(placa: string): Promise<VehicleDto | null> {
+  async findByPlate(placa: string, authHeader: string): Promise<VehicleDto | null> {
     let vehicles: VehicleDto[];
     try {
-      const res = await fetch(`${VEHICLES_URL}/vehicles`);
+      const res = await fetch(`${VEHICLES_URL}/vehicles`, {
+        headers: { Authorization: authHeader },
+      });
       if (!res.ok) return null;
       vehicles = (await res.json()) as VehicleDto[];
     } catch {

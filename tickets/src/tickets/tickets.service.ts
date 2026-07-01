@@ -24,8 +24,12 @@ export class TicketsService {
     private readonly assignmentsClient: AssignmentsClient,
   ) {}
 
-  async create(dto: CreateTicketDto, idEmpleado: string): Promise<Ticket> {
-    const vehicle = await this.vehiclesClient.findByPlate(dto.placa);
+  async create(
+    dto: CreateTicketDto,
+    idEmpleado: string,
+    authHeader: string,
+  ): Promise<Ticket> {
+    const vehicle = await this.vehiclesClient.findByPlate(dto.placa, authHeader);
     if (!vehicle) {
       throw new NotFoundException(
         `No existe un vehículo con la placa '${dto.placa}'`,
@@ -55,7 +59,7 @@ export class TicketsService {
       );
     }
 
-    const place = await this.zonesClient.findPlaceById(dto.idEspacio);
+    const place = await this.zonesClient.findPlaceById(dto.idEspacio, authHeader);
     if (!place) {
       throw new NotFoundException(`Espacio '${dto.idEspacio}' no encontrado`);
     }
@@ -83,7 +87,7 @@ export class TicketsService {
     const saved = await this.ticketRepository.save(ticket);
 
     try {
-      await this.zonesClient.setStatus(place.id, 'OCCUPIED');
+      await this.zonesClient.setStatus(place.id, 'OCCUPIED', authHeader);
     } catch (error) {
       // Compensación: si zones no confirma la ocupación, no dejamos un
       // ticket "activo" sobre un espacio que sigue apareciendo disponible.
@@ -106,7 +110,7 @@ export class TicketsService {
     return ticket;
   }
 
-  async pay(id: string, idEmpleado: string): Promise<Ticket> {
+  async pay(id: string, idEmpleado: string, authHeader: string): Promise<Ticket> {
     const ticket = await this.findOne(id);
     if (ticket.estado !== EstadoTicket.ACTIVO) {
       throw new ConflictException(
@@ -118,11 +122,11 @@ export class TicketsService {
     ticket.valorRecaudado = TICKET_PRICE;
     ticket.idEmpleadoPago = idEmpleado;
     const saved = await this.ticketRepository.save(ticket);
-    await this.zonesClient.setStatus(ticket.idEspacio, 'AVAILABLE');
+    await this.zonesClient.setStatus(ticket.idEspacio, 'AVAILABLE', authHeader);
     return saved;
   }
 
-  async cancel(id: string, idEmpleado: string): Promise<Ticket> {
+  async cancel(id: string, idEmpleado: string, authHeader: string): Promise<Ticket> {
     const ticket = await this.findOne(id);
     if (ticket.estado !== EstadoTicket.ACTIVO) {
       throw new ConflictException(
@@ -133,7 +137,7 @@ export class TicketsService {
     ticket.fechaHoraSalida = new Date();
     ticket.idEmpleadoPago = idEmpleado;
     const saved = await this.ticketRepository.save(ticket);
-    await this.zonesClient.setStatus(ticket.idEspacio, 'AVAILABLE');
+    await this.zonesClient.setStatus(ticket.idEspacio, 'AVAILABLE', authHeader);
     return saved;
   }
 

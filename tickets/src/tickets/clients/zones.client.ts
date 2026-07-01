@@ -17,10 +17,12 @@ export interface PlaceDto {
 // filtros opcionales por status/zone. Se filtra en memoria por id.
 @Injectable()
 export class ZonesClient {
-  async findPlaceById(idEspacio: string): Promise<PlaceDto | null> {
+  async findPlaceById(idEspacio: string, authHeader: string): Promise<PlaceDto | null> {
     let places: PlaceDto[];
     try {
-      const res = await fetch(`${ZONES_URL}/api/v1/places`);
+      const res = await fetch(`${ZONES_URL}/api/v1/places`, {
+        headers: { Authorization: authHeader },
+      });
       if (!res.ok) return null;
       places = (await res.json()) as PlaceDto[];
     } catch {
@@ -31,12 +33,16 @@ export class ZonesClient {
     return places.find((p) => p.id === idEspacio) ?? null;
   }
 
-  async setStatus(idEspacio: string, status: PlaceStatus): Promise<void> {
+  async setStatus(
+    idEspacio: string,
+    status: PlaceStatus,
+    authHeader: string,
+  ): Promise<void> {
     let res: Response;
     try {
       res = await fetch(`${ZONES_URL}/api/v1/places/${idEspacio}/status`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: authHeader },
         body: JSON.stringify({ status }),
       });
     } catch {

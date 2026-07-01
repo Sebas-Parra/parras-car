@@ -1,6 +1,9 @@
 spring:
   application:
     name: zonas
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
   jackson:
     mapper:
       accept-case-insensitive-enums: true
@@ -20,6 +23,9 @@ spring:
 
 server:
   port: ${SERVER_PORT:8080}
+
+jwt:
+  secret: ${JWT_SECRET:6f2f368a76edefcc1859716acadb5cd68ac14bd4186334c03ba341da97dff77c}
 
 springdoc:
   api-docs:

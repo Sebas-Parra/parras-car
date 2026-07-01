@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_issuer: str = "parras-app-key"
     jwt_expire_minutes: int = 60 * 24  # 24 hours
+    refresh_token_expire_days: int = 7
 
 
 settings = Settings()

@@ -1,3 +1,4 @@
+import secrets
 from datetime import datetime, timedelta, timezone
 
 import bcrypt
@@ -25,6 +26,10 @@ def create_access_token(user_id: str, username: str, roles: list[str]) -> str:
         "exp": now + timedelta(minutes=settings.jwt_expire_minutes),
     }
     return jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
+
+
+def generate_refresh_token() -> str:
+    return secrets.token_urlsafe(32)
 
 
 def decode_token(token: str) -> dict:

@@ -48,6 +48,26 @@ services:
           - POST
         strip_path: true
 
+  - name: users-refresh-service
+    url: http://users:8000/auth/refresh
+    routes:
+      - name: users-refresh-route
+        paths:
+          - /users/auth/refresh
+        methods:
+          - POST
+        strip_path: true
+
+  - name: users-logout-service
+    url: http://users:8000/auth/logout
+    routes:
+      - name: users-logout-route
+        paths:
+          - /users/auth/logout
+        methods:
+          - POST
+        strip_path: true
+
   # ── Vehicles ──────────────────────────────────────────────────────────────
   - name: vehicles-service
     url: http://vehicles:3000

@@ -112,6 +112,7 @@ services:
       DB_CONTRASENA: postgres
       DB_NOMBRE: vehicles_db
       PORT: 3000
+      JWT_SECRET: 6f2f368a76edefcc1859716acadb5cd68ac14bd4186334c03ba341da97dff77c
     ports:
       - '3000:3000'
     depends_on:
@@ -133,6 +134,7 @@ services:
       DB_PASSWORD: postgres
       DB_NAME: zonas_db
       SERVER_PORT: 8080
+      JWT_SECRET: 6f2f368a76edefcc1859716acadb5cd68ac14bd4186334c03ba341da97dff77c
     ports:
       - '8080:8080'
     depends_on:

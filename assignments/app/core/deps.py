@@ -21,6 +21,15 @@ def get_db() -> Generator[Session, None, None]:
         db.close()
 
 
+def get_bearer_token(credentials: HTTPAuthorizationCredentials | None = Depends(_bearer)) -> str:
+    if not credentials:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="No autenticado. Se requiere token de acceso.",
+        )
+    return credentials.credentials
+
+
 def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(_bearer),
 ) -> dict:

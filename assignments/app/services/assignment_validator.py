@@ -11,28 +11,28 @@ from app.services import vehicles_client
 class AssignmentValidator:
     """Validates preconditions before any assignment operation."""
 
-    def require_user_exists(self, user_id: UUID) -> dict:
-        user = vehicles_client.get_user(user_id)
+    def require_user_exists(self, user_id: UUID, token: str) -> dict:
+        user = vehicles_client.get_user(user_id, token)
         if not user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
         return user
 
-    def require_user_active(self, user_id: UUID) -> None:
-        user = self.require_user_exists(user_id)
+    def require_user_active(self, user_id: UUID, token: str) -> None:
+        user = self.require_user_exists(user_id, token)
         if not user.get("active", True):
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=f"User {user_id} is not active",
             )
 
-    def require_vehicle_exists(self, vehicle_id: UUID) -> dict:
-        vehicle = vehicles_client.get_vehicle(vehicle_id)
+    def require_vehicle_exists(self, vehicle_id: UUID, token: str) -> dict:
+        vehicle = vehicles_client.get_vehicle(vehicle_id, token)
         if not vehicle:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Vehicle not found")
         return vehicle
 
-    def require_vehicle_active(self, vehicle_id: UUID) -> None:
-        vehicle = self.require_vehicle_exists(vehicle_id)
+    def require_vehicle_active(self, vehicle_id: UUID, token: str) -> None:
+        vehicle = self.require_vehicle_exists(vehicle_id, token)
         if not vehicle.get("active", True):
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,

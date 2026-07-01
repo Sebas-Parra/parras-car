@@ -20,9 +20,9 @@ class AssignmentService:
         self._validator = validator
         self._audit = audit
 
-    def create(self, db: Session, data: AssignmentCreate) -> AssignmentRead:
-        self._validator.require_user_active(data.user_id)
-        self._validator.require_vehicle_active(data.vehicle_id)
+    def create(self, db: Session, data: AssignmentCreate, token: str) -> AssignmentRead:
+        self._validator.require_user_active(data.user_id, token)
+        self._validator.require_vehicle_active(data.vehicle_id, token)
         self._validator.require_vehicle_available(db, data.vehicle_id, data.user_id)
 
         existing = assignment_repository.get_by_ids(db, data.user_id, data.vehicle_id)
@@ -49,11 +49,11 @@ class AssignmentService:
         db.refresh(assignment)
         return assignment
 
-    def transfer(self, db: Session, vehicle_id: UUID, data: AssignmentTransfer) -> AssignmentRead:
+    def transfer(self, db: Session, vehicle_id: UUID, data: AssignmentTransfer, token: str) -> AssignmentRead:
         self._validator.require_different_users(data.from_user_id, data.to_user_id)
-        self._validator.require_user_active(data.from_user_id)
-        self._validator.require_user_active(data.to_user_id)
-        self._validator.require_vehicle_active(vehicle_id)
+        self._validator.require_user_active(data.from_user_id, token)
+        self._validator.require_user_active(data.to_user_id, token)
+        self._validator.require_vehicle_active(vehicle_id, token)
         self._validator.require_active_assignment(db, data.from_user_id, vehicle_id)
 
         old_assignment = assignment_repository.get_by_ids(db, data.from_user_id, vehicle_id)
@@ -73,11 +73,11 @@ class AssignmentService:
         db.refresh(new_assignment)
         return new_assignment
 
-    def get_fleet(self, db: Session, user_id: UUID) -> FleetResponse:
+    def get_fleet(self, db: Session, user_id: UUID, token: str) -> FleetResponse:
         assignments = assignment_repository.list_active_by_user(db, user_id)
         vehicles: list[VehicleDetail] = []
         for assignment in assignments:
-            vehicle_data = vehicles_client.get_vehicle(assignment.vehicle_id)
+            vehicle_data = vehicles_client.get_vehicle(assignment.vehicle_id, token)
             if vehicle_data:
                 vehicles.append(
                     VehicleDetail(

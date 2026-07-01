@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.core.deps import get_db, require_admin, require_self_or_admin
+from app.core.deps import get_bearer_token, get_db, require_admin, require_self_or_admin
 from app.dto.assignment import AssignmentCreate, AssignmentRead, AssignmentTransfer, FleetResponse
 from app.dto.audit import AuditRead
 from app.services.assignment_service import AssignmentService
@@ -24,8 +24,9 @@ def create_assignment(
     db: Session = Depends(get_db),
     svc: AssignmentService = Depends(get_assignment_service),
     _: dict = Depends(require_admin),
+    token: str = Depends(get_bearer_token),
 ):
-    return svc.create(db, data)
+    return svc.create(db, data, token)
 
 
 # Admin / root only
@@ -48,8 +49,9 @@ def transfer_assignment(
     db: Session = Depends(get_db),
     svc: AssignmentService = Depends(get_assignment_service),
     _: dict = Depends(require_admin),
+    token: str = Depends(get_bearer_token),
 ):
-    return svc.transfer(db, vehicle_id, data)
+    return svc.transfer(db, vehicle_id, data, token)
 
 
 # No auth — internal call from vehicles service (server-to-server, no user token)
@@ -82,8 +84,9 @@ def get_fleet(
     db: Session = Depends(get_db),
     svc: AssignmentService = Depends(get_assignment_service),
     _: dict = Depends(require_self_or_admin),
+    token: str = Depends(get_bearer_token),
 ):
-    return svc.get_fleet(db, user_id)
+    return svc.get_fleet(db, user_id, token)
 
 
 # Own data or admin/root

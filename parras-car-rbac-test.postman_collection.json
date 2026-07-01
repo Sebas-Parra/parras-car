@@ -2,622 +2,2348 @@
   "info": {
     "_postman_id": "d4f9a1b2-3c8e-4f56-9d7a-0b1c2e3f4a5b",
     "name": "Parras-Car — RBAC Test Suite",
-    "description": "Flujo completo de pruebas JWT + control de acceso por roles (cliente / admin / root) para todos los microservicios. Ejecutar las carpetas en orden: Auth → Users → Zones → Vehicles → Assignments.",
+    "description": "Flujo completo de pruebas JWT + control de acceso por roles (cliente / admin / root) para todos los microservicios. Ejecutar las carpetas en orden: Auth → Users → Zones → Vehicles → Assignments → Tickets.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "base_url",        "value": "http://localhost:9000", "type": "string" },
-    { "key": "admin_token",     "value": "", "type": "string" },
-    { "key": "root_token",      "value": "", "type": "string" },
-    { "key": "cliente_token",   "value": "", "type": "string" },
-    { "key": "admin_user_id",   "value": "", "type": "string" },
-    { "key": "cliente_user_id", "value": "", "type": "string" },
-    { "key": "zone_id",         "value": "", "type": "string" },
-    { "key": "place_id",        "value": "", "type": "string" },
-    { "key": "vehicle_id",      "value": "", "type": "string" }
+    {
+      "key": "base_url",
+      "value": "http://localhost:9000",
+      "type": "string"
+    },
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "root_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "cliente_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "admin_user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "cliente_user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "zone_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "place_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "vehicle_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ticket_zone_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "place_a_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "place_b_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ticket_vehicle_1_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ticket_vehicle_2_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ticket_1_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ticket_2_id",
+      "value": "",
+      "type": "string"
+    }
   ],
   "item": [
-
     {
       "name": "1. Auth",
       "item": [
-
         {
           "name": "[ADMIN] Login",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('200 OK', () => pm.response.to.have.status(200));",
-            "const body = pm.response.json();",
-            "pm.collectionVariables.set('admin_token',   body.access_token);",
-            "pm.collectionVariables.set('admin_user_id', body.user_id);",
-            "pm.test('rol admin presente', () => pm.expect(body.roles).to.include('admin'));"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('admin_token',   body.access_token);",
+                  "pm.collectionVariables.set('admin_user_id', body.user_id);",
+                  "pm.test('rol admin presente', () => pm.expect(body.roles).to.include('admin'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"Admin123!\"\n}" },
-            "url": { "raw": "{{base_url}}/users/auth/login", "host": ["{{base_url}}"], "path": ["users","auth","login"] }
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"Admin123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "auth",
+                "login"
+              ]
+            }
           }
         },
-
         {
           "name": "[ROOT] Login",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('200 OK', () => pm.response.to.have.status(200));",
-            "const body = pm.response.json();",
-            "pm.collectionVariables.set('root_token', body.access_token);",
-            "pm.test('rol root presente', () => pm.expect(body.roles).to.include('root'));"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('root_token', body.access_token);",
+                  "pm.test('rol root presente', () => pm.expect(body.roles).to.include('root'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"username\": \"root\",\n  \"password\": \"Root123!\"\n}" },
-            "url": { "raw": "{{base_url}}/users/auth/login", "host": ["{{base_url}}"], "path": ["users","auth","login"] }
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"root\",\n  \"password\": \"Root123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "auth",
+                "login"
+              ]
+            }
           }
         },
-
         {
           "name": "[CLIENTE] Registro (público)",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('201 Created', () => pm.response.to.have.status(201));",
-            "const body = pm.response.json();",
-            "pm.collectionVariables.set('cliente_user_id', body.id);",
-            "pm.test('rol cliente asignado', () => pm.expect(body.user.roles[0].name).to.eql('cliente'));"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('cliente_user_id', body.id);",
+                  "pm.test('rol cliente asignado', () => pm.expect(body.user.roles[0].name).to.eql('cliente'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"cedula\":     \"1715020788\",\n  \"first_name\": \"Test\",\n  \"last_name\":  \"Cliente\",\n  \"email\":      \"testcliente@parras-car.com\",\n  \"phone\":      \"0991234567\",\n  \"password\":   \"Test1234!\"\n}" },
-            "url": { "raw": "{{base_url}}/users/persons", "host": ["{{base_url}}"], "path": ["users","persons"] }
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cedula\":     \"1715020788\",\n  \"first_name\": \"Test\",\n  \"last_name\":  \"Cliente\",\n  \"email\":      \"testcliente@parras-car.com\",\n  \"phone\":      \"0991234567\",\n  \"password\":   \"Test1234!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/persons",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "persons"
+              ]
+            }
           }
         },
-
         {
           "name": "[CLIENTE] Login",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('200 OK', () => pm.response.to.have.status(200));",
-            "const body = pm.response.json();",
-            "pm.collectionVariables.set('cliente_token',   body.access_token);",
-            "pm.collectionVariables.set('cliente_user_id', body.user_id);",
-            "pm.test('rol cliente presente', () => pm.expect(body.roles).to.include('cliente'));"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('cliente_token',   body.access_token);",
+                  "pm.collectionVariables.set('cliente_user_id', body.user_id);",
+                  "pm.test('rol cliente presente', () => pm.expect(body.roles).to.include('cliente'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"username\": \"testcliente\",\n  \"password\": \"Test1234!\"\n}" },
-            "url": { "raw": "{{base_url}}/users/auth/login", "host": ["{{base_url}}"], "path": ["users","auth","login"] }
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"testcliente\",\n  \"password\": \"Test1234!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "auth",
+                "login"
+              ]
+            }
           }
         },
-
         {
           "name": "Sin token → 401",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('401 sin token', () => pm.response.to.have.status(401));"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('401 sin token', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/users/persons", "host": ["{{base_url}}"], "path": ["users","persons"] }
+            "url": {
+              "raw": "{{base_url}}/users/persons",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "persons"
+              ]
+            }
           }
         },
-
         {
           "name": "Token inválido → 401",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('401 token inválido', () => pm.response.to.have.status(401));"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('401 token inválido', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer token.falso.aqui" }],
-            "url": { "raw": "{{base_url}}/users/persons", "host": ["{{base_url}}"], "path": ["users","persons"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer token.falso.aqui"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/persons",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "persons"
+              ]
+            }
           }
         }
-
       ]
     },
-
     {
       "name": "2. Users — RBAC",
       "item": [
-
         {
           "name": "[ADMIN] Listar personas → 200",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('200 admin lista personas', () => pm.response.to.have.status(200));",
-            "pm.test('respuesta es array', () => pm.expect(pm.response.json()).to.be.an('array'));"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 admin lista personas', () => pm.response.to.have.status(200));",
+                  "pm.test('respuesta es array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
-            "url": { "raw": "{{base_url}}/users/persons", "host": ["{{base_url}}"], "path": ["users","persons"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/persons",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "persons"
+              ]
+            }
           }
         },
-
         {
           "name": "[CLIENTE] Listar personas → 403",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('403 cliente no puede listar personas', () => pm.response.to.have.status(403));"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('403 cliente no puede listar personas', () => pm.response.to.have.status(403));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{cliente_token}}" }],
-            "url": { "raw": "{{base_url}}/users/persons", "host": ["{{base_url}}"], "path": ["users","persons"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{cliente_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/persons",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "persons"
+              ]
+            }
           }
         },
-
         {
           "name": "[CLIENTE] Ver mis propios datos → 200",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('200 cliente ve sus datos', () => pm.response.to.have.status(200));"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 cliente ve sus datos', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{cliente_token}}" }],
-            "url": { "raw": "{{base_url}}/users/users/{{cliente_user_id}}", "host": ["{{base_url}}"], "path": ["users","users","{{cliente_user_id}}"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{cliente_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/users/{{cliente_user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "users",
+                "{{cliente_user_id}}"
+              ]
+            }
           }
         },
-
         {
           "name": "[CLIENTE] Ver datos de otro usuario → 403",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('403 cliente no puede ver datos de otro', () => pm.response.to.have.status(403));"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('403 cliente no puede ver datos de otro', () => pm.response.to.have.status(403));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{cliente_token}}" }],
-            "url": { "raw": "{{base_url}}/users/users/{{admin_user_id}}", "host": ["{{base_url}}"], "path": ["users","users","{{admin_user_id}}"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{cliente_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/users/{{admin_user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "users",
+                "{{admin_user_id}}"
+              ]
+            }
           }
         },
-
         {
           "name": "[ADMIN] Ver cualquier usuario → 200",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('200 admin ve cualquier usuario', () => pm.response.to.have.status(200));"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 admin ve cualquier usuario', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
-            "url": { "raw": "{{base_url}}/users/users/{{cliente_user_id}}", "host": ["{{base_url}}"], "path": ["users","users","{{cliente_user_id}}"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/users/{{cliente_user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "users",
+                "{{cliente_user_id}}"
+              ]
+            }
           }
         },
-
         {
           "name": "[ADMIN] Listar roles → 200",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('200 admin lista roles', () => pm.response.to.have.status(200));",
-            "const roles = pm.response.json().map(r => r.name);",
-            "pm.test('roles del sistema presentes', () => {",
-            "  ['cliente','recaudador','admin','root'].forEach(r => pm.expect(roles).to.include(r));",
-            "});"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 admin lista roles', () => pm.response.to.have.status(200));",
+                  "const roles = pm.response.json().map(r => r.name);",
+                  "pm.test('roles del sistema presentes', () => {",
+                  "  ['cliente','recaudador','admin','root'].forEach(r => pm.expect(roles).to.include(r));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
-            "url": { "raw": "{{base_url}}/users/roles", "host": ["{{base_url}}"], "path": ["users","roles"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/roles",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "roles"
+              ]
+            }
           }
         },
-
         {
           "name": "[CLIENTE] Listar roles → 403",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('403 cliente no puede listar roles', () => pm.response.to.have.status(403));"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('403 cliente no puede listar roles', () => pm.response.to.have.status(403));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{cliente_token}}" }],
-            "url": { "raw": "{{base_url}}/users/roles", "host": ["{{base_url}}"], "path": ["users","roles"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{cliente_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/roles",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "roles"
+              ]
+            }
           }
         }
-
       ]
     },
-
     {
       "name": "3. Zones — RBAC",
       "item": [
-
         {
           "name": "Sin token → 401",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('401 sin token en zones', () => pm.response.to.have.status(401));"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('401 sin token en zones', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/zones/api/v1/zones", "host": ["{{base_url}}"], "path": ["zones","api","v1","zones"] }
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/zones",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "zones"
+              ]
+            }
           }
         },
-
         {
           "name": "[CLIENTE] Listar zonas → 200",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('200 cliente puede ver zonas', () => pm.response.to.have.status(200));",
-            "pm.test('respuesta es array', () => pm.expect(pm.response.json()).to.be.an('array'));"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 cliente puede ver zonas', () => pm.response.to.have.status(200));",
+                  "pm.test('respuesta es array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{cliente_token}}" }],
-            "url": { "raw": "{{base_url}}/zones/api/v1/zones", "host": ["{{base_url}}"], "path": ["zones","api","v1","zones"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{cliente_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/zones",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "zones"
+              ]
+            }
           }
         },
-
         {
           "name": "[CLIENTE] Crear zona → 403",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('403 cliente no puede crear zonas', () => pm.response.to.have.status(403));"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('403 cliente no puede crear zonas', () => pm.response.to.have.status(403));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{cliente_token}}" },
-              { "key": "Content-Type",  "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{cliente_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
-            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Zona Prohibida\",\n  \"capacity\": 5,\n  \"type\": \"REGULAR\"\n}" },
-            "url": { "raw": "{{base_url}}/zones/api/v1/zones", "host": ["{{base_url}}"], "path": ["zones","api","v1","zones"] }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Zona Prohibida\",\n  \"capacity\": 5,\n  \"type\": \"REGULAR\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/zones",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "zones"
+              ]
+            }
           }
         },
-
         {
           "name": "[ADMIN] Crear zona → 201",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('201 admin crea zona', () => pm.response.to.have.status(201));",
-            "const body = pm.response.json();",
-            "pm.collectionVariables.set('zone_id', body.id);",
-            "pm.test('zone_id guardado', () => pm.expect(body.id).to.not.be.empty);"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 admin crea zona', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('zone_id', body.id);",
+                  "pm.test('zone_id guardado', () => pm.expect(body.id).to.not.be.empty);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
-              { "key": "Content-Type",  "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
-            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Zona Norte RBAC\",\n  \"description\": \"Zona creada por test de RBAC\",\n  \"capacity\": 10,\n  \"type\": \"REGULAR\"\n}" },
-            "url": { "raw": "{{base_url}}/zones/api/v1/zones", "host": ["{{base_url}}"], "path": ["zones","api","v1","zones"] }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Zona Norte RBAC\",\n  \"description\": \"Zona creada por test de RBAC\",\n  \"capacity\": 10,\n  \"type\": \"REGULAR\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/zones",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "zones"
+              ]
+            }
           }
         },
-
         {
           "name": "[CLIENTE] Listar espacios → 200",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('200 cliente puede ver espacios', () => pm.response.to.have.status(200));"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 cliente puede ver espacios', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{cliente_token}}" }],
-            "url": { "raw": "{{base_url}}/zones/api/v1/places", "host": ["{{base_url}}"], "path": ["zones","api","v1","places"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{cliente_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/places",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "places"
+              ]
+            }
           }
         },
-
         {
           "name": "[CLIENTE] Crear espacio → 403",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('403 cliente no puede crear espacios', () => pm.response.to.have.status(403));"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('403 cliente no puede crear espacios', () => pm.response.to.have.status(403));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{cliente_token}}" },
-              { "key": "Content-Type",  "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{cliente_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
-            "body": { "mode": "raw", "raw": "{\n  \"idZone\": \"{{zone_id}}\",\n  \"type\": \"CAR\"\n}" },
-            "url": { "raw": "{{base_url}}/zones/api/v1/places", "host": ["{{base_url}}"], "path": ["zones","api","v1","places"] }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idZone\": \"{{zone_id}}\",\n  \"type\": \"CAR\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/places",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "places"
+              ]
+            }
           }
         },
-
         {
           "name": "[ADMIN] Crear espacio → 201",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('201 admin crea espacio', () => pm.response.to.have.status(201));",
-            "pm.collectionVariables.set('place_id', pm.response.json().id);"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 admin crea espacio', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('place_id', pm.response.json().id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
-              { "key": "Content-Type",  "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
-            "body": { "mode": "raw", "raw": "{\n  \"idZone\": \"{{zone_id}}\",\n  \"description\": \"Espacio de prueba A1\",\n  \"type\": \"CAR\"\n}" },
-            "url": { "raw": "{{base_url}}/zones/api/v1/places", "host": ["{{base_url}}"], "path": ["zones","api","v1","places"] }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idZone\": \"{{zone_id}}\",\n  \"description\": \"Espacio de prueba A1\",\n  \"type\": \"CAR\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/places",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "places"
+              ]
+            }
           }
         },
-
         {
           "name": "[ADMIN] Cambiar estado zona → 200",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('200 admin cambia estado zona', () => pm.response.to.have.status(200));"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 admin cambia estado zona', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "PUT",
-            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
-            "url": { "raw": "{{base_url}}/zones/api/v1/zones/{{zone_id}}/status", "host": ["{{base_url}}"], "path": ["zones","api","v1","zones","{{zone_id}}","status"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/zones/{{zone_id}}/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "zones",
+                "{{zone_id}}",
+                "status"
+              ]
+            }
           }
         },
-
         {
           "name": "[ADMIN] DELETE zona → 403 (solo root)",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('403 admin no puede eliminar zona físicamente', () => pm.response.to.have.status(403));"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('403 admin no puede eliminar zona físicamente', () => pm.response.to.have.status(403));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
-            "url": { "raw": "{{base_url}}/zones/api/v1/zones/{{zone_id}}", "host": ["{{base_url}}"], "path": ["zones","api","v1","zones","{{zone_id}}"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/zones/{{zone_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "zones",
+                "{{zone_id}}"
+              ]
+            }
           }
         },
-
         {
           "name": "[ROOT] DELETE espacio (físico) → 204",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('204 root elimina espacio físicamente', () => pm.response.to.have.status(204));"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('204 root elimina espacio físicamente', () => pm.response.to.have.status(204));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{root_token}}" }],
-            "url": { "raw": "{{base_url}}/zones/api/v1/places/{{place_id}}", "host": ["{{base_url}}"], "path": ["zones","api","v1","places","{{place_id}}"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{root_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/places/{{place_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "places",
+                "{{place_id}}"
+              ]
+            }
           }
         },
-
         {
           "name": "[ROOT] DELETE zona (físico) → 204",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('204 root elimina zona físicamente', () => pm.response.to.have.status(204));"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('204 root elimina zona físicamente', () => pm.response.to.have.status(204));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{root_token}}" }],
-            "url": { "raw": "{{base_url}}/zones/api/v1/zones/{{zone_id}}", "host": ["{{base_url}}"], "path": ["zones","api","v1","zones","{{zone_id}}"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{root_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/zones/{{zone_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "zones",
+                "{{zone_id}}"
+              ]
+            }
           }
         }
-
       ]
     },
-
     {
       "name": "4. Vehicles — RBAC",
       "item": [
-
         {
           "name": "Sin token → 401",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('401 sin token en vehicles', () => pm.response.to.have.status(401));"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('401 sin token en vehicles', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/vehicles/vehicles", "host": ["{{base_url}}"], "path": ["vehicles","vehicles"] }
+            "url": {
+              "raw": "{{base_url}}/vehicles/vehicles",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vehicles",
+                "vehicles"
+              ]
+            }
           }
         },
-
         {
           "name": "[CLIENTE] Listar vehículos → 200",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('200 cliente puede ver vehículos', () => pm.response.to.have.status(200));",
-            "pm.test('respuesta es array', () => pm.expect(pm.response.json()).to.be.an('array'));"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 cliente puede ver vehículos', () => pm.response.to.have.status(200));",
+                  "pm.test('respuesta es array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{cliente_token}}" }],
-            "url": { "raw": "{{base_url}}/vehicles/vehicles", "host": ["{{base_url}}"], "path": ["vehicles","vehicles"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{cliente_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/vehicles/vehicles",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vehicles",
+                "vehicles"
+              ]
+            }
           }
         },
-
         {
           "name": "[CLIENTE] Crear vehículo → 403",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('403 cliente no puede crear vehículos', () => pm.response.to.have.status(403));"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('403 cliente no puede crear vehículos', () => pm.response.to.have.status(403));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{cliente_token}}" },
-              { "key": "Content-Type",  "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{cliente_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
-            "body": { "mode": "raw", "raw": "{\n  \"tipo\": \"car\",\n  \"datos\": {\n    \"plate\": \"XYZ-9999\",\n    \"brand\": \"Toyota\",\n    \"model\": \"Corolla\",\n    \"color\": \"Rojo\",\n    \"year\": 2023,\n    \"clasification\": \"GASOLINE\",\n    \"numberOfDoors\": 4,\n    \"trunkCapacity\": 400\n  }\n}" },
-            "url": { "raw": "{{base_url}}/vehicles/vehicles", "host": ["{{base_url}}"], "path": ["vehicles","vehicles"] }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"car\",\n  \"datos\": {\n    \"plate\": \"XYZ-9999\",\n    \"brand\": \"Toyota\",\n    \"model\": \"Corolla\",\n    \"color\": \"Rojo\",\n    \"year\": 2023,\n    \"clasification\": \"GASOLINE\",\n    \"numberOfDoors\": 4,\n    \"trunkCapacity\": 400\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/vehicles/vehicles",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vehicles",
+                "vehicles"
+              ]
+            }
           }
         },
-
         {
           "name": "[ADMIN] Crear vehículo → 201",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('201 admin crea vehículo', () => pm.response.to.have.status(201));",
-            "pm.collectionVariables.set('vehicle_id', pm.response.json().id);",
-            "pm.test('vehicle_id guardado', () => pm.expect(pm.response.json().id).to.not.be.empty);"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 admin crea vehículo', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('vehicle_id', pm.response.json().id);",
+                  "pm.test('vehicle_id guardado', () => pm.expect(pm.response.json().id).to.not.be.empty);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
-              { "key": "Content-Type",  "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
-            "body": { "mode": "raw", "raw": "{\n  \"tipo\": \"car\",\n  \"datos\": {\n    \"plate\": \"RBA-2025\",\n    \"brand\": \"Toyota\",\n    \"model\": \"Corolla\",\n    \"color\": \"Blanco\",\n    \"year\": 2024,\n    \"clasification\": \"GASOLINE\",\n    \"numberOfDoors\": 4,\n    \"trunkCapacity\": 380\n  }\n}" },
-            "url": { "raw": "{{base_url}}/vehicles/vehicles", "host": ["{{base_url}}"], "path": ["vehicles","vehicles"] }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"car\",\n  \"datos\": {\n    \"plate\": \"RBA-2025\",\n    \"brand\": \"Toyota\",\n    \"model\": \"Corolla\",\n    \"color\": \"Blanco\",\n    \"year\": 2024,\n    \"clasification\": \"GASOLINE\",\n    \"numberOfDoors\": 4,\n    \"trunkCapacity\": 380\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/vehicles/vehicles",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vehicles",
+                "vehicles"
+              ]
+            }
           }
         },
-
         {
           "name": "[CLIENTE] Actualizar vehículo → 403",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('403 cliente no puede actualizar vehículos', () => pm.response.to.have.status(403));"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('403 cliente no puede actualizar vehículos', () => pm.response.to.have.status(403));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{cliente_token}}" },
-              { "key": "Content-Type",  "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{cliente_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
-            "body": { "mode": "raw", "raw": "{\n  \"tipo\": \"car\",\n  \"datos\": { \"color\": \"Negro\" }\n}" },
-            "url": { "raw": "{{base_url}}/vehicles/vehicles/{{vehicle_id}}", "host": ["{{base_url}}"], "path": ["vehicles","vehicles","{{vehicle_id}}"] }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"car\",\n  \"datos\": { \"color\": \"Negro\" }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/vehicles/vehicles/{{vehicle_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vehicles",
+                "vehicles",
+                "{{vehicle_id}}"
+              ]
+            }
           }
         },
-
         {
           "name": "[CLIENTE] Eliminar vehículo → 403",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('403 cliente no puede eliminar vehículos', () => pm.response.to.have.status(403));"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('403 cliente no puede eliminar vehículos', () => pm.response.to.have.status(403));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{cliente_token}}" }],
-            "url": { "raw": "{{base_url}}/vehicles/vehicles/{{vehicle_id}}", "host": ["{{base_url}}"], "path": ["vehicles","vehicles","{{vehicle_id}}"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{cliente_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/vehicles/vehicles/{{vehicle_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vehicles",
+                "vehicles",
+                "{{vehicle_id}}"
+              ]
+            }
           }
         }
-
       ]
     },
-
     {
       "name": "5. Assignments — RBAC",
       "item": [
-
         {
           "name": "Sin token → 401",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('401 sin token en assignments', () => pm.response.to.have.status(401));"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('401 sin token en assignments', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"user_id\": \"{{cliente_user_id}}\",\n  \"vehicle_id\": \"{{vehicle_id}}\"\n}" },
-            "url": { "raw": "{{base_url}}/assignments/assignments", "host": ["{{base_url}}"], "path": ["assignments","assignments"] }
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{cliente_user_id}}\",\n  \"vehicle_id\": \"{{vehicle_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/assignments/assignments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assignments",
+                "assignments"
+              ]
+            }
           }
         },
-
         {
           "name": "[CLIENTE] Crear asignación → 403",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('403 cliente no puede crear asignaciones', () => pm.response.to.have.status(403));"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('403 cliente no puede crear asignaciones', () => pm.response.to.have.status(403));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{cliente_token}}" },
-              { "key": "Content-Type",  "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{cliente_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
-            "body": { "mode": "raw", "raw": "{\n  \"user_id\": \"{{cliente_user_id}}\",\n  \"vehicle_id\": \"{{vehicle_id}}\"\n}" },
-            "url": { "raw": "{{base_url}}/assignments/assignments", "host": ["{{base_url}}"], "path": ["assignments","assignments"] }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{cliente_user_id}}\",\n  \"vehicle_id\": \"{{vehicle_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/assignments/assignments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assignments",
+                "assignments"
+              ]
+            }
           }
         },
-
         {
           "name": "[ADMIN] Crear asignación → 201",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('201 admin crea asignación', () => pm.response.to.have.status(201));",
-            "pm.test('asignación activa', () => pm.expect(pm.response.json().active).to.be.true);"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 admin crea asignación', () => pm.response.to.have.status(201));",
+                  "pm.test('asignación activa', () => pm.expect(pm.response.json().active).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
-              { "key": "Content-Type",  "value": "application/json" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
-            "body": { "mode": "raw", "raw": "{\n  \"user_id\": \"{{cliente_user_id}}\",\n  \"vehicle_id\": \"{{vehicle_id}}\"\n}" },
-            "url": { "raw": "{{base_url}}/assignments/assignments", "host": ["{{base_url}}"], "path": ["assignments","assignments"] }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{cliente_user_id}}\",\n  \"vehicle_id\": \"{{vehicle_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/assignments/assignments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assignments",
+                "assignments"
+              ]
+            }
           }
         },
-
         {
           "name": "[CLIENTE] Ver mi propia flota → 200",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('200 cliente ve su propia flota', () => pm.response.to.have.status(200));",
-            "pm.test('flota tiene el vehículo asignado', () => pm.expect(pm.response.json().total).to.be.gte(1));"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 cliente ve su propia flota', () => pm.response.to.have.status(200));",
+                  "pm.test('flota tiene el vehículo asignado', () => pm.expect(pm.response.json().total).to.be.gte(1));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{cliente_token}}" }],
-            "url": { "raw": "{{base_url}}/assignments/assignments/{{cliente_user_id}}/fleet", "host": ["{{base_url}}"], "path": ["assignments","assignments","{{cliente_user_id}}","fleet"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{cliente_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/assignments/assignments/{{cliente_user_id}}/fleet",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assignments",
+                "assignments",
+                "{{cliente_user_id}}",
+                "fleet"
+              ]
+            }
           }
         },
-
         {
           "name": "[CLIENTE] Ver flota de otro usuario → 403",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('403 cliente no puede ver flota ajena', () => pm.response.to.have.status(403));"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('403 cliente no puede ver flota ajena', () => pm.response.to.have.status(403));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{cliente_token}}" }],
-            "url": { "raw": "{{base_url}}/assignments/assignments/{{admin_user_id}}/fleet", "host": ["{{base_url}}"], "path": ["assignments","assignments","{{admin_user_id}}","fleet"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{cliente_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/assignments/assignments/{{admin_user_id}}/fleet",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assignments",
+                "assignments",
+                "{{admin_user_id}}",
+                "fleet"
+              ]
+            }
           }
         },
-
         {
           "name": "[ADMIN] Ver flota de cualquier usuario → 200",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('200 admin puede ver flota de cualquier usuario', () => pm.response.to.have.status(200));"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 admin puede ver flota de cualquier usuario', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
-            "url": { "raw": "{{base_url}}/assignments/assignments/{{cliente_user_id}}/fleet", "host": ["{{base_url}}"], "path": ["assignments","assignments","{{cliente_user_id}}","fleet"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/assignments/assignments/{{cliente_user_id}}/fleet",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assignments",
+                "assignments",
+                "{{cliente_user_id}}",
+                "fleet"
+              ]
+            }
           }
         },
-
         {
           "name": "[ADMIN] Ver auditoría completa → 200",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('200 admin ve auditoría', () => pm.response.to.have.status(200));",
-            "pm.test('hay registros de auditoría', () => pm.expect(pm.response.json()).to.be.an('array'));"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 admin ve auditoría', () => pm.response.to.have.status(200));",
+                  "pm.test('hay registros de auditoría', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
-            "url": { "raw": "{{base_url}}/assignments/assignments/audit", "host": ["{{base_url}}"], "path": ["assignments","assignments","audit"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/assignments/assignments/audit",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assignments",
+                "assignments",
+                "audit"
+              ]
+            }
           }
         },
-
         {
           "name": "[CLIENTE] Ver auditoría → 403",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('403 cliente no puede ver auditoría global', () => pm.response.to.have.status(403));"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('403 cliente no puede ver auditoría global', () => pm.response.to.have.status(403));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{cliente_token}}" }],
-            "url": { "raw": "{{base_url}}/assignments/assignments/audit", "host": ["{{base_url}}"], "path": ["assignments","assignments","audit"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{cliente_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/assignments/assignments/audit",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assignments",
+                "assignments",
+                "audit"
+              ]
+            }
           }
         },
-
         {
           "name": "Sin token — by-vehicle (open, interno) → 200 o 404",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('endpoint interno no requiere auth', () => {",
-            "  pm.expect([200, 404]).to.include(pm.response.code);",
-            "});"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('endpoint interno no requiere auth', () => {",
+                  "  pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/assignments/assignments/by-vehicle/{{vehicle_id}}", "host": ["{{base_url}}"], "path": ["assignments","assignments","by-vehicle","{{vehicle_id}}"] }
+            "url": {
+              "raw": "{{base_url}}/assignments/assignments/by-vehicle/{{vehicle_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assignments",
+                "assignments",
+                "by-vehicle",
+                "{{vehicle_id}}"
+              ]
+            }
           }
         },
-
         {
           "name": "[CLIENTE] Eliminar asignación → 403",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('403 cliente no puede eliminar asignaciones', () => pm.response.to.have.status(403));"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('403 cliente no puede eliminar asignaciones', () => pm.response.to.have.status(403));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{cliente_token}}" }],
-            "url": { "raw": "{{base_url}}/assignments/assignments/{{cliente_user_id}}/{{vehicle_id}}", "host": ["{{base_url}}"], "path": ["assignments","assignments","{{cliente_user_id}}","{{vehicle_id}}"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{cliente_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/assignments/assignments/{{cliente_user_id}}/{{vehicle_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assignments",
+                "assignments",
+                "{{cliente_user_id}}",
+                "{{vehicle_id}}"
+              ]
+            }
           }
         },
-
         {
           "name": "[ADMIN] Eliminar asignación → 200",
-          "event": [{ "listen": "test", "script": { "exec": [
-            "pm.test('200 admin elimina asignación', () => pm.response.to.have.status(200));",
-            "pm.test('asignación inactiva', () => pm.expect(pm.response.json().active).to.be.false);"
-          ], "type": "text/javascript" }}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 admin elimina asignación', () => pm.response.to.have.status(200));",
+                  "pm.test('asignación inactiva', () => pm.expect(pm.response.json().active).to.be.false);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
-            "url": { "raw": "{{base_url}}/assignments/assignments/{{cliente_user_id}}/{{vehicle_id}}", "host": ["{{base_url}}"], "path": ["assignments","assignments","{{cliente_user_id}}","{{vehicle_id}}"] }
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/assignments/assignments/{{cliente_user_id}}/{{vehicle_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assignments",
+                "assignments",
+                "{{cliente_user_id}}",
+                "{{vehicle_id}}"
+              ]
+            }
           }
         }
-
+      ]
+    },
+    {
+      "name": "6. Tickets — RBAC",
+      "item": [
+        {
+          "name": "Sin token → 401",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tickets/tickets",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tickets",
+                "tickets"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('401 sin token', () => pm.response.to.have.status(401));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "[ADMIN] Crear zona (tickets) → 201",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/zones",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "zones"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Zona Tickets RBAC\",\n  \"description\": \"Zona para pruebas de tickets\",\n  \"capacity\": 10,\n  \"type\": \"REGULAR\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 admin crea zona', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('ticket_zone_id', pm.response.json().id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "[ADMIN] Crear espacio A (AVAILABLE) → 201",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/places",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "places"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idZone\": \"{{ticket_zone_id}}\",\n  \"description\": \"Espacio A - tickets\",\n  \"type\": \"CAR\",\n  \"status\": \"AVAILABLE\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 admin crea espacio A', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('place_a_id', pm.response.json().id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "[ADMIN] Crear espacio B (AVAILABLE) → 201",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/places",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "places"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idZone\": \"{{ticket_zone_id}}\",\n  \"description\": \"Espacio B - tickets\",\n  \"type\": \"CAR\",\n  \"status\": \"AVAILABLE\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 admin crea espacio B', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('place_b_id', pm.response.json().id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "[ADMIN] Crear vehículo 1 (propietario cliente) → 201",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/vehicles/vehicles",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vehicles",
+                "vehicles"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"car\",\n  \"datos\": {\n    \"plate\": \"TCK-1111\",\n    \"brand\": \"Chevrolet\",\n    \"model\": \"Spark\",\n    \"color\": \"Rojo\",\n    \"year\": 2023,\n    \"clasification\": \"GASOLINE\",\n    \"numberOfDoors\": 4,\n    \"trunkCapacity\": 170\n  }\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 admin crea vehiculo 1', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('ticket_vehicle_1_id', pm.response.json().id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "[ADMIN] Crear vehículo 2 (mismo propietario) → 201",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/vehicles/vehicles",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "vehicles",
+                "vehicles"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"motocicleta\",\n  \"datos\": {\n    \"plate\": \"TC-222C\",\n    \"brand\": \"Yamaha\",\n    \"model\": \"FZ\",\n    \"color\": \"Negro\",\n    \"year\": 2022,\n    \"clasification\": \"GASOLINE\",\n    \"typeOfMotorbike\": \"SPORT\"\n  }\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 admin crea vehiculo 2', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('ticket_vehicle_2_id', pm.response.json().id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "[ADMIN] Asignar vehículo 1 al cliente → 201",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/assignments/assignments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assignments",
+                "assignments"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{cliente_user_id}}\",\n  \"vehicle_id\": \"{{ticket_vehicle_1_id}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 asignacion vehiculo 1', () => pm.response.to.have.status(201));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "[ADMIN] Asignar vehículo 2 al mismo cliente → 201",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/assignments/assignments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "assignments",
+                "assignments"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{cliente_user_id}}\",\n  \"vehicle_id\": \"{{ticket_vehicle_2_id}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 asignacion vehiculo 2 (mismo dueño, 2do vehículo)', () => pm.response.to.have.status(201));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "[CLIENTE] Emitir ticket → 403",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{cliente_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tickets/tickets",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tickets",
+                "tickets"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idEspacio\": \"{{place_a_id}}\",\n  \"placa\": \"TCK-1111\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('403 cliente no puede emitir ticket', () => pm.response.to.have.status(403));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "[ADMIN] Emitir ticket vehículo 1 en espacio A → 201",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tickets/tickets",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tickets",
+                "tickets"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idEspacio\": \"{{place_a_id}}\",\n  \"placa\": \"TCK-1111\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 ticket creado', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('ticket_1_id', body.id);",
+                  "pm.test('estado ACTIVO', () => pm.expect(body.estado).to.eql('ACTIVO'));",
+                  "pm.test('valorRecaudado en 0', () => pm.expect(Number(body.valorRecaudado)).to.eql(0));",
+                  "pm.test('idUsuario es el propietario asignado', () => pm.expect(body.idUsuario).to.eql(pm.collectionVariables.get('cliente_user_id')));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "[ADMIN] Emitir ticket duplicado (mismo vehículo 1) → 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tickets/tickets",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tickets",
+                "tickets"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idEspacio\": \"{{place_b_id}}\",\n  \"placa\": \"TCK-1111\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('409 vehiculo ya tiene ticket activo', () => pm.response.to.have.status(409));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "[ADMIN] Emitir ticket vehículo 2 en espacio A (ocupado) → 409",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tickets/tickets",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tickets",
+                "tickets"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idEspacio\": \"{{place_a_id}}\",\n  \"placa\": \"TC-222C\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('409 espacio ya ocupado', () => pm.response.to.have.status(409));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "[ADMIN] Emitir ticket vehículo 2 en espacio B (libre) → 201",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tickets/tickets",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tickets",
+                "tickets"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idEspacio\": \"{{place_b_id}}\",\n  \"placa\": \"TC-222C\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 ticket 2 creado (2do vehículo, mismo dueño)', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('ticket_2_id', pm.response.json().id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "[ADMIN] Listar tickets → 200",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tickets/tickets",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tickets",
+                "tickets"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 listar tickets', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "[ADMIN] Pagar ticket 1 → 200",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tickets/tickets/{{ticket_1_id}}/pay",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tickets",
+                "tickets",
+                "{{ticket_1_id}}",
+                "pay"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 ticket pagado', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('estado PAGADO', () => pm.expect(body.estado).to.eql('PAGADO'));",
+                  "pm.test('valorRecaudado > 0', () => pm.expect(Number(body.valorRecaudado)).to.be.above(0));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "[ADMIN] Anular ticket 2 → 200",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tickets/tickets/{{ticket_2_id}}/cancel",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tickets",
+                "tickets",
+                "{{ticket_2_id}}",
+                "cancel"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 ticket anulado', () => pm.response.to.have.status(200));",
+                  "pm.test('estado ANULADO', () => pm.expect(pm.response.json().estado).to.eql('ANULADO'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "[ADMIN] Volver a ocupar espacio A (liberado tras pago) → 201",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tickets/tickets",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tickets",
+                "tickets"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idEspacio\": \"{{place_a_id}}\",\n  \"placa\": \"TC-222C\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 espacio A quedó libre tras el pago', () => pm.response.to.have.status(201));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "[ADMIN] Pagar ticket 1 de nuevo → 409",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tickets/tickets/{{ticket_1_id}}/pay",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tickets",
+                "tickets",
+                "{{ticket_1_id}}",
+                "pay"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('409 ticket ya no está activo', () => pm.response.to.have.status(409));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
       ]
     }
-
   ]
 }

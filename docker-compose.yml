@@ -204,7 +204,18 @@ services:
       ZONES_SERVICE_URL: http://zones:8080
       VEHICLES_SERVICE_URL: http://vehicles:3000
       ASSIGNMENTS_SERVICE_URL: http://assignments:8001
+      # Tarifa de respaldo si el tipo de espacio es desconocido
       TICKET_PRICE: 1.00
+      # Tarifa base por hora/fracción según tipo de espacio (zones.TypeOfPlace)
+      PLACE_RATE_CAR: 1.00
+      PLACE_RATE_BIKE: 0.50
+      PLACE_RATE_BUS: 2.00
+      # Multiplicador de tarifa según tipo de zona (zones.TypeOfZone)
+      ZONE_MULT_REGULAR: 1
+      ZONE_MULT_VIP: 5
+      ZONE_MULT_INTERNAL: 3
+      ZONE_MULT_EXTERNAL: 2
+      ZONE_MULT_PREFERENTIAL: 0.5
     ports:
       - '3001:3000'
     depends_on:

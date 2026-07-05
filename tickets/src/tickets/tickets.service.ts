@@ -12,13 +12,25 @@ import { CreateTicketDto } from './dto/create-ticket.dto';
 import { EstadoTicket } from './entities/enum/estado-ticket.enum';
 import { Ticket } from './entities/ticket.entity';
 
-// Tarifa por hora o fracción según el tipo de vehículo (USD).
-const HOURLY_RATES: Record<string, number> = {
-  car: Number(process.env.RATE_CAR ?? 1.0),
-  motocicleta: Number(process.env.RATE_MOTORCYCLE ?? 0.5),
-  pickupTruck: Number(process.env.RATE_PICKUP ?? 1.5),
+// Tarifa base por hora o fracción según el TIPO DE ESPACIO (USD). La tarifa
+// no depende del vehículo: una camioneta usa un espacio CAR y paga como CAR.
+// Configurable por variables de entorno.
+const PLACE_BASE_RATES: Record<string, number> = {
+  CAR: Number(process.env.PLACE_RATE_CAR ?? 1.0),
+  BIKE: Number(process.env.PLACE_RATE_BIKE ?? 0.5),
+  BUS: Number(process.env.PLACE_RATE_BUS ?? 2.0),
 };
-// Tarifa de respaldo si el tipo del vehículo es desconocido.
+
+// Multiplicador de la tarifa según el TIPO DE ZONA. Configurable por env.
+const ZONE_MULTIPLIERS: Record<string, number> = {
+  REGULAR: Number(process.env.ZONE_MULT_REGULAR ?? 1),
+  VIP: Number(process.env.ZONE_MULT_VIP ?? 5),
+  INTERNAL: Number(process.env.ZONE_MULT_INTERNAL ?? 3),
+  EXTERNAL: Number(process.env.ZONE_MULT_EXTERNAL ?? 2),
+  PREFERENTIAL: Number(process.env.ZONE_MULT_PREFERENTIAL ?? 0.5),
+};
+
+// Tarifa de respaldo si el tipo de espacio es desconocido.
 const DEFAULT_RATE = Number(process.env.TICKET_PRICE ?? 1.0);
 const HOUR_MS = 60 * 60 * 1000;
 
@@ -31,8 +43,12 @@ const PLACE_VEHICLE_COMPAT: Record<string, string[]> = {
   BUS: [],
 };
 
-function rateForTipo(tipo?: string): number {
-  return (tipo && HOURLY_RATES[tipo]) || DEFAULT_RATE;
+// tarifa = base(tipoEspacio) × multiplicador(tipoZona)
+function computeRate(tipoEspacio?: string, tipoZona?: string): number {
+  const base =
+    (tipoEspacio && PLACE_BASE_RATES[tipoEspacio]) || DEFAULT_RATE;
+  const mult = (tipoZona && ZONE_MULTIPLIERS[tipoZona]) || 1;
+  return Math.round(base * mult * 100) / 100;
 }
 
 @Injectable()
@@ -98,6 +114,10 @@ export class TicketsService {
       );
     }
 
+    // La tarifa depende solo de zones: tipo de espacio × tipo de zona.
+    const zone = await this.zonesClient.findZoneById(place.idZone, authHeader);
+    const tarifaHora = computeRate(place.type, zone?.type);
+
     const fechaHoraIngreso = new Date();
     const codigo = await this.generateUniqueCode(place.code, fechaHoraIngreso);
 
@@ -108,7 +128,9 @@ export class TicketsService {
       placa: dto.placa,
       idVehiculo: vehicle.id,
       tipoVehiculo: vehicle.tipo,
-      tarifaHora: rateForTipo(vehicle.tipo),
+      tipoEspacio: place.type,
+      tipoZona: zone?.type,
+      tarifaHora,
       idUsuario: assignment.user_id,
       idEmpleadoIngreso: idEmpleado,
       fechaHoraIngreso,
@@ -177,7 +199,8 @@ export class TicketsService {
   // p.ej. 1 min → 1 hora, 61 min → 2 horas. Mínimo 1 hora.
   private calcularValor(ticket: Ticket, salida: Date): number {
     const tarifa =
-      Number(ticket.tarifaHora) || rateForTipo(ticket.tipoVehiculo);
+      Number(ticket.tarifaHora) ||
+      computeRate(ticket.tipoEspacio, ticket.tipoZona);
     const elapsedMs = salida.getTime() - ticket.fechaHoraIngreso.getTime();
     const horas = Math.max(1, Math.ceil(elapsedMs / HOUR_MS));
     return Math.round(tarifa * horas * 100) / 100;

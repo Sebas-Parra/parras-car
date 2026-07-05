@@ -31,12 +31,22 @@ export class Ticket {
   idVehiculo!: string;
 
   // Tipo del vehículo capturado al ingreso (car | motocicleta | pickupTruck).
-  // Determina la tarifa; se guarda para no depender de vehicles al cobrar.
+  // Ya NO define la tarifa (eso lo hace el espacio/zona); se guarda para
+  // auditoría y para validar compatibilidad con el tipo de espacio.
   @Column({ nullable: true })
   tipoVehiculo?: string;
 
-  // Tarifa por hora (o fracción) vigente al momento del ingreso. Se congela
-  // aquí para que un cambio de tarifas no altere tickets ya emitidos.
+  // Tipo del espacio (CAR | BIKE | BUS) y de la zona (REGULAR | VIP | ...)
+  // capturados al ingreso. Definen la tarifa y se guardan para trazabilidad.
+  @Column({ nullable: true })
+  tipoEspacio?: string;
+
+  @Column({ nullable: true })
+  tipoZona?: string;
+
+  // Tarifa por hora (o fracción) vigente al momento del ingreso = tarifa base
+  // del espacio × multiplicador de la zona. Se congela aquí para que un cambio
+  // de tarifas no altere tickets ya emitidos.
   @Column({
     type: 'decimal',
     precision: 10,

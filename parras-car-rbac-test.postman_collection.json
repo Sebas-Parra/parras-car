@@ -2440,10 +2440,11 @@
                   "pm.test('200 ticket pagado', () => pm.response.to.have.status(200));",
                   "const body = pm.response.json();",
                   "pm.test('estado PAGADO', () => pm.expect(body.estado).to.eql('PAGADO'));",
-                  "// vehiculo 1 es 'car' => $1.00 por hora o fraccion; pago inmediato = 1 fraccion",
-                  "pm.test('valorRecaudado = 1.00 (car, 1 fraccion)', () => pm.expect(Number(body.valorRecaudado)).to.eql(1));",
-                  "pm.test('tarifaHora = 1.00 (car)', () => pm.expect(Number(body.tarifaHora)).to.eql(1));",
-                  "pm.test('tipoVehiculo car', () => pm.expect(body.tipoVehiculo).to.eql('car'));"
+                  "// tarifa = base(espacio) x mult(zona). Espacio A = CAR ($1), zona REGULAR (x1) => $1.00/fraccion",
+                  "pm.test('tipoEspacio CAR', () => pm.expect(body.tipoEspacio).to.eql('CAR'));",
+                  "pm.test('tipoZona REGULAR', () => pm.expect(body.tipoZona).to.eql('REGULAR'));",
+                  "pm.test('tarifaHora = 1.00 (CAR x REGULAR)', () => pm.expect(Number(body.tarifaHora)).to.eql(1));",
+                  "pm.test('valorRecaudado = 1.00 (1 fraccion)', () => pm.expect(Number(body.valorRecaudado)).to.eql(1));"
                 ]
               }
             }

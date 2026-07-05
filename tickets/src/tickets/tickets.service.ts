@@ -22,6 +22,15 @@ const HOURLY_RATES: Record<string, number> = {
 const DEFAULT_RATE = Number(process.env.TICKET_PRICE ?? 1.0);
 const HOUR_MS = 60 * 60 * 1000;
 
+// Qué tipos de vehículo admite cada tipo de espacio. Un espacio CAR es más
+// grande, así que acepta autos y camionetas; el BIKE solo motos. BUS se ignora
+// por ahora (sin tipos livianos compatibles).
+const PLACE_VEHICLE_COMPAT: Record<string, string[]> = {
+  CAR: ['car', 'pickupTruck'],
+  BIKE: ['motocicleta'],
+  BUS: [],
+};
+
 function rateForTipo(tipo?: string): number {
   return (tipo && HOURLY_RATES[tipo]) || DEFAULT_RATE;
 }
@@ -78,6 +87,14 @@ export class TicketsService {
     if (!place.active || place.status !== 'AVAILABLE') {
       throw new ConflictException(
         `El espacio '${place.code}' no está disponible (estado: ${place.status})`,
+      );
+    }
+
+    const allowedTipos = PLACE_VEHICLE_COMPAT[place.type] ?? [];
+    if (!vehicle.tipo || !allowedTipos.includes(vehicle.tipo)) {
+      throw new ConflictException(
+        `El espacio '${place.code}' es de tipo ${place.type} y no admite ` +
+          `vehículos de tipo '${vehicle.tipo ?? 'desconocido'}'`,
       );
     }
 

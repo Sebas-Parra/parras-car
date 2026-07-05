@@ -3,10 +3,13 @@ import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 const ZONES_URL = process.env.ZONES_SERVICE_URL ?? 'http://zones:8080';
 
 export type PlaceStatus = 'AVAILABLE' | 'OCCUPIED' | 'MAINTENANCE' | 'RESERVED';
+export type PlaceType = 'CAR' | 'BIKE' | 'BUS';
 
 export interface PlaceDto {
   id: string;
   code: string;
+  // Tipo físico del espacio (CAR | BIKE | BUS). Determina qué vehículos caben.
+  type: PlaceType;
   status: PlaceStatus;
   active: boolean;
   idZone: string;

@@ -93,6 +93,14 @@
     {
       "key": "recaudador_user_id",
       "value": ""
+    },
+    {
+      "key": "recaudador_username",
+      "value": ""
+    },
+    {
+      "key": "recaudador_role_id",
+      "value": ""
     }
   ],
   "item": [
@@ -265,6 +273,129 @@
           }
         },
         {
+          "name": "[PUBLICO] Registrar persona (futuro recaudador)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('recaudador_user_id', body.id);",
+                  "pm.collectionVariables.set('recaudador_username', body.user.username);",
+                  "pm.test('nace con rol cliente', () => pm.expect(body.user.roles[0].name).to.eql('cliente'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cedula\": \"1715021000\",\n  \"first_name\": \"Recaudador\",\n  \"last_name\": \"Sistema\",\n  \"email\": \"recaudador@parras-car.com\",\n  \"phone\": \"0990000002\",\n  \"password\": \"Recaudador123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/persons",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "persons"
+              ]
+            }
+          }
+        },
+        {
+          "name": "[ADMIN] Obtener id del rol recaudador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const roles = pm.response.json();",
+                  "const rec = roles.find(r => r.name === 'recaudador');",
+                  "pm.test('rol recaudador existe', () => pm.expect(rec, 'rol recaudador').to.be.an('object'));",
+                  "pm.collectionVariables.set('recaudador_role_id', rec.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/roles",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "roles"
+              ]
+            }
+          }
+        },
+        {
+          "name": "[ADMIN] Asignar rol recaudador a la persona",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('persona ahora es recaudador', () => pm.expect(body.roles.map(r => r.name)).to.include('recaudador'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role_id\": \"{{recaudador_role_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/users/{{recaudador_user_id}}/roles",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "users",
+                "{{recaudador_user_id}}",
+                "roles"
+              ]
+            }
+          }
+        },
+        {
           "name": "[RECAUDADOR] Login",
           "event": [
             {
@@ -274,8 +405,7 @@
                 "exec": [
                   "pm.test('200 OK', () => pm.response.to.have.status(200));",
                   "const body = pm.response.json();",
-                  "pm.collectionVariables.set('recaudador_token',   body.access_token);",
-                  "pm.collectionVariables.set('recaudador_user_id', body.user_id);",
+                  "pm.collectionVariables.set('recaudador_token', body.access_token);",
                   "pm.test('rol recaudador presente', () => pm.expect(body.roles).to.include('recaudador'));"
                 ]
               }
@@ -291,7 +421,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"recaudador\",\n  \"password\": \"Recaudador123!\"\n}"
+              "raw": "{\n  \"username\": \"{{recaudador_username}}\",\n  \"password\": \"Recaudador123!\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/users/auth/login",
@@ -1817,7 +1947,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"idZone\": \"{{ticket_zone_id}}\",\n  \"description\": \"Espacio B - tickets\",\n  \"type\": \"CAR\",\n  \"status\": \"AVAILABLE\"\n}"
+              "raw": "{\n  \"idZone\": \"{{ticket_zone_id}}\",\n  \"description\": \"Espacio B - tickets (BIKE)\",\n  \"type\": \"BIKE\",\n  \"status\": \"AVAILABLE\"\n}"
             }
           },
           "event": [
@@ -2356,6 +2486,47 @@
           ]
         },
         {
+          "name": "[RECAUDADOR] Emitir carro en espacio BIKE → 409 (incompatible)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('409 tipo de vehiculo incompatible con el espacio', () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{recaudador_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idEspacio\": \"{{place_b_id}}\",\n  \"placa\": \"TCK-1111\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tickets/tickets",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tickets",
+                "tickets"
+              ]
+            }
+          }
+        },
+        {
           "name": "[RECAUDADOR] Volver a ocupar espacio A (liberado tras pago) → 201",
           "request": {
             "method": "POST",
@@ -2381,7 +2552,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"idEspacio\": \"{{place_a_id}}\",\n  \"placa\": \"TC-222C\"\n}"
+              "raw": "{\n  \"idEspacio\": \"{{place_a_id}}\",\n  \"placa\": \"TCK-1111\"\n}"
             }
           },
           "event": [

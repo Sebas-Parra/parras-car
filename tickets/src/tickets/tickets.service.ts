@@ -12,7 +12,19 @@ import { CreateTicketDto } from './dto/create-ticket.dto';
 import { EstadoTicket } from './entities/enum/estado-ticket.enum';
 import { Ticket } from './entities/ticket.entity';
 
-const TICKET_PRICE = Number(process.env.TICKET_PRICE ?? 1.0);
+// Tarifa por hora o fracción según el tipo de vehículo (USD).
+const HOURLY_RATES: Record<string, number> = {
+  car: Number(process.env.RATE_CAR ?? 1.0),
+  motocicleta: Number(process.env.RATE_MOTORCYCLE ?? 0.5),
+  pickupTruck: Number(process.env.RATE_PICKUP ?? 1.5),
+};
+// Tarifa de respaldo si el tipo del vehículo es desconocido.
+const DEFAULT_RATE = Number(process.env.TICKET_PRICE ?? 1.0);
+const HOUR_MS = 60 * 60 * 1000;
+
+function rateForTipo(tipo?: string): number {
+  return (tipo && HOURLY_RATES[tipo]) || DEFAULT_RATE;
+}
 
 @Injectable()
 export class TicketsService {
@@ -78,6 +90,8 @@ export class TicketsService {
       codigoEspacio: place.code,
       placa: dto.placa,
       idVehiculo: vehicle.id,
+      tipoVehiculo: vehicle.tipo,
+      tarifaHora: rateForTipo(vehicle.tipo),
       idUsuario: assignment.user_id,
       idEmpleadoIngreso: idEmpleado,
       fechaHoraIngreso,
@@ -117,9 +131,10 @@ export class TicketsService {
         `El ticket '${ticket.codigo}' no está activo (estado: ${ticket.estado})`,
       );
     }
+    const fechaHoraSalida = new Date();
     ticket.estado = EstadoTicket.PAGADO;
-    ticket.fechaHoraSalida = new Date();
-    ticket.valorRecaudado = TICKET_PRICE;
+    ticket.fechaHoraSalida = fechaHoraSalida;
+    ticket.valorRecaudado = this.calcularValor(ticket, fechaHoraSalida);
     ticket.idEmpleadoPago = idEmpleado;
     const saved = await this.ticketRepository.save(ticket);
     await this.zonesClient.setStatus(ticket.idEspacio, 'AVAILABLE', authHeader);
@@ -139,6 +154,16 @@ export class TicketsService {
     const saved = await this.ticketRepository.save(ticket);
     await this.zonesClient.setStatus(ticket.idEspacio, 'AVAILABLE', authHeader);
     return saved;
+  }
+
+  // Cobro por hora o fracción: se factura la hora completa apenas se inicia.
+  // p.ej. 1 min → 1 hora, 61 min → 2 horas. Mínimo 1 hora.
+  private calcularValor(ticket: Ticket, salida: Date): number {
+    const tarifa =
+      Number(ticket.tarifaHora) || rateForTipo(ticket.tipoVehiculo);
+    const elapsedMs = salida.getTime() - ticket.fechaHoraIngreso.getTime();
+    const horas = Math.max(1, Math.ceil(elapsedMs / HOUR_MS));
+    return Math.round(tarifa * horas * 100) / 100;
   }
 
   private async generateUniqueCode(

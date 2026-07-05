@@ -6,6 +6,9 @@ export interface VehicleDto {
   id: string;
   plate: string;
   active: boolean;
+  // Discriminador de tipo expuesto por vehicles vía toJSON:
+  // 'car' | 'motocicleta' | 'pickupTruck'.
+  tipo?: string;
 }
 
 // vehicles no expone búsqueda por placa, solo listado completo y GET /:id.

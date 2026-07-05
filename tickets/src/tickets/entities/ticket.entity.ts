@@ -30,6 +30,25 @@ export class Ticket {
   @Column()
   idVehiculo!: string;
 
+  // Tipo del vehículo capturado al ingreso (car | motocicleta | pickupTruck).
+  // Determina la tarifa; se guarda para no depender de vehicles al cobrar.
+  @Column({ nullable: true })
+  tipoVehiculo?: string;
+
+  // Tarifa por hora (o fracción) vigente al momento del ingreso. Se congela
+  // aquí para que un cambio de tarifas no altere tickets ya emitidos.
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    default: 0,
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => Number(value),
+    },
+  })
+  tarifaHora!: number;
+
   @Column()
   idUsuario!: string;
 

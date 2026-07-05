@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
   Req,
@@ -46,14 +47,14 @@ export class TicketsController {
 
   // Cualquier usuario autenticado — consultar ticket
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.ticketsService.findOne(id);
   }
 
   // Empleado (recaudador) o admin/root — registrar pago y liberar espacio
   @Patch(':id/pay')
   @Roles('recaudador', 'admin', 'root')
-  pay(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+  pay(@Param('id', ParseUUIDPipe) id: string, @Req() req: AuthenticatedRequest) {
     return this.ticketsService.pay(
       id,
       req.user.userId,
@@ -64,7 +65,7 @@ export class TicketsController {
   // Empleado (recaudador) o admin/root — anular ticket y liberar espacio
   @Patch(':id/cancel')
   @Roles('recaudador', 'admin', 'root')
-  cancel(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+  cancel(@Param('id', ParseUUIDPipe) id: string, @Req() req: AuthenticatedRequest) {
     return this.ticketsService.cancel(
       id,
       req.user.userId,

@@ -85,6 +85,14 @@
       "key": "ticket_2_id",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "recaudador_token",
+      "value": ""
+    },
+    {
+      "key": "recaudador_user_id",
+      "value": ""
     }
   ],
   "item": [
@@ -242,6 +250,48 @@
             "body": {
               "mode": "raw",
               "raw": "{\n  \"username\": \"testcliente\",\n  \"password\": \"Test1234!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "[RECAUDADOR] Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('recaudador_token',   body.access_token);",
+                  "pm.collectionVariables.set('recaudador_user_id', body.user_id);",
+                  "pm.test('rol recaudador presente', () => pm.expect(body.roles).to.include('recaudador'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"recaudador\",\n  \"password\": \"Recaudador123!\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/users/auth/login",
@@ -1991,13 +2041,13 @@
           ]
         },
         {
-          "name": "[ADMIN] Emitir ticket vehículo 1 en espacio A → 201",
+          "name": "[RECAUDADOR] Emitir ticket vehículo 1 en espacio A → 201",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
+                "value": "Bearer {{recaudador_token}}"
               },
               {
                 "key": "Content-Type",
@@ -2037,13 +2087,13 @@
           ]
         },
         {
-          "name": "[ADMIN] Emitir ticket duplicado (mismo vehículo 1) → 409",
+          "name": "[RECAUDADOR] Emitir ticket duplicado (mismo vehículo 1) → 409",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
+                "value": "Bearer {{recaudador_token}}"
               },
               {
                 "key": "Content-Type",
@@ -2078,13 +2128,13 @@
           ]
         },
         {
-          "name": "[ADMIN] Emitir ticket vehículo 2 en espacio A (ocupado) → 409",
+          "name": "[RECAUDADOR] Emitir ticket vehículo 2 en espacio A (ocupado) → 409",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
+                "value": "Bearer {{recaudador_token}}"
               },
               {
                 "key": "Content-Type",
@@ -2119,13 +2169,13 @@
           ]
         },
         {
-          "name": "[ADMIN] Emitir ticket vehículo 2 en espacio B (libre) → 201",
+          "name": "[RECAUDADOR] Emitir ticket vehículo 2 en espacio B (libre) → 201",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
+                "value": "Bearer {{recaudador_token}}"
               },
               {
                 "key": "Content-Type",
@@ -2161,13 +2211,13 @@
           ]
         },
         {
-          "name": "[ADMIN] Listar tickets → 200",
+          "name": "[RECAUDADOR] Listar tickets → 200",
           "request": {
             "method": "GET",
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
+                "value": "Bearer {{recaudador_token}}"
               }
             ],
             "url": {
@@ -2194,13 +2244,48 @@
           ]
         },
         {
-          "name": "[ADMIN] Pagar ticket 1 → 200",
+          "name": "[RECAUDADOR] Pagar ticket id inválido → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400 id no es UUID (antes 500)', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "PATCH",
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
+                "value": "Bearer {{recaudador_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tickets/tickets/no-es-uuid/pay",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tickets",
+                "tickets",
+                "no-es-uuid",
+                "pay"
+              ]
+            }
+          }
+        },
+        {
+          "name": "[RECAUDADOR] Pagar ticket 1 → 200",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{recaudador_token}}"
               }
             ],
             "url": {
@@ -2220,25 +2305,28 @@
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
                   "pm.test('200 ticket pagado', () => pm.response.to.have.status(200));",
                   "const body = pm.response.json();",
                   "pm.test('estado PAGADO', () => pm.expect(body.estado).to.eql('PAGADO'));",
-                  "pm.test('valorRecaudado > 0', () => pm.expect(Number(body.valorRecaudado)).to.be.above(0));"
-                ],
-                "type": "text/javascript"
+                  "// vehiculo 1 es 'car' => $1.00 por hora o fraccion; pago inmediato = 1 fraccion",
+                  "pm.test('valorRecaudado = 1.00 (car, 1 fraccion)', () => pm.expect(Number(body.valorRecaudado)).to.eql(1));",
+                  "pm.test('tarifaHora = 1.00 (car)', () => pm.expect(Number(body.tarifaHora)).to.eql(1));",
+                  "pm.test('tipoVehiculo car', () => pm.expect(body.tipoVehiculo).to.eql('car'));"
+                ]
               }
             }
           ]
         },
         {
-          "name": "[ADMIN] Anular ticket 2 → 200",
+          "name": "[RECAUDADOR] Anular ticket 2 → 200",
           "request": {
             "method": "PATCH",
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
+                "value": "Bearer {{recaudador_token}}"
               }
             ],
             "url": {
@@ -2268,13 +2356,13 @@
           ]
         },
         {
-          "name": "[ADMIN] Volver a ocupar espacio A (liberado tras pago) → 201",
+          "name": "[RECAUDADOR] Volver a ocupar espacio A (liberado tras pago) → 201",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
+                "value": "Bearer {{recaudador_token}}"
               },
               {
                 "key": "Content-Type",
@@ -2309,13 +2397,13 @@
           ]
         },
         {
-          "name": "[ADMIN] Pagar ticket 1 de nuevo → 409",
+          "name": "[RECAUDADOR] Pagar ticket 1 de nuevo → 409",
           "request": {
             "method": "PATCH",
             "header": [
               {
                 "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
+                "value": "Bearer {{recaudador_token}}"
               }
             ],
             "url": {

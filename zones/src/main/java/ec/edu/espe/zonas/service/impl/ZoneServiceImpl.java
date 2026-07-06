@@ -48,7 +48,7 @@ public class ZoneServiceImpl implements ZoneService {
 
     @Override
     public ZoneResponseDto createZone(ZoneRequestDto request) {
-        if (zoneRepository.existsByName(request.getName().trim())) {
+        if (zoneRepository.existsByNameNormalized(request.getName().trim())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe una zona con ese nombre");
         }
 
@@ -73,7 +73,9 @@ public class ZoneServiceImpl implements ZoneService {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Zona no encontrada"));
 
         String trimmedName = request.getName().trim();
-        if (!zone.getName().equals(trimmedName) && zoneRepository.existsByName(trimmedName)) {
+        String normalizedNew = trimmedName.replaceAll("\\s+", "").toLowerCase();
+        String normalizedCurrent = zone.getName().replaceAll("\\s+", "").toLowerCase();
+        if (!normalizedNew.equals(normalizedCurrent) && zoneRepository.existsByNameNormalized(trimmedName)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya existe una zona con ese nombre");
         }
 
@@ -128,7 +130,6 @@ public class ZoneServiceImpl implements ZoneService {
     public void deleteZone(UUID idZone) {
         Zone zone = zoneRepository.findById(idZone)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Zona no encontrada"));
-
         boolean hasOccupiedPlaces = placeRepository.existsByZoneAndStatus(zone, StatusOfPlace.OCCUPIED);
         if (hasOccupiedPlaces) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,

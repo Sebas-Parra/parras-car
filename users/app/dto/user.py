@@ -7,6 +7,9 @@ from app.dto.person import PersonBase, PersonRead, _ADDRESS_REGEX, _NAME_REGEX, 
 from app.dto.role import RoleRead
 
 
+
+
+
 class UserCreate(PersonBase):
     """Datos para el registro de un nuevo cliente.
 
@@ -74,6 +77,10 @@ class UserRead(BaseModel):
     created_at: datetime
     updated_at: datetime
     roles: list[RoleRead] = []
+
+
+class UserDetailRead(UserRead):
+    person: PersonRead
 
 
 class PersonWithUserRead(PersonRead):

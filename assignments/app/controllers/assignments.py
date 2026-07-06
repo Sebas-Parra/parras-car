@@ -1,9 +1,9 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.core.deps import get_bearer_token, get_db, require_admin, require_self_or_admin
+from app.core.deps import get_bearer_token, get_current_user, get_db, require_admin, require_self_or_admin
 from app.dto.assignment import AssignmentCreate, AssignmentRead, AssignmentTransfer, FleetResponse
 from app.dto.audit import AuditRead
 from app.services.assignment_service import AssignmentService
@@ -17,15 +17,22 @@ def get_assignment_service() -> AssignmentService:
     return AssignmentService(validator=AssignmentValidator(), audit=AuditService())
 
 
-# Admin / root only
+# Propio usuario o admin/root — cliente solo puede asignarse a sí mismo
 @router.post("", response_model=AssignmentRead, status_code=201)
 def create_assignment(
     data: AssignmentCreate,
     db: Session = Depends(get_db),
     svc: AssignmentService = Depends(get_assignment_service),
-    _: dict = Depends(require_admin),
+    current_user: dict = Depends(get_current_user),
     token: str = Depends(get_bearer_token),
 ):
+    _ADMIN_ROLES = {"admin", "root"}
+    is_admin = bool(_ADMIN_ROLES & set(current_user.get("roles", [])))
+    if not is_admin and str(data.user_id) != current_user.get("sub"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo puedes asignarte vehículos a ti mismo.",
+        )
     return svc.create(db, data, token)
 
 

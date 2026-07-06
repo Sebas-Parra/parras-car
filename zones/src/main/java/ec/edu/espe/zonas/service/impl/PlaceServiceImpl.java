@@ -119,6 +119,7 @@ public class PlaceServiceImpl implements PlaceService {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                 "No se puede eliminar un lugar que está ocupado");
         }
+
         placeRepository.delete(place);
     }
 

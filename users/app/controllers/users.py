@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.core.deps import get_db, require_admin, require_self_or_admin
 from app.dto.role import RoleAssign
-from app.dto.user import UserRead, UserUpdate
+from app.dto.user import UserDetailRead, UserRead, UserUpdate
 from app.services import user_service
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -23,7 +23,7 @@ def list_users(
 
 
 # Own data or admin/root
-@router.get("/{user_id}", response_model=UserRead)
+@router.get("/{user_id}", response_model=UserDetailRead)
 def get_user(
     user_id: UUID,
     db: Session = Depends(get_db),

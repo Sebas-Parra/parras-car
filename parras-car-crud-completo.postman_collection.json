@@ -3180,6 +3180,42 @@
           }
         },
         {
+          "name": "[RECAUDADOR] DELETE eliminar zona → 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('403 recaudador no puede eliminar zonas, solo root', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{recaudador_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/zones/api/v1/zones/{{zone_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zones",
+                "api",
+                "v1",
+                "zones",
+                "{{zone_id}}"
+              ]
+            }
+          }
+        },
+        {
           "name": "[ADMIN] DELETE eliminar zona (solo root puede) → 403",
           "event": [
             {
@@ -3881,14 +3917,16 @@
           }
         },
         {
-          "name": "[CLIENTE] CREATE crear vehículo → 403",
+          "name": "[CLIENTE] CREATE crear vehículo → 201",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('403 cliente no puede crear vehículos', () => pm.response.to.have.status(403));"
+                  "pm.test('201 cliente puede crear vehículo', () => pm.response.to.have.status(201));",
+                  "pm.test('tiene id', () => pm.expect(pm.response.json()).to.have.property('id'));",
+                  "if (pm.response.code === 201) { pm.collectionVariables.set('vehicle_id', pm.response.json().id); }"
                 ]
               }
             }
@@ -3907,7 +3945,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"tipo\": \"car\",\n  \"datos\": {\n    \"plate\": \"XXX-9999\",\n    \"brand\": \"Toyota\",\n    \"model\": \"Corolla\",\n    \"color\": \"Rojo\",\n    \"year\": 2023,\n    \"clasification\": \"GASOLINE\",\n    \"numberOfDoors\": 4,\n    \"trunkCapacity\": 400\n  }\n}"
+              "raw": "{\n  \"plate\": \"CLI-001\",\n  \"brand\": \"Toyota\",\n  \"model\": \"Corolla\",\n  \"color\": \"Blanco\",\n  \"year\": 2022,\n  \"clasification\": \"SEDAN\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/vehicles/vehicles",
@@ -3922,14 +3960,15 @@
           }
         },
         {
-          "name": "[RECAUDADOR] CREATE crear vehículo → 403",
+          "name": "[RECAUDADOR] CREATE crear vehículo → 201",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('403 recaudador no puede crear vehículos', () => pm.response.to.have.status(403));"
+                  "pm.test('201 recaudador puede crear vehículo', () => pm.response.to.have.status(201));",
+                  "pm.test('tiene id', () => pm.expect(pm.response.json()).to.have.property('id'));"
                 ]
               }
             }
@@ -3948,7 +3987,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"tipo\": \"car\",\n  \"datos\": {\n    \"plate\": \"XXX-8888\",\n    \"brand\": \"Kia\",\n    \"model\": \"Rio\",\n    \"color\": \"Azul\",\n    \"year\": 2022,\n    \"clasification\": \"GASOLINE\",\n    \"numberOfDoors\": 4,\n    \"trunkCapacity\": 300\n  }\n}"
+              "raw": "{\n  \"plate\": \"REC-001\",\n  \"brand\": \"Chevrolet\",\n  \"model\": \"Sail\",\n  \"color\": \"Negro\",\n  \"year\": 2021,\n  \"clasification\": \"SEDAN\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/vehicles/vehicles",
@@ -3963,14 +4002,16 @@
           }
         },
         {
-          "name": "[ADMIN] CREATE crear auto → 201",
+          "name": "[ADMIN] CREATE crear vehículo → 201",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('201 admin crea vehículo', () => pm.response.to.have.status(201));"
+                  "pm.test('201 admin puede crear vehículo', () => pm.response.to.have.status(201));",
+                  "pm.test('tiene id', () => pm.expect(pm.response.json()).to.have.property('id'));",
+                  "if (pm.response.code === 201) { pm.collectionVariables.set('vehicle_id', pm.response.json().id); }"
                 ]
               }
             }

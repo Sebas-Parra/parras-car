@@ -9,6 +9,7 @@ import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { Vehicle } from './entities/vehicle.entity';
 import { FactoryVehiculos } from './factory/factory-vehicle';
+import { AuditEvent, EventPublisher } from './event-published.service';
 
 const ASSIGNMENTS_URL = process.env.ASSIGNMENTS_SERVICE_URL ?? 'http://assignments:8001';
 
@@ -17,7 +18,25 @@ export class VehiclesService {
   constructor(
     @InjectRepository(Vehicle)
     private repositoryVehicle: Repository<Vehicle>,
-  ) {}
+    private eventPublisher: EventPublisher
+  ) { }
+
+  // Método auxiliar para publicar eventos
+  private async emitEvent(
+    accion: string,
+    vehiculo: Vehicle,
+    datosExtra?: any,
+  ) {
+    const event: AuditEvent = {
+      servicio: 'ms-vehiculos',
+      accion,
+      entidad: 'VEHICULO',
+      entidadId: vehiculo.id,
+      datos: { ...vehiculo, ...datosExtra },
+      // usuario e ip se podrían obtener del contexto (request) si se inyecta
+    };
+    await this.eventPublisher.publish(event);
+  }
 
   async create(createVehicleDto: CreateVehicleDto): Promise<Vehicle> {
     const exist = await this.repositoryVehicle.findOne({
@@ -29,7 +48,9 @@ export class VehiclesService {
       );
     }
     const vehicle = FactoryVehiculos.create(createVehicleDto);
-    return this.repositoryVehicle.save(vehicle);
+    const saved = await this.repositoryVehicle.save(vehicle);
+    await this.emitEvent('CREATE', saved);
+    return saved
   }
 
   findAll(): Promise<Vehicle[]> {

@@ -7,6 +7,7 @@ import { PickupTruck } from './entities/pickupTrucks.entity';
 import { Vehicle } from './entities/vehicle.entity';
 import { VehiclesController } from './vehicles.controller';
 import { VehiclesService } from './vehicles.service';
+import { EventPublisher } from './event-published.service';
 
 @Module({
   imports: [
@@ -14,7 +15,7 @@ import { VehiclesService } from './vehicles.service';
     AuthModule,
   ],
   controllers: [VehiclesController],
-  providers: [VehiclesService],
+  providers: [VehiclesService, EventPublisher],
   exports: [VehiclesService],
 })
-export class VehiclesModule {}
+export class VehiclesModule { }

@@ -20,9 +20,9 @@ import { VehiclesService } from './vehicles.service';
 export class VehiclesController {
   constructor(private readonly vehiclesService: VehiclesService) {}
 
-  // Admin / root — registrar vehículo
+  // Cualquier usuario autenticado — registrar vehículo
   @Post()
-  @Roles('admin', 'root')
+  @Roles('admin', 'root', 'cliente', 'recaudador')
   create(@Body() createVehicleDto: CreateVehicleDto) {
     return this.vehiclesService.create(createVehicleDto);
   }

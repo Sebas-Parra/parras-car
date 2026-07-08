@@ -4,15 +4,15 @@ services:
     container_name: parras-users-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: auth_db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME_USERS}
     ports:
-      - '5433:5432'
+      - '${DB_PORT_USERS}:5432'
     volumes:
       - users_db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres -d auth_db']
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER} -d ${DB_NAME_USERS}']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -24,15 +24,15 @@ services:
     container_name: parras-vehicles-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: vehicles_db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME_VEHICLES}
     ports:
-      - '5434:5432'
+      - '${DB_PORT_VEHICLES}:5432'
     volumes:
       - vehicles_db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres -d vehicles_db']
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER} -d ${DB_NAME_VEHICLES}']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -44,15 +44,15 @@ services:
     container_name: parras-zones-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: zonas_db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME_ZONES}
     ports:
-      - '5436:5432'
+      - '${DB_PORT_ZONES}:5432'
     volumes:
       - zones_db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres -d zonas_db']
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER} -d ${DB_NAME_ZONES}']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -64,15 +64,15 @@ services:
     container_name: parras-assignments-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: assignments_db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME_ASSIGNMENTS}
     ports:
-      - '5435:5432'
+      - '${DB_PORT_ASSIGNMENTS}:5432'
     volumes:
       - assignments_db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres -d assignments_db']
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER} -d ${DB_NAME_ASSIGNMENTS}']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -84,15 +84,35 @@ services:
     container_name: parras-tickets-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: tickets_db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME_TICKETS}
     ports:
-      - '5437:5432'
+      - '${DB_PORT_TICKETS}:5432'
     volumes:
       - tickets_db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres -d tickets_db']
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER} -d ${DB_NAME_TICKETS}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - parras_network
+
+  audit-db:
+    image: postgres:16-alpine
+    container_name: parras-audit-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME_AUDIT}
+    ports:
+      - '${DB_PORT_AUDIT}:5432'
+    volumes:
+      - audit_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER} -d ${DB_NAME_AUDIT}']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -108,7 +128,8 @@ services:
     container_name: parras-users
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql+psycopg2://postgres:postgres@users-db:5432/auth_db
+      DATABASE_URL: postgresql+psycopg2://${DB_USER}:${DB_PASSWORD}@users-db:5432/${DB_NAME_USERS}
+      JWT_SECRET: ${JWT_SECRET}
     ports:
       - '8000:8000'
     depends_on:
@@ -128,11 +149,17 @@ services:
     environment:
       DB_HOST: vehicles-db
       DB_PORT: 5432
-      DB_USUARIO: postgres
-      DB_CONTRASENA: postgres
-      DB_NOMBRE: vehicles_db
+      DB_USUARIO: ${DB_USER}
+      DB_CONTRASENA: ${DB_PASSWORD}
+      DB_NOMBRE: ${DB_NAME_VEHICLES}
       PORT: 3000
-      JWT_SECRET: 6f2f368a76edefcc1859716acadb5cd68ac14bd4186334c03ba341da97dff77c
+      JWT_SECRET: ${JWT_SECRET}
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE}
+      RABBITMQ_ROUTING_KEY: ${RABBITMQ_ROUTING_KEY}
     ports:
       - '3000:3000'
     depends_on:
@@ -150,11 +177,11 @@ services:
     environment:
       DB_HOST: zones-db
       DB_PORT: 5432
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-      DB_NAME: zonas_db
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME_ZONES}
       SERVER_PORT: 8080
-      JWT_SECRET: 6f2f368a76edefcc1859716acadb5cd68ac14bd4186334c03ba341da97dff77c
+      JWT_SECRET: ${JWT_SECRET}
     ports:
       - '8080:8080'
     depends_on:
@@ -170,9 +197,10 @@ services:
     container_name: parras-assignments
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql+psycopg2://postgres:postgres@assignments-db:5432/assignments_db
-      VEHICLES_SERVICE_URL: http://vehicles:3000
-      USERS_SERVICE_URL: http://users:8000
+      DATABASE_URL: postgresql+psycopg2://${DB_USER}:${DB_PASSWORD}@assignments-db:5432/${DB_NAME_ASSIGNMENTS}
+      VEHICLES_SERVICE_URL: ${VEHICLES_SERVICE_URL}
+      USERS_SERVICE_URL: ${USERS_SERVICE_URL}
+      JWT_SECRET: ${JWT_SECRET}
     ports:
       - '8001:8001'
     depends_on:
@@ -196,26 +224,23 @@ services:
     environment:
       DB_HOST: tickets-db
       DB_PORT: 5432
-      DB_USUARIO: postgres
-      DB_CONTRASENA: postgres
-      DB_NOMBRE: tickets_db
+      DB_USUARIO: ${DB_USER}
+      DB_CONTRASENA: ${DB_PASSWORD}
+      DB_NOMBRE: ${DB_NAME_TICKETS}
       PORT: 3000
-      JWT_SECRET: 6f2f368a76edefcc1859716acadb5cd68ac14bd4186334c03ba341da97dff77c
-      ZONES_SERVICE_URL: http://zones:8080
-      VEHICLES_SERVICE_URL: http://vehicles:3000
-      ASSIGNMENTS_SERVICE_URL: http://assignments:8001
-      # Tarifa de respaldo si el tipo de espacio es desconocido
-      TICKET_PRICE: 1.00
-      # Tarifa base por hora/fracción según tipo de espacio (zones.TypeOfPlace)
-      PLACE_RATE_CAR: 1.00
-      PLACE_RATE_BIKE: 0.50
-      PLACE_RATE_BUS: 2.00
-      # Multiplicador de tarifa según tipo de zona (zones.TypeOfZone)
-      ZONE_MULT_REGULAR: 1
-      ZONE_MULT_VIP: 5
-      ZONE_MULT_INTERNAL: 3
-      ZONE_MULT_EXTERNAL: 2
-      ZONE_MULT_PREFERENTIAL: 0.5
+      JWT_SECRET: ${JWT_SECRET}
+      ZONES_SERVICE_URL: ${ZONES_SERVICE_URL}
+      VEHICLES_SERVICE_URL: ${VEHICLES_SERVICE_URL}
+      ASSIGNMENTS_SERVICE_URL: ${ASSIGNMENTS_SERVICE_URL}
+      TICKET_PRICE: ${TICKET_PRICE}
+      PLACE_RATE_CAR: ${PLACE_RATE_CAR}
+      PLACE_RATE_BIKE: ${PLACE_RATE_BIKE}
+      PLACE_RATE_BUS: ${PLACE_RATE_BUS}
+      ZONE_MULT_REGULAR: ${ZONE_MULT_REGULAR}
+      ZONE_MULT_VIP: ${ZONE_MULT_VIP}
+      ZONE_MULT_INTERNAL: ${ZONE_MULT_INTERNAL}
+      ZONE_MULT_EXTERNAL: ${ZONE_MULT_EXTERNAL}
+      ZONE_MULT_PREFERENTIAL: ${ZONE_MULT_PREFERENTIAL}
     ports:
       - '3001:3000'
     depends_on:
@@ -277,6 +302,7 @@ volumes:
   zones_db_data:
   assignments_db_data:
   tickets_db_data:
+  audit_db_data:
 
 networks:
   parras_network:

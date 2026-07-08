@@ -25,7 +25,7 @@ server:
   port: ${SERVER_PORT:8080}
 
 jwt:
-  secret: ${JWT_SECRET:6f2f368a76edefcc1859716acadb5cd68ac14bd4186334c03ba341da97dff77c}
+  secret: ${JWT_SECRET}
 
 springdoc:
   api-docs:

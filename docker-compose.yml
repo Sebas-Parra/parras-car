@@ -249,6 +249,12 @@ services:
       DB_NOMBRE: ${DB_NAME_TICKETS}
       PORT: 3000
       JWT_SECRET: ${JWT_SECRET}
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE}
+      RABBITMQ_ROUTING_KEY: ${RABBITMQ_ROUTING_KEY}
       ZONES_SERVICE_URL: ${ZONES_SERVICE_URL}
       VEHICLES_SERVICE_URL: ${VEHICLES_SERVICE_URL}
       ASSIGNMENTS_SERVICE_URL: ${ASSIGNMENTS_SERVICE_URL}
@@ -265,6 +271,8 @@ services:
       - '3001:3000'
     depends_on:
       tickets-db:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
       zones:
         condition: service_started

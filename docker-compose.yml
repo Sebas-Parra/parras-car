@@ -119,6 +119,24 @@ services:
     networks:
       - parras_network
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: parras-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', 'check_port_connectivity']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - parras_network
+
   # ─── Microservices ────────────────────────────────────────────
 
   users:
@@ -164,6 +182,8 @@ services:
       - '3000:3000'
     depends_on:
       vehicles-db:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     networks:
       - parras_network
@@ -252,6 +272,39 @@ services:
         condition: service_started
       assignments:
         condition: service_started
+    networks:
+      - parras_network
+
+  ms-audit:
+    build:
+      context: ./ms-audit
+      dockerfile: Dockerfile
+    container_name: parras-ms-audit
+    restart: unless-stopped
+    environment:
+      DB_HOST: audit-db
+      DB_PORT: 5432
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME_AUDIT}
+      PORT: 3002
+      JWT_SECRET: ${JWT_SECRET}
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      RABBITMQ_QUEUE: ${RABBITMQ_QUEUE}
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE}
+      RABBITMQ_ROUTING_KEY: ${RABBITMQ_ROUTING_KEY}
+      THROTTLE_TTL: 60
+      THROTTLE_LIMIT: 10
+    ports:
+      - '3002:3002'
+    depends_on:
+      audit-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     networks:
       - parras_network
 

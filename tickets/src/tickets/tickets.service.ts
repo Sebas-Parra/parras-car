@@ -72,6 +72,7 @@ export class TicketsService {
     accion: string,
     ticket: Ticket,
     actingUser: ActingUser,
+    ip?: string,
     datosExtra?: any,
   ) {
     const event: AuditEvent = {
@@ -82,6 +83,7 @@ export class TicketsService {
       datos: { ...ticket, ...datosExtra },
       usuario: actingUser.username,
       rol: actingUser.roles[0],
+      ip,
     };
     await this.eventPublisher.publish(event);
   }
@@ -91,6 +93,7 @@ export class TicketsService {
     idEmpleado: string,
     authHeader: string,
     actingUser: ActingUser,
+    ip?: string,
   ): Promise<Ticket> {
     const vehicle = await this.vehiclesClient.findByPlate(dto.placa, authHeader);
     if (!vehicle) {
@@ -174,7 +177,7 @@ export class TicketsService {
       throw error;
     }
 
-    await this.emitEvent('CREATE', saved, actingUser);
+    await this.emitEvent('CREATE', saved, actingUser, ip);
     return saved;
   }
 
@@ -195,6 +198,7 @@ export class TicketsService {
     idEmpleado: string,
     authHeader: string,
     actingUser: ActingUser,
+    ip?: string,
   ): Promise<Ticket> {
     const ticket = await this.findOne(id);
     if (ticket.estado !== EstadoTicket.ACTIVO) {
@@ -209,7 +213,7 @@ export class TicketsService {
     ticket.idEmpleadoPago = idEmpleado;
     const saved = await this.ticketRepository.save(ticket);
     await this.zonesClient.setStatus(ticket.idEspacio, 'AVAILABLE', authHeader);
-    await this.emitEvent('UPDATE', saved, actingUser);
+    await this.emitEvent('UPDATE', saved, actingUser, ip);
     return saved;
   }
 
@@ -218,6 +222,7 @@ export class TicketsService {
     idEmpleado: string,
     authHeader: string,
     actingUser: ActingUser,
+    ip?: string,
   ): Promise<Ticket> {
     const ticket = await this.findOne(id);
     if (ticket.estado !== EstadoTicket.ACTIVO) {
@@ -230,7 +235,7 @@ export class TicketsService {
     ticket.idEmpleadoPago = idEmpleado;
     const saved = await this.ticketRepository.save(ticket);
     await this.zonesClient.setStatus(ticket.idEspacio, 'AVAILABLE', authHeader);
-    await this.emitEvent('DELETE', saved, actingUser);
+    await this.emitEvent('DELETE', saved, actingUser, ip);
     return saved;
   }
 

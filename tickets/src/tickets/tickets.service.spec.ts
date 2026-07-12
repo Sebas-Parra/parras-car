@@ -157,4 +157,72 @@ describe('TicketsService', () => {
       }),
     );
   });
+
+  it('publishes the client IP on CREATE when provided', async () => {
+    const dto: CreateTicketDto = { idEspacio: 'place-1', placa: 'ABC-123' };
+
+    await service.create(dto, 'empleado-1', 'Bearer token', actingUser, '203.0.113.5');
+
+    expect(publisher.publish).toHaveBeenCalledWith(
+      expect.objectContaining({ ip: '203.0.113.5' }),
+    );
+  });
+
+  it('publishes the client IP on UPDATE (pay) when provided', async () => {
+    const activeTicket: Ticket = {
+      id: 'tick-1',
+      codigo: 'TCK-A1-1',
+      idEspacio: 'place-1',
+      codigoEspacio: 'A1',
+      placa: 'ABC-123',
+      idVehiculo: 'veh-1',
+      tipoVehiculo: 'car',
+      tipoEspacio: 'CAR',
+      tipoZona: 'REGULAR',
+      tarifaHora: 1,
+      idUsuario: 'user-1',
+      idEmpleadoIngreso: 'empleado-1',
+      fechaHoraIngreso: new Date(Date.now() - 60_000),
+      estado: EstadoTicket.ACTIVO,
+      valorRecaudado: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as Ticket;
+    repo.findOne.mockResolvedValue(activeTicket);
+
+    await service.pay('tick-1', 'empleado-1', 'Bearer token', actingUser, '203.0.113.5');
+
+    expect(publisher.publish).toHaveBeenCalledWith(
+      expect.objectContaining({ ip: '203.0.113.5' }),
+    );
+  });
+
+  it('publishes the client IP on DELETE (cancel) when provided', async () => {
+    const activeTicket: Ticket = {
+      id: 'tick-1',
+      codigo: 'TCK-A1-1',
+      idEspacio: 'place-1',
+      codigoEspacio: 'A1',
+      placa: 'ABC-123',
+      idVehiculo: 'veh-1',
+      tipoVehiculo: 'car',
+      tipoEspacio: 'CAR',
+      tipoZona: 'REGULAR',
+      tarifaHora: 1,
+      idUsuario: 'user-1',
+      idEmpleadoIngreso: 'empleado-1',
+      fechaHoraIngreso: new Date(),
+      estado: EstadoTicket.ACTIVO,
+      valorRecaudado: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as Ticket;
+    repo.findOne.mockResolvedValue(activeTicket);
+
+    await service.cancel('tick-1', 'empleado-1', 'Bearer token', actingUser, '203.0.113.5');
+
+    expect(publisher.publish).toHaveBeenCalledWith(
+      expect.objectContaining({ ip: '203.0.113.5' }),
+    );
+  });
 });

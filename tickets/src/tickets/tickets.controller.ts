@@ -14,6 +14,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { CreateTicketDto } from './dto/create-ticket.dto';
+import { getClientIp } from './get-client-ip';
 import { ActingUser, TicketsService } from './tickets.service';
 
 interface AuthenticatedRequest extends Request {
@@ -41,6 +42,7 @@ export class TicketsController {
       req.user.userId,
       req.headers.authorization ?? '',
       actingUserOf(req),
+      getClientIp(req),
     );
   }
 
@@ -65,6 +67,7 @@ export class TicketsController {
       req.user.userId,
       req.headers.authorization ?? '',
       actingUserOf(req),
+      getClientIp(req),
     );
   }
 
@@ -77,6 +80,7 @@ export class TicketsController {
       req.user.userId,
       req.headers.authorization ?? '',
       actingUserOf(req),
+      getClientIp(req),
     );
   }
 }

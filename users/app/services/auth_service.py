@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.dto.auth import LoginRequest, LogoutRequest, RefreshRequest, TokenResponse
 from app.repositories import refresh_token_repository, user_repository
+from app.services.audit_publisher import publish_audit_event
 from app.utils.security import create_access_token, generate_refresh_token, verify_password
 
 
@@ -43,6 +44,14 @@ def login(db: Session, data: LoginRequest) -> TokenResponse:
     user.last_login = datetime.now(timezone.utc)
     response = _build_response(db, user)
     db.commit()
+
+    publish_audit_event(
+        accion="LOGIN",
+        entidad_id=response.user_id,
+        usuario=response.username,
+        rol=response.roles[0] if response.roles else "",
+        datos={"username": response.username},
+    )
     return response
 
 
@@ -82,5 +91,16 @@ def refresh(db: Session, data: RefreshRequest) -> TokenResponse:
 def logout(db: Session, data: LogoutRequest) -> None:
     rt = refresh_token_repository.get_by_token(db, data.refresh_token)
     if rt and not rt.revoked:
+        user = user_repository.get_by_id(db, rt.id_user)
         refresh_token_repository.revoke(db, rt)
         db.commit()
+
+        if user:
+            roles = [r.name for r in user.roles]
+            publish_audit_event(
+                accion="LOGOUT",
+                entidad_id=str(user.id_person),
+                usuario=user.username,
+                rol=roles[0] if roles else "",
+                datos={"username": user.username},
+            )

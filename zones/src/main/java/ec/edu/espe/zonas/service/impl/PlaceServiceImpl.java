@@ -2,6 +2,7 @@ package ec.edu.espe.zonas.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -9,6 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import ec.edu.espe.zonas.audit.AuditEvent;
+import ec.edu.espe.zonas.audit.AuditPublisher;
 import ec.edu.espe.zonas.dtos.PlaceRequestDto;
 import ec.edu.espe.zonas.dtos.PlaceResponseDto;
 import ec.edu.espe.zonas.entidades.Place;
@@ -16,6 +19,8 @@ import ec.edu.espe.zonas.entidades.Zone;
 import ec.edu.espe.zonas.entidades.enums.StatusOfPlace;
 import ec.edu.espe.zonas.repositories.PlaceRepository;
 import ec.edu.espe.zonas.repositories.ZoneRepository;
+import ec.edu.espe.zonas.security.AuthenticatedUser;
+import ec.edu.espe.zonas.security.CurrentUser;
 import ec.edu.espe.zonas.service.PlaceService;
 import ec.edu.espe.zonas.utils.UtilsMappers;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +31,7 @@ public class PlaceServiceImpl implements PlaceService {
     private final PlaceRepository placeRepository;
     private final ZoneRepository zoneRepository;
     private final UtilsMappers mappers;
+    private final AuditPublisher auditPublisher;
 
     @Override
     @Transactional(readOnly = true)
@@ -69,6 +75,7 @@ public class PlaceServiceImpl implements PlaceService {
         newPlace.setUpdatedAt(LocalDateTime.now());
 
         Place savedPlace = placeRepository.save(newPlace);
+        emitEvent("CREATE", savedPlace, Map.of("code", savedPlace.getCode()));
         return mappers.toPlaceResponseDto(savedPlace);
     }
 
@@ -107,6 +114,7 @@ public class PlaceServiceImpl implements PlaceService {
 
         existing.setUpdatedAt(LocalDateTime.now());
         Place saved = placeRepository.save(existing);
+        emitEvent("UPDATE", saved, Map.of("code", saved.getCode()));
         return mappers.toPlaceResponseDto(saved);
     }
 
@@ -121,6 +129,7 @@ public class PlaceServiceImpl implements PlaceService {
         }
 
         placeRepository.delete(place);
+        emitEvent("DELETE", place, Map.of("code", place.getCode()));
     }
 
     @Override
@@ -131,6 +140,7 @@ public class PlaceServiceImpl implements PlaceService {
         place.setStatus(status);
         place.setUpdatedAt(LocalDateTime.now());
         Place saved = placeRepository.save(place);
+        emitEvent("UPDATE", saved, Map.of("status", status.name()));
         return mappers.toPlaceResponseDto(saved);
     }
 
@@ -152,6 +162,19 @@ public class PlaceServiceImpl implements PlaceService {
             .stream()
             .map(mappers::toPlaceResponseDto)
             .toList();
+    }
+
+    private void emitEvent(String accion, Place place, Map<String, Object> datosExtra) {
+        AuthenticatedUser actor = CurrentUser.get();
+        AuditEvent event = new AuditEvent(
+                "ms-zonas",
+                accion,
+                "PLACE",
+                place.getId().toString(),
+                datosExtra,
+                actor.username(),
+                actor.roles().isEmpty() ? "" : actor.roles().get(0));
+        auditPublisher.publish(event);
     }
 
     private String generatePlaceCode(Zone zone, long seq) {

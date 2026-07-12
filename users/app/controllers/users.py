@@ -38,9 +38,9 @@ def update_user(
     user_id: UUID,
     data: UserUpdate,
     db: Session = Depends(get_db),
-    _: dict = Depends(require_self_or_admin),
+    current_user: dict = Depends(require_self_or_admin),
 ):
-    return user_service.update_user(db, user_id, data)
+    return user_service.update_user(db, user_id, data, current_user)
 
 
 # Admin / root only
@@ -48,9 +48,9 @@ def update_user(
 def deactivate_user(
     user_id: UUID,
     db: Session = Depends(get_db),
-    _: dict = Depends(require_admin),
+    current_user: dict = Depends(require_admin),
 ):
-    return user_service.deactivate_user(db, user_id)
+    return user_service.deactivate_user(db, user_id, current_user)
 
 
 # Admin / root only
@@ -58,9 +58,9 @@ def deactivate_user(
 def activate_user(
     user_id: UUID,
     db: Session = Depends(get_db),
-    _: dict = Depends(require_admin),
+    current_user: dict = Depends(require_admin),
 ):
-    return user_service.activate_user(db, user_id)
+    return user_service.activate_user(db, user_id, current_user)
 
 
 # Admin / root only
@@ -69,9 +69,9 @@ def assign_role(
     user_id: UUID,
     data: RoleAssign,
     db: Session = Depends(get_db),
-    _: dict = Depends(require_admin),
+    current_user: dict = Depends(require_admin),
 ):
-    return user_service.assign_role(db, user_id, data.role_id)
+    return user_service.assign_role(db, user_id, data.role_id, current_user)
 
 
 # Admin / root only
@@ -80,6 +80,6 @@ def remove_role(
     user_id: UUID,
     role_id: UUID,
     db: Session = Depends(get_db),
-    _: dict = Depends(require_admin),
+    current_user: dict = Depends(require_admin),
 ):
-    return user_service.remove_role(db, user_id, role_id)
+    return user_service.remove_role(db, user_id, role_id, current_user)

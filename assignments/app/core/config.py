@@ -11,5 +11,12 @@ class Settings(BaseSettings):
     jwt_secret: str
     jwt_algorithm: str = "HS256"
 
+    rabbitmq_host: str = "localhost"
+    rabbitmq_port: int = 5672
+    rabbitmq_user: str = "guest"
+    rabbitmq_password: str = "guest"
+    rabbitmq_exchange: str = "audit_exchange"
+    rabbitmq_routing_key: str = "audit_event"
+
 
 settings = Settings()

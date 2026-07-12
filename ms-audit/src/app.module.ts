@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AuditModule } from './audit/audit.module';
 import { EventAudit } from './audit/entities/event-audit.entity';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { EventAudit } from './audit/entities/event-audit.entity';
       }),
       inject: [ConfigService],
     }),
+    AuthModule,
     AuditModule,
   ],
 })

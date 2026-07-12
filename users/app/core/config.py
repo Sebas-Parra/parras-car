@@ -12,5 +12,12 @@ class Settings(BaseSettings):
     jwt_expire_minutes: int = 60 * 24  # 24 hours
     refresh_token_expire_days: int = 7
 
+    rabbitmq_host: str = "localhost"
+    rabbitmq_port: int = 5672
+    rabbitmq_user: str = "guest"
+    rabbitmq_password: str = "guest"
+    rabbitmq_exchange: str = "audit_exchange"
+    rabbitmq_routing_key: str = "audit_event"
+
 
 settings = Settings()

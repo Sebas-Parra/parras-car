@@ -148,10 +148,18 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg2://${DB_USER}:${DB_PASSWORD}@users-db:5432/${DB_NAME_USERS}
       JWT_SECRET: ${JWT_SECRET}
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE}
+      RABBITMQ_ROUTING_KEY: ${RABBITMQ_ROUTING_KEY}
     ports:
       - '8000:8000'
     depends_on:
       users-db:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     networks:
       - parras_network

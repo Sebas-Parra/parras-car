@@ -22,6 +22,7 @@ export class AuditService {
       ip: dto.ip,
       mac: dto.mac,
       timestamp: new Date(),
+      eventTimestamp: dto.eventTimestamp ? new Date(dto.eventTimestamp) : new Date(),
     });
 
     return this.auditRepo.save(newEvent);

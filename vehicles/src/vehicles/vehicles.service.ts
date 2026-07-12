@@ -31,6 +31,7 @@ export class VehiclesService {
     accion: string,
     vehiculo: Vehicle,
     actingUser: ActingUser,
+    ip?: string,
     datosExtra?: any,
   ) {
     const event: AuditEvent = {
@@ -41,11 +42,12 @@ export class VehiclesService {
       datos: { ...vehiculo, ...datosExtra },
       usuario: actingUser.username,
       rol: actingUser.roles[0],
+      ip,
     };
     await this.eventPublisher.publish(event);
   }
 
-  async create(createVehicleDto: CreateVehicleDto, actingUser: ActingUser): Promise<Vehicle> {
+  async create(createVehicleDto: CreateVehicleDto, actingUser: ActingUser, ip?: string): Promise<Vehicle> {
     const exist = await this.repositoryVehicle.findOne({
       where: { plate: createVehicleDto.datos.plate },
     });
@@ -56,7 +58,7 @@ export class VehiclesService {
     }
     const vehicle = FactoryVehiculos.create(createVehicleDto);
     const saved = await this.repositoryVehicle.save(vehicle);
-    await this.emitEvent('CREATE', saved, actingUser);
+    await this.emitEvent('CREATE', saved, actingUser, ip);
     return saved
   }
 

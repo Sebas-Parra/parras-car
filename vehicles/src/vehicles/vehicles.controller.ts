@@ -15,6 +15,7 @@ import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
+import { getClientIp } from './get-client-ip';
 import { ActingUser, VehiclesService } from './vehicles.service';
 
 interface AuthenticatedRequest extends Request {
@@ -33,7 +34,7 @@ export class VehiclesController {
     @Body() createVehicleDto: CreateVehicleDto,
     @Req() req: AuthenticatedRequest,
   ) {
-    return this.vehiclesService.create(createVehicleDto, req.user);
+    return this.vehiclesService.create(createVehicleDto, req.user, getClientIp(req));
   }
 
   // Cualquier usuario autenticado — consultar catálogo

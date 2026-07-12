@@ -40,4 +40,17 @@ describe('VehiclesService', () => {
       expect.objectContaining({ usuario: 'jdoe', rol: 'admin' }),
     );
   });
+
+  it('publishes the client IP on CREATE when provided', async () => {
+    const dto = {
+      tipo: 'car',
+      datos: { plate: 'ABC-124' },
+    } as unknown as CreateVehicleDto;
+
+    await service.create(dto, { username: 'jdoe', roles: ['admin'] }, '203.0.113.5');
+
+    expect(publisher.publish).toHaveBeenCalledWith(
+      expect.objectContaining({ ip: '203.0.113.5' }),
+    );
+  });
 });

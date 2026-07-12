@@ -14,6 +14,7 @@ export interface AuditEvent {
     entidadId?: string;
     datos?: any;
     usuario?: string;
+    rol?: string;
     ip?: string;
 }
 

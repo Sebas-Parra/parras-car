@@ -44,9 +44,9 @@ def update_person(
     person_id: UUID,
     data: PersonUpdate,
     db: Session = Depends(get_db),
-    _: dict = Depends(require_self_or_admin),
+    current_user: dict = Depends(require_self_or_admin),
 ):
-    return person_service.update_person(db, person_id, data)
+    return person_service.update_person(db, person_id, data, current_user)
 
 
 # Admin / root only
@@ -54,9 +54,9 @@ def update_person(
 def deactivate_person(
     person_id: UUID,
     db: Session = Depends(get_db),
-    _: dict = Depends(require_admin),
+    current_user: dict = Depends(require_admin),
 ):
-    return person_service.deactivate_person(db, person_id)
+    return person_service.deactivate_person(db, person_id, current_user)
 
 
 # Admin / root only
@@ -64,6 +64,6 @@ def deactivate_person(
 def activate_person(
     person_id: UUID,
     db: Session = Depends(get_db),
-    _: dict = Depends(require_admin),
+    current_user: dict = Depends(require_admin),
 ):
-    return person_service.activate_person(db, person_id)
+    return person_service.activate_person(db, person_id, current_user)

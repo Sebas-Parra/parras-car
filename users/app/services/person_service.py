@@ -8,6 +8,7 @@ from app.dto.user import UserCreate
 from app.entities.person import Person
 from app.entities.user import User
 from app.repositories import person_repository, role_repository, user_repository
+from app.services.audit_publisher import publish_audit_event
 from app.utils import username as username_util
 from app.utils.security import hash_password
 
@@ -70,10 +71,20 @@ def create_person_with_user(db: Session, data: UserCreate) -> Person:
     db.add(user)
     db.commit()
     db.refresh(person)
+
+    # Self-registration: no JWT actor exists yet, so usuario/rol are the
+    # identity that was just created.
+    publish_audit_event(
+        accion="CREATE",
+        entidad_id=str(person.id),
+        usuario=generated_username,
+        rol="cliente",
+        datos={"username": generated_username, "email": person.email, "cedula": person.cedula},
+    )
     return person
 
 
-def update_person(db: Session, person_id: UUID, data: PersonUpdate) -> Person:
+def update_person(db: Session, person_id: UUID, data: PersonUpdate, current_user: dict) -> Person:
     person = get_person(db, person_id)
     update_data = data.model_dump(exclude_unset=True)
 
@@ -86,22 +97,49 @@ def update_person(db: Session, person_id: UUID, data: PersonUpdate) -> Person:
 
     db.commit()
     db.refresh(person)
+
+    roles = current_user.get("roles") or []
+    publish_audit_event(
+        accion="UPDATE",
+        entidad_id=str(person.id),
+        usuario=current_user.get("username", ""),
+        rol=roles[0] if roles else "",
+        datos=update_data,
+    )
     return person
 
 
-def deactivate_person(db: Session, person_id: UUID) -> Person:
+def deactivate_person(db: Session, person_id: UUID, current_user: dict) -> Person:
     person = get_person(db, person_id)
     if person.user is not None:
         person.user.active = False
     person.active = False
     db.commit()
     db.refresh(person)
+
+    roles = current_user.get("roles") or []
+    publish_audit_event(
+        accion="DELETE",
+        entidad_id=str(person.id),
+        usuario=current_user.get("username", ""),
+        rol=roles[0] if roles else "",
+        datos={"active": False},
+    )
     return person
 
 
-def activate_person(db: Session, person_id: UUID) -> Person:
+def activate_person(db: Session, person_id: UUID, current_user: dict) -> Person:
     person = get_person(db, person_id)
     person.active = True
     db.commit()
     db.refresh(person)
+
+    roles = current_user.get("roles") or []
+    publish_audit_event(
+        accion="UPDATE",
+        entidad_id=str(person.id),
+        usuario=current_user.get("username", ""),
+        rol=roles[0] if roles else "",
+        datos={"active": True},
+    )
     return person

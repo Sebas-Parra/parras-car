@@ -13,6 +13,11 @@ import { AuditEvent, EventPublisher } from './event-published.service';
 
 const ASSIGNMENTS_URL = process.env.ASSIGNMENTS_SERVICE_URL ?? 'http://assignments:8001';
 
+export interface ActingUser {
+  username: string;
+  roles: string[];
+}
+
 @Injectable()
 export class VehiclesService {
   constructor(
@@ -25,6 +30,7 @@ export class VehiclesService {
   private async emitEvent(
     accion: string,
     vehiculo: Vehicle,
+    actingUser: ActingUser,
     datosExtra?: any,
   ) {
     const event: AuditEvent = {
@@ -33,12 +39,13 @@ export class VehiclesService {
       entidad: 'VEHICULO',
       entidadId: vehiculo.id,
       datos: { ...vehiculo, ...datosExtra },
-      // usuario e ip se podrían obtener del contexto (request) si se inyecta
+      usuario: actingUser.username,
+      rol: actingUser.roles[0],
     };
     await this.eventPublisher.publish(event);
   }
 
-  async create(createVehicleDto: CreateVehicleDto): Promise<Vehicle> {
+  async create(createVehicleDto: CreateVehicleDto, actingUser: ActingUser): Promise<Vehicle> {
     const exist = await this.repositoryVehicle.findOne({
       where: { plate: createVehicleDto.datos.plate },
     });
@@ -49,7 +56,7 @@ export class VehiclesService {
     }
     const vehicle = FactoryVehiculos.create(createVehicleDto);
     const saved = await this.repositoryVehicle.save(vehicle);
-    await this.emitEvent('CREATE', saved);
+    await this.emitEvent('CREATE', saved, actingUser);
     return saved
   }
 

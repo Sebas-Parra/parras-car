@@ -6,14 +6,20 @@ import {
   Param,
   Patch,
   Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
-import { VehiclesService } from './vehicles.service';
+import { ActingUser, VehiclesService } from './vehicles.service';
+
+interface AuthenticatedRequest extends Request {
+  user: ActingUser;
+}
 
 @Controller('vehicles')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -23,8 +29,11 @@ export class VehiclesController {
   // Cualquier usuario autenticado — registrar vehículo
   @Post()
   @Roles('admin', 'root', 'cliente', 'recaudador')
-  create(@Body() createVehicleDto: CreateVehicleDto) {
-    return this.vehiclesService.create(createVehicleDto);
+  create(
+    @Body() createVehicleDto: CreateVehicleDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.vehiclesService.create(createVehicleDto, req.user);
   }
 
   // Cualquier usuario autenticado — consultar catálogo

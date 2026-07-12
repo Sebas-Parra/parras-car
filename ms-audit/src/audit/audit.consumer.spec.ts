@@ -8,6 +8,7 @@ jest.mock('amqplib');
 
 describe('AuditConsumer', () => {
   let consumer: AuditConsumer;
+  let auditService: { create: jest.Mock };
   let channel: {
     assertExchange: jest.Mock;
     assertQueue: jest.Mock;
@@ -42,11 +43,13 @@ describe('AuditConsumer', () => {
     };
     (amqp.connect as jest.Mock).mockResolvedValue(connection);
 
+    auditService = { create: jest.fn() };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuditConsumer,
         { provide: ConfigService, useValue: { get: (key: string) => configValues[key] } },
-        { provide: AuditService, useValue: { create: jest.fn() } },
+        { provide: AuditService, useValue: auditService },
       ],
     }).compile();
 
@@ -67,6 +70,43 @@ describe('AuditConsumer', () => {
     expect(channel.assertQueue).toHaveBeenCalledWith('audit_queue', {
       durable: true,
       arguments: { 'x-dead-letter-exchange': 'audit_exchange.dlx' },
+    });
+  });
+
+  describe('message handling', () => {
+    const validPayload = {
+      servicio: 'ms-tickets',
+      accion: 'CREATE',
+      entidad: 'TICKET',
+      usuario: 'juan.perez',
+      rol: 'admin',
+    };
+
+    const getConsumeCallback = async () => {
+      await consumer.onModuleInit();
+      return channel.consume.mock.calls[0][1] as (msg: any) => Promise<void>;
+    };
+
+    it('dead-letters (does not requeue) a message that fails JSON parsing/DTO validation', async () => {
+      const onMessage = await getConsumeCallback();
+      const msg = { content: Buffer.from('not-valid-json') };
+
+      await onMessage(msg);
+
+      expect(channel.nack).toHaveBeenCalledWith(msg, false, false);
+      expect(auditService.create).not.toHaveBeenCalled();
+    });
+
+    it('requeues (does not dead-letter) a message when auditService.create fails transiently', async () => {
+      auditService.create.mockRejectedValue(new Error('connection timeout'));
+      const onMessage = await getConsumeCallback();
+      const msg = { content: Buffer.from(JSON.stringify(validPayload)) };
+
+      await onMessage(msg);
+
+      expect(auditService.create).toHaveBeenCalled();
+      expect(channel.nack).toHaveBeenCalledWith(msg, true, false);
+      expect(channel.ack).not.toHaveBeenCalled();
     });
   });
 });

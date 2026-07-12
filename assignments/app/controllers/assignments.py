@@ -33,7 +33,7 @@ def create_assignment(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Solo puedes asignarte vehículos a ti mismo.",
         )
-    return svc.create(db, data, token)
+    return svc.create(db, data, token, current_user)
 
 
 # Admin / root only
@@ -43,9 +43,9 @@ def delete_assignment(
     vehicle_id: UUID,
     db: Session = Depends(get_db),
     svc: AssignmentService = Depends(get_assignment_service),
-    _: dict = Depends(require_admin),
+    current_user: dict = Depends(require_admin),
 ):
-    return svc.delete(db, user_id, vehicle_id)
+    return svc.delete(db, user_id, vehicle_id, current_user)
 
 
 # Admin / root only
@@ -55,10 +55,10 @@ def transfer_assignment(
     data: AssignmentTransfer,
     db: Session = Depends(get_db),
     svc: AssignmentService = Depends(get_assignment_service),
-    _: dict = Depends(require_admin),
+    current_user: dict = Depends(require_admin),
     token: str = Depends(get_bearer_token),
 ):
-    return svc.transfer(db, vehicle_id, data, token)
+    return svc.transfer(db, vehicle_id, data, token, current_user)
 
 
 # No auth — internal call from vehicles service (server-to-server, no user token)

@@ -43,10 +43,19 @@ export class AuditConsumer implements OnModuleInit {
         const queue = this.configService.get('RABBITMQ_QUEUE');
         const exchange = this.configService.get('RABBITMQ_EXCHANGE');
         const routingKey = this.configService.get('RABBITMQ_ROUTING_KEY');
+        const dlxExchange = `${exchange}.dlx`;
+        const dlq = `${queue}.dlq`;
 
         try {
+            await this.channel.assertExchange(dlxExchange, 'fanout', { durable: true });
+            await this.channel.assertQueue(dlq, { durable: true });
+            await this.channel.bindQueue(dlq, dlxExchange, '');
+
             await this.channel.assertExchange(exchange, 'topic', { durable: true });
-            await this.channel.assertQueue(queue, { durable: true });
+            await this.channel.assertQueue(queue, {
+                durable: true,
+                arguments: { 'x-dead-letter-exchange': dlxExchange },
+            });
             await this.channel.bindQueue(queue, exchange, routingKey);
 
             this.channel.consume(
@@ -66,7 +75,7 @@ export class AuditConsumer implements OnModuleInit {
                                     Object.values(e.constraints || {}).join(', '),
                                 );
                                 this.logger.warn(`DTO inválido: ${errorMessages.join('; ')}`);
-                                // Rechazar el mensaje y no reencolar (para evitar bucles)
+                                // Rechazar el mensaje; con la DLX configurada, RabbitMQ lo enruta al DLQ en vez de perderlo
                                 this.channel.nack(msg, false, false);
                                 return;
                             }
@@ -79,7 +88,7 @@ export class AuditConsumer implements OnModuleInit {
                             const errorMessage =
                                 err instanceof Error ? err.message : 'Error desconocido';
                             this.logger.error(`Error procesando mensaje: ${errorMessage}`);
-                            // Rechazar el mensaje y no reencolar
+                            // Rechazar el mensaje; con la DLX configurada, RabbitMQ lo enruta al DLQ en vez de perderlo
                             this.channel.nack(msg, false, false);
                         }
                     }

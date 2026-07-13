@@ -28,7 +28,7 @@ def _build_response(db: Session, user) -> TokenResponse:
     )
 
 
-def login(db: Session, data: LoginRequest) -> TokenResponse:
+def login(db: Session, data: LoginRequest, ip: str | None = None) -> TokenResponse:
     user = user_repository.get_by_username(db, data.username)
     if not user or not verify_password(data.password, user.password_hash):
         raise HTTPException(
@@ -51,6 +51,7 @@ def login(db: Session, data: LoginRequest) -> TokenResponse:
         usuario=response.username,
         rol=response.roles[0] if response.roles else "",
         datos={"username": response.username},
+        ip=ip,
     )
     return response
 
@@ -88,7 +89,7 @@ def refresh(db: Session, data: RefreshRequest) -> TokenResponse:
     return response
 
 
-def logout(db: Session, data: LogoutRequest) -> None:
+def logout(db: Session, data: LogoutRequest, ip: str | None = None) -> None:
     rt = refresh_token_repository.get_by_token(db, data.refresh_token)
     if rt and not rt.revoked:
         user = user_repository.get_by_id(db, rt.id_user)
@@ -103,4 +104,5 @@ def logout(db: Session, data: LogoutRequest) -> None:
                 usuario=user.username,
                 rol=roles[0] if roles else "",
                 datos={"username": user.username},
+                ip=ip,
             )

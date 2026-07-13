@@ -31,6 +31,7 @@ def test_publishes_event_with_expected_payload(mock_blocking_connection):
         "datos": {"username": "jdoe"},
         "usuario": "jdoe",
         "rol": "cliente",
+        "ip": None,
     }
     mock_connection.close.assert_called_once()
 

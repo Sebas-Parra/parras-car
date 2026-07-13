@@ -25,7 +25,9 @@ def _actor_role(current_user: dict) -> str:
     return roles[0] if roles else ""
 
 
-def update_user(db: Session, user_id: UUID, data: UserUpdate, current_user: dict) -> User:
+def update_user(
+    db: Session, user_id: UUID, data: UserUpdate, current_user: dict, ip: str | None = None
+) -> User:
     user = get_user(db, user_id)
     update_data = data.model_dump(exclude_unset=True)
 
@@ -45,11 +47,12 @@ def update_user(db: Session, user_id: UUID, data: UserUpdate, current_user: dict
         usuario=current_user.get("username", ""),
         rol=_actor_role(current_user),
         datos=update_data,
+        ip=ip,
     )
     return user
 
 
-def deactivate_user(db: Session, user_id: UUID, current_user: dict) -> User:
+def deactivate_user(db: Session, user_id: UUID, current_user: dict, ip: str | None = None) -> User:
     user = get_user(db, user_id)
     user.active = False
     db.commit()
@@ -61,11 +64,12 @@ def deactivate_user(db: Session, user_id: UUID, current_user: dict) -> User:
         usuario=current_user.get("username", ""),
         rol=_actor_role(current_user),
         datos={"active": False},
+        ip=ip,
     )
     return user
 
 
-def activate_user(db: Session, user_id: UUID, current_user: dict) -> User:
+def activate_user(db: Session, user_id: UUID, current_user: dict, ip: str | None = None) -> User:
     user = get_user(db, user_id)
     if not user.person.active:
         raise HTTPException(
@@ -82,11 +86,12 @@ def activate_user(db: Session, user_id: UUID, current_user: dict) -> User:
         usuario=current_user.get("username", ""),
         rol=_actor_role(current_user),
         datos={"active": True},
+        ip=ip,
     )
     return user
 
 
-def assign_role(db: Session, user_id: UUID, role_id: UUID, current_user: dict) -> User:
+def assign_role(db: Session, user_id: UUID, role_id: UUID, current_user: dict, ip: str | None = None) -> User:
     user = get_user(db, user_id)
     role = role_repository.get_by_id(db, role_id)
     if role is None:
@@ -103,11 +108,12 @@ def assign_role(db: Session, user_id: UUID, role_id: UUID, current_user: dict) -
         usuario=current_user.get("username", ""),
         rol=_actor_role(current_user),
         datos={"role_added": role.name},
+        ip=ip,
     )
     return user
 
 
-def remove_role(db: Session, user_id: UUID, role_id: UUID, current_user: dict) -> User:
+def remove_role(db: Session, user_id: UUID, role_id: UUID, current_user: dict, ip: str | None = None) -> User:
     user = get_user(db, user_id)
     role = role_repository.get_by_id(db, role_id)
     if role is None or role not in user.roles:
@@ -122,5 +128,6 @@ def remove_role(db: Session, user_id: UUID, role_id: UUID, current_user: dict) -
         usuario=current_user.get("username", ""),
         rol=_actor_role(current_user),
         datos={"role_removed": role.name},
+        ip=ip,
     )
     return user

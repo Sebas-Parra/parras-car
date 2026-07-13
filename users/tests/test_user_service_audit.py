@@ -28,6 +28,18 @@ def test_update_user_publishes_update_event(mock_publish, db_session):
 
 
 @patch("app.services.user_service.publish_audit_event")
+def test_update_user_publishes_the_client_ip_when_provided(mock_publish, db_session):
+    admin_user = _get_admin_user(db_session)
+
+    user_service.update_user(
+        db_session, admin_user.id_person, UserUpdate(username="admin3"), CURRENT_USER, ip="203.0.113.5"
+    )
+
+    mock_publish.assert_called_once()
+    assert mock_publish.call_args.kwargs["ip"] == "203.0.113.5"
+
+
+@patch("app.services.user_service.publish_audit_event")
 def test_deactivate_user_publishes_delete_event(mock_publish, db_session):
     admin_user = _get_admin_user(db_session)
 

@@ -42,6 +42,27 @@ def test_create_person_with_user_publishes_create_event(mock_publish, db_session
 
 
 @patch("app.services.person_service.publish_audit_event")
+def test_create_person_with_user_publishes_the_client_ip_when_provided(mock_publish, db_session):
+    _ensure_cliente_role(db_session)
+    data = UserCreate(
+        cedula="1710000041",
+        first_name="Ip",
+        middle_name="Test",
+        last_name="Register",
+        email="ipregister@example.com",
+        phone="0991234567",
+        address="Calle Falsa 123",
+        nationality="Ecuatoriana",
+        password="Password123",
+    )
+
+    person_service.create_person_with_user(db_session, data, ip="203.0.113.5")
+
+    mock_publish.assert_called_once()
+    assert mock_publish.call_args.kwargs["ip"] == "203.0.113.5"
+
+
+@patch("app.services.person_service.publish_audit_event")
 def test_update_person_publishes_update_event(mock_publish, db_session):
     _ensure_cliente_role(db_session)
     data = UserCreate(
@@ -66,6 +87,32 @@ def test_update_person_publishes_update_event(mock_publish, db_session):
     assert kwargs["accion"] == "UPDATE"
     assert kwargs["usuario"] == "admin"
     assert kwargs["rol"] == "administrador"
+
+
+@patch("app.services.person_service.publish_audit_event")
+def test_update_person_publishes_the_client_ip_when_provided(mock_publish, db_session):
+    _ensure_cliente_role(db_session)
+    data = UserCreate(
+        cedula="1710000058",
+        first_name="Update",
+        middle_name="Ip",
+        last_name="Test",
+        email="updateip@example.com",
+        phone="0991234567",
+        address="Calle Falsa 123",
+        nationality="Ecuatoriana",
+        password="Password123",
+    )
+    person = person_service.create_person_with_user(db_session, data)
+    mock_publish.reset_mock()
+    current_user = {"username": "admin", "roles": ["administrador"]}
+
+    person_service.update_person(
+        db_session, person.id, PersonUpdate(phone="0987654321"), current_user, ip="203.0.113.5"
+    )
+
+    mock_publish.assert_called_once()
+    assert mock_publish.call_args.kwargs["ip"] == "203.0.113.5"
 
 
 @patch("app.services.person_service.publish_audit_event")

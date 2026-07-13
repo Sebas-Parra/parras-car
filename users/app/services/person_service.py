@@ -24,7 +24,7 @@ def list_persons(db: Session, skip: int = 0, limit: int = 100) -> list[Person]:
     return person_repository.list_all(db, skip, limit)
 
 
-def create_person_with_user(db: Session, data: UserCreate) -> Person:
+def create_person_with_user(db: Session, data: UserCreate, ip: str | None = None) -> Person:
     if person_repository.get_by_cedula(db, data.cedula):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Cedula already registered")
 
@@ -34,7 +34,6 @@ def create_person_with_user(db: Session, data: UserCreate) -> Person:
             detail=f"El correo '{data.email}' ya está registrado, por favor ingrese uno diferente",
         )
 
-    # Self-registration always gets the 'cliente' role
     cliente_role = role_repository.get_by_name(db, "cliente")
     if cliente_role is None:
         raise HTTPException(
@@ -72,19 +71,20 @@ def create_person_with_user(db: Session, data: UserCreate) -> Person:
     db.commit()
     db.refresh(person)
 
-    # Self-registration: no JWT actor exists yet, so usuario/rol are the
-    # identity that was just created.
     publish_audit_event(
         accion="CREATE",
         entidad_id=str(person.id),
         usuario=generated_username,
         rol="cliente",
         datos={"username": generated_username, "email": person.email, "cedula": person.cedula},
+        ip=ip,
     )
     return person
 
 
-def update_person(db: Session, person_id: UUID, data: PersonUpdate, current_user: dict) -> Person:
+def update_person(
+    db: Session, person_id: UUID, data: PersonUpdate, current_user: dict, ip: str | None = None
+) -> Person:
     person = get_person(db, person_id)
     update_data = data.model_dump(exclude_unset=True)
 
@@ -105,11 +105,12 @@ def update_person(db: Session, person_id: UUID, data: PersonUpdate, current_user
         usuario=current_user.get("username", ""),
         rol=roles[0] if roles else "",
         datos=update_data,
+        ip=ip,
     )
     return person
 
 
-def deactivate_person(db: Session, person_id: UUID, current_user: dict) -> Person:
+def deactivate_person(db: Session, person_id: UUID, current_user: dict, ip: str | None = None) -> Person:
     person = get_person(db, person_id)
     if person.user is not None:
         person.user.active = False
@@ -124,11 +125,12 @@ def deactivate_person(db: Session, person_id: UUID, current_user: dict) -> Perso
         usuario=current_user.get("username", ""),
         rol=roles[0] if roles else "",
         datos={"active": False},
+        ip=ip,
     )
     return person
 
 
-def activate_person(db: Session, person_id: UUID, current_user: dict) -> Person:
+def activate_person(db: Session, person_id: UUID, current_user: dict, ip: str | None = None) -> Person:
     person = get_person(db, person_id)
     person.active = True
     db.commit()
@@ -141,5 +143,6 @@ def activate_person(db: Session, person_id: UUID, current_user: dict) -> Person:
         usuario=current_user.get("username", ""),
         rol=roles[0] if roles else "",
         datos={"active": True},
+        ip=ip,
     )
     return person

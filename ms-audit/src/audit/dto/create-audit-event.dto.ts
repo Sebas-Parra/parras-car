@@ -64,7 +64,7 @@ export class CreateAuditEventDto {
 
     @IsString()
     @IsNotEmpty()
-    @MinLength(5)
+    @MinLength(3)
     @MaxLength(25)
     @Matches(/^[a-zA-Z0-9._-]+$/, {
         message:

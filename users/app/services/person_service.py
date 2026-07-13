@@ -34,6 +34,7 @@ def create_person_with_user(db: Session, data: UserCreate, ip: str | None = None
             detail=f"El correo '{data.email}' ya está registrado, por favor ingrese uno diferente",
         )
 
+    # Self-registration always gets the 'cliente' role
     cliente_role = role_repository.get_by_name(db, "cliente")
     if cliente_role is None:
         raise HTTPException(
@@ -71,6 +72,8 @@ def create_person_with_user(db: Session, data: UserCreate, ip: str | None = None
     db.commit()
     db.refresh(person)
 
+    # Self-registration: no JWT actor exists yet, so usuario/rol are the
+    # identity that was just created.
     publish_audit_event(
         accion="CREATE",
         entidad_id=str(person.id),

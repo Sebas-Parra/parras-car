@@ -117,6 +117,17 @@ services:
         plugins:
           - name: jwt
 
+  # ── Audit ─────────────────────────────────────────────────────────────────
+  - name: ms-audit-service
+    url: http://ms-audit:3002
+    routes:
+      - name: ms-audit-route
+        paths:
+          - /audit
+        strip_path: true
+        plugins:
+          - name: jwt
+
   # ── Swagger UI ────────────────────────────────────────────────────────────
   - name: swagger-ui-service
     url: http://swagger-ui:8080

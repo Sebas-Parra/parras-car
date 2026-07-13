@@ -11,7 +11,7 @@
     { "key": "zones_url", "value": "http://localhost:8080", "type": "string" },
     { "key": "assignments_url", "value": "http://localhost:8001", "type": "string" },
     { "key": "tickets_url", "value": "http://localhost:3001", "type": "string" },
-    { "key": "ms_audit_url", "value": "http://localhost:3002", "type": "string" },
+    { "key": "ms_audit_url", "value": "http://localhost:9000/audit", "type": "string" },
     { "key": "cliente_cedula", "value": "1710000017", "type": "string" },
     { "key": "cliente_email", "value": "pepe@example.com", "type": "string" },
     { "key": "cliente_password", "value": "Password123", "type": "string" },

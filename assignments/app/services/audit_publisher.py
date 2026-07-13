@@ -15,6 +15,7 @@ def publish_audit_event(
     usuario: str,
     rol: str,
     datos: dict[str, Any] | None = None,
+    ip: str | None = None,
 ) -> None:
     event = {
         "servicio": "ms-assignments",
@@ -24,6 +25,7 @@ def publish_audit_event(
         "datos": datos,
         "usuario": usuario,
         "rol": rol,
+        "ip": ip,
     }
     try:
         credentials = pika.PlainCredentials(settings.rabbitmq_user, settings.rabbitmq_password)

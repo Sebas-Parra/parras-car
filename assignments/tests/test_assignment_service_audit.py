@@ -33,6 +33,18 @@ def test_create_publishes_a_create_event_for_a_brand_new_assignment(mock_publish
 
 
 @patch("app.services.assignment_service.publish_audit_event")
+def test_create_publishes_the_client_ip_when_provided(mock_publish, db_session):
+    svc = _service()
+
+    svc.create(
+        db_session, AssignmentCreate(user_id=USER_ID, vehicle_id=VEHICLE_ID), "token", CURRENT_USER, ip="203.0.113.5"
+    )
+
+    mock_publish.assert_called_once()
+    assert mock_publish.call_args.kwargs["ip"] == "203.0.113.5"
+
+
+@patch("app.services.assignment_service.publish_audit_event")
 def test_create_publishes_an_update_event_when_reactivating_an_existing_row(mock_publish, db_session):
     svc = _service()
     svc.create(db_session, AssignmentCreate(user_id=USER_ID, vehicle_id=VEHICLE_ID), "token", CURRENT_USER)
@@ -60,6 +72,18 @@ def test_delete_publishes_a_delete_event(mock_publish, db_session):
 
 
 @patch("app.services.assignment_service.publish_audit_event")
+def test_delete_publishes_the_client_ip_when_provided(mock_publish, db_session):
+    svc = _service()
+    svc.create(db_session, AssignmentCreate(user_id=USER_ID, vehicle_id=VEHICLE_ID), "token", CURRENT_USER)
+    mock_publish.reset_mock()
+
+    svc.delete(db_session, USER_ID, VEHICLE_ID, CURRENT_USER, ip="203.0.113.5")
+
+    mock_publish.assert_called_once()
+    assert mock_publish.call_args.kwargs["ip"] == "203.0.113.5"
+
+
+@patch("app.services.assignment_service.publish_audit_event")
 def test_transfer_publishes_a_single_update_event(mock_publish, db_session):
     svc = _service()
     svc.create(db_session, AssignmentCreate(user_id=USER_ID, vehicle_id=VEHICLE_ID), "token", CURRENT_USER)
@@ -78,3 +102,22 @@ def test_transfer_publishes_a_single_update_event(mock_publish, db_session):
     assert kwargs["accion"] == "UPDATE"
     assert kwargs["entidad_id"] == str(VEHICLE_ID)
     assert kwargs["datos"] == {"from_user_id": str(USER_ID), "to_user_id": str(USER_ID_2)}
+
+
+@patch("app.services.assignment_service.publish_audit_event")
+def test_transfer_publishes_the_client_ip_when_provided(mock_publish, db_session):
+    svc = _service()
+    svc.create(db_session, AssignmentCreate(user_id=USER_ID, vehicle_id=VEHICLE_ID), "token", CURRENT_USER)
+    mock_publish.reset_mock()
+
+    svc.transfer(
+        db_session,
+        VEHICLE_ID,
+        AssignmentTransfer(from_user_id=USER_ID, to_user_id=USER_ID_2),
+        "token",
+        CURRENT_USER,
+        ip="203.0.113.5",
+    )
+
+    mock_publish.assert_called_once()
+    assert mock_publish.call_args.kwargs["ip"] == "203.0.113.5"

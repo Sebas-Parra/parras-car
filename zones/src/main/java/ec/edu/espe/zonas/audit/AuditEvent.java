@@ -9,5 +9,6 @@ public record AuditEvent(
         String entidadId,
         Map<String, Object> datos,
         String usuario,
-        String rol) {
+        String rol,
+        String ip) {
 }

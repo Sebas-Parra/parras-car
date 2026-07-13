@@ -15,8 +15,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import ec.edu.espe.zonas.audit.AuditEvent;
 import ec.edu.espe.zonas.audit.AuditPublisher;
@@ -49,11 +52,16 @@ class ZoneServiceImplAuditTest {
         AuthenticatedUser actor = new AuthenticatedUser("user-1", "jdoe", List.of("admin"));
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(actor, null, List.of()));
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRemoteAddr("203.0.113.5");
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
     }
 
     @AfterEach
     void tearDown() {
         SecurityContextHolder.clearContext();
+        RequestContextHolder.resetRequestAttributes();
     }
 
     @Test
@@ -76,6 +84,23 @@ class ZoneServiceImplAuditTest {
         org.assertj.core.api.Assertions.assertThat(event.entidad()).isEqualTo("ZONA");
         org.assertj.core.api.Assertions.assertThat(event.usuario()).isEqualTo("jdoe");
         org.assertj.core.api.Assertions.assertThat(event.rol()).isEqualTo("admin");
+    }
+
+    @Test
+    void createZonePublishesTheClientIp() {
+        ZoneRequestDto request = new ZoneRequestDto();
+        request.setName("Zona Este");
+        request.setCapacity(5);
+        request.setType(TypeOfZone.REGULAR);
+        when(zoneRepository.existsByNameNormalized("Zona Este")).thenReturn(false);
+        when(zoneRepository.count()).thenReturn(0L);
+        when(zoneRepository.save(any(Zone.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        zoneService.createZone(request);
+
+        ArgumentCaptor<AuditEvent> captor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(auditPublisher).publish(captor.capture());
+        org.assertj.core.api.Assertions.assertThat(captor.getValue().ip()).isEqualTo("203.0.113.5");
     }
 
     @Test

@@ -16,8 +16,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import ec.edu.espe.zonas.audit.AuditEvent;
 import ec.edu.espe.zonas.audit.AuditPublisher;
@@ -53,11 +56,16 @@ class PlaceServiceImplAuditTest {
         AuthenticatedUser actor = new AuthenticatedUser("user-1", "jdoe", List.of("admin"));
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(actor, null, List.of()));
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRemoteAddr("203.0.113.5");
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
     }
 
     @AfterEach
     void tearDown() {
         SecurityContextHolder.clearContext();
+        RequestContextHolder.resetRequestAttributes();
     }
 
     @Test
@@ -92,11 +100,37 @@ class PlaceServiceImplAuditTest {
     }
 
     @Test
+    void createPlacePublishesTheClientIp() {
+        UUID zoneId = UUID.randomUUID();
+        Zone zone = Zone.builder().id(zoneId).name("Zona Norte").code("ZON-REG-01")
+                .capacity(10).type(TypeOfZone.REGULAR).status(1).build();
+        when(zoneRepository.findById(zoneId)).thenReturn(Optional.of(zone));
+        when(placeRepository.countByZone(zone)).thenReturn(0L);
+        when(placeRepository.existsByCode(org.mockito.ArgumentMatchers.anyString())).thenReturn(false);
+
+        PlaceRequestDto request = new PlaceRequestDto();
+        request.setIdZone(zoneId);
+        request.setType(TypeOfPlace.CAR);
+
+        Place mappedPlace = new Place();
+        mappedPlace.setId(UUID.randomUUID());
+        when(mappers.toEntityPlace(request)).thenReturn(mappedPlace);
+        when(placeRepository.save(any(Place.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(mappers.toPlaceResponseDto(any(Place.class))).thenReturn(null);
+
+        placeService.createPlace(request);
+
+        ArgumentCaptor<AuditEvent> captor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(auditPublisher).publish(captor.capture());
+        assertThat(captor.getValue().ip()).isEqualTo("203.0.113.5");
+    }
+
+    @Test
     void deletePlaceByIdPublishesADeleteEvent() {
         UUID id = UUID.randomUUID();
         Place place = new Place();
         place.setId(id);
-        place.setCode("RE01-01");
+        place.setCode("A1-01");
         place.setStatus(StatusOfPlace.AVAILABLE);
         when(placeRepository.findById(id)).thenReturn(Optional.of(place));
 

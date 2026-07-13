@@ -22,6 +22,7 @@ import ec.edu.espe.zonas.entidades.enums.StatusOfPlace;
 import ec.edu.espe.zonas.repositories.PlaceRepository;
 import ec.edu.espe.zonas.repositories.ZoneRepository;
 import ec.edu.espe.zonas.security.AuthenticatedUser;
+import ec.edu.espe.zonas.security.ClientIp;
 import ec.edu.espe.zonas.security.CurrentUser;
 import ec.edu.espe.zonas.service.ZoneService;
 
@@ -160,7 +161,8 @@ public class ZoneServiceImpl implements ZoneService {
                 zone.getId() != null ? zone.getId().toString() : null,
                 datosExtra,
                 actor.username(),
-                actor.roles().isEmpty() ? "" : actor.roles().get(0));
+                actor.roles().isEmpty() ? "" : actor.roles().get(0),
+                ClientIp.get());
         auditPublisher.publish(event);
     }
 

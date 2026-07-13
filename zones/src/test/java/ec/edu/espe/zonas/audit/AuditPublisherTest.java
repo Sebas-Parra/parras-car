@@ -27,7 +27,7 @@ class AuditPublisherTest {
         AuditPublisher publisher = new AuditPublisher(rabbitTemplate, "audit_exchange", "audit_event");
         AuditEvent event = new AuditEvent(
                 "ms-zonas", "CREATE", "ZONA", "zone-1",
-                Map.of("name", "Zona Norte"), "jdoe", "admin");
+                Map.of("name", "Zona Norte"), "jdoe", "admin", "203.0.113.5");
 
         publisher.publish(event);
 
@@ -48,6 +48,6 @@ class AuditPublisherTest {
                 .when(rabbitTemplate).convertAndSend(anyString(), anyString(), any(AuditEvent.class));
 
         assertDoesNotThrow(() -> publisher.publish(
-                new AuditEvent("ms-zonas", "CREATE", "ZONA", "zone-1", Map.of(), "jdoe", "admin")));
+                new AuditEvent("ms-zonas", "CREATE", "ZONA", "zone-1", Map.of(), "jdoe", "admin", "203.0.113.5")));
     }
 }

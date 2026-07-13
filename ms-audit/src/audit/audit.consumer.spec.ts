@@ -80,6 +80,7 @@ describe('AuditConsumer', () => {
       entidad: 'TICKET',
       usuario: 'juan.perez',
       rol: 'admin',
+      ip: '203.0.113.5',
     };
 
     const getConsumeCallback = async () => {

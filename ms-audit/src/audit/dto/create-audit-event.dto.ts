@@ -76,9 +76,10 @@ export class CreateAuditEventDto {
     @IsNotEmpty()
     rol!: string;
 
-    @IsOptional()
+    @IsString()
+    @IsNotEmpty()
     @IsIP('4', { message: 'La dirección IP debe ser una dirección IPv4 válida.' })
-    ip?: string;
+    ip!: string;
 
     @IsOptional()
     @IsMACAddress({

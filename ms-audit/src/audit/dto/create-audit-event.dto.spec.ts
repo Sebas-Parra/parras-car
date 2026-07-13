@@ -13,6 +13,7 @@ const validPayload = {
   entidad: 'VEHICULO',
   usuario: 'john.doe',
   rol: 'admin',
+  ip: '203.0.113.5',
 };
 
 describe('CreateAuditEventDto', () => {
@@ -41,6 +42,17 @@ describe('CreateAuditEventDto', () => {
     const { rol, ...rest } = validPayload;
     const errors = await validateDto(rest);
     expect(errors.some((e) => e.property === 'rol')).toBe(true);
+  });
+
+  it('rejects a payload missing ip', async () => {
+    const { ip, ...rest } = validPayload;
+    const errors = await validateDto(rest);
+    expect(errors.some((e) => e.property === 'ip')).toBe(true);
+  });
+
+  it('rejects a payload with a non-IPv4 ip', async () => {
+    const errors = await validateDto({ ...validPayload, ip: 'not-an-ip' });
+    expect(errors.some((e) => e.property === 'ip')).toBe(true);
   });
 
   it('rejects datos larger than 10KB serialized', async () => {

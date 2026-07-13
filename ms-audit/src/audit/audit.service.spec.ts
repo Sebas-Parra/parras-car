@@ -31,6 +31,7 @@ describe('AuditService', () => {
       entidad: 'VEHICULO',
       usuario: 'jdoe',
       rol: 'admin',
+      ip: '203.0.113.5',
       eventTimestamp: '2026-01-01T00:00:00.000Z',
     };
 
@@ -48,6 +49,7 @@ describe('AuditService', () => {
       entidad: 'VEHICULO',
       usuario: 'jdoe',
       rol: 'admin',
+      ip: '203.0.113.5',
     };
     const before = Date.now();
 

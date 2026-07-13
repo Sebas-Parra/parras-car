@@ -24,8 +24,8 @@ export class EventAudit {
     @Column({ type: 'varchar', length: 15, nullable: false })
     rol!: string
 
-    @Column({ type: 'varchar', length: 15, nullable: true })
-    ip?: string
+    @Column({ type: 'varchar', length: 15, nullable: false })
+    ip!: string
 
     @Column({ type: 'varchar', length: 17, nullable: true })
     mac?: string

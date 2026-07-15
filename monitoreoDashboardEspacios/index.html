@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - Espacios de Estacionamiento</title>
+    <!-- Tailwind CSS vía CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Estilos adicionales -->
+    <link rel="stylesheet" href="app.css" />
+</head>
+
+<body class="bg-gray-100 p-6 font-sans antialiased">
+
+    <div class="max-w-7xl mx-auto">
+        <!-- Encabezado -->
+        <header class="flex items-center justify-between mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">🅿️ Dashboard de Espacios</h1>
+            <div class="flex items-center gap-4">
+                <span id="totalEspacios"
+                    class="text-sm bg-blue-100 text-blue-800 px-3 py-1 rounded-full">Cargando...</span>
+                <span id="statusConexion" class="flex items-center gap-2 text-sm">
+                    <span class="w-3 h-3 bg-green-500 rounded-full inline-block" id="indicator"></span>
+                    <span id="statusText">Conectado</span>
+                </span>
+            </div>
+        </header>
+
+        <!-- Contenedor de tarjetas (grid) -->
+        <div id="espaciosContainer"
+            class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            <!-- Las tarjetas se inyectan dinámicamente desde app.js -->
+        </div>
+
+        <!-- Pie de página con timestamp de última actualización -->
+        <footer class="mt-8 text-sm text-gray-500 text-center border-t pt-4">
+            Última actualización: <span id="lastUpdate">--</span>
+        </footer>
+    </div>
+
+    <!-- Nuestro JavaScript -->
+    <script src="app.js"></script>
+</body>
+
+</html>

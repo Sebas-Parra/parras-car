@@ -24,6 +24,7 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
+            .cors(cors -> {})
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint((req, res, e) -> {
@@ -40,6 +41,9 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // Swagger — sin auth
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                // Dashboard de monitoreo de espacios — lectura pública + preflight CORS
+                .requestMatchers(HttpMethod.GET, "/api/v1/places", "/api/v1/places/**").permitAll()
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 // GET: cualquier usuario autenticado (cliente, recaudador, admin, root)
                 .requestMatchers(HttpMethod.GET, "/api/v1/**").authenticated()
                 // POST / PUT: admin + root (crear y actualizar zonas/espacios)

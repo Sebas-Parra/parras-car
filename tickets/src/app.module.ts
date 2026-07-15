@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { Ticket } from './tickets/entities/ticket.entity';
 import { TicketsModule } from './tickets/tickets.module';
+import { SseModule } from './sse/sse.module';
 
 @Module({
   imports: [
@@ -28,8 +29,9 @@ import { TicketsModule } from './tickets/tickets.module';
       inject: [ConfigService],
     }),
     TicketsModule,
+    SseModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

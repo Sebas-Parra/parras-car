@@ -8,9 +8,10 @@ import { EventPublisher } from './event-published.service';
 import { Ticket } from './entities/ticket.entity';
 import { TicketsController } from './tickets.controller';
 import { TicketsService } from './tickets.service';
+import { SseModule } from 'src/sse/sse.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Ticket]), AuthModule],
+  imports: [TypeOrmModule.forFeature([Ticket]), AuthModule, SseModule],
   controllers: [TicketsController],
   providers: [
     TicketsService,
@@ -21,4 +22,4 @@ import { TicketsService } from './tickets.service';
   ],
   exports: [TicketsService],
 })
-export class TicketsModule {}
+export class TicketsModule { }

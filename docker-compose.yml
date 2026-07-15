@@ -161,10 +161,12 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    links:
+      - users-db
     networks:
       - parras_network
     command: >
-      sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+      sh -c "until alembic upgrade head; do echo 'Waiting for users-db...' && sleep 2; done; uvicorn app.main:app --host 0.0.0.0 --port 8000"
 
   vehicles:
     build:

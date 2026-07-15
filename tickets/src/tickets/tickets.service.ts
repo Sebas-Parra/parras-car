@@ -12,6 +12,7 @@ import { CreateTicketDto } from './dto/create-ticket.dto';
 import { EstadoTicket } from './entities/enum/estado-ticket.enum';
 import { Ticket } from './entities/ticket.entity';
 import { AuditEvent, EventPublisher } from './event-published.service';
+import { SseService } from 'src/sse/sse.services';
 
 // Tarifa base por hora o fracción según el TIPO DE ESPACIO (USD). La tarifa
 // no depende del vehículo: una camioneta usa un espacio CAR y paga como CAR.
@@ -66,7 +67,8 @@ export class TicketsService {
     private readonly vehiclesClient: VehiclesClient,
     private readonly assignmentsClient: AssignmentsClient,
     private readonly eventPublisher: EventPublisher,
-  ) {}
+    private readonly sseService: SseService,
+  ) { }
 
   private async emitEvent(
     accion: string,
@@ -139,7 +141,7 @@ export class TicketsService {
     if (!vehicle.tipo || !allowedTipos.includes(vehicle.tipo)) {
       throw new ConflictException(
         `El espacio '${place.code}' es de tipo ${place.type} y no admite ` +
-          `vehículos de tipo '${vehicle.tipo ?? 'desconocido'}'`,
+        `vehículos de tipo '${vehicle.tipo ?? 'desconocido'}'`,
       );
     }
 
@@ -178,6 +180,10 @@ export class TicketsService {
     }
 
     await this.emitEvent('CREATE', saved, actingUser, ip);
+    await this.sseService.emitEvent('espacio-actualizado', {
+      id: saved.idEspacio,
+      estado: 'OCCUPIED',
+    })
     return saved;
   }
 

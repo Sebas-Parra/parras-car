@@ -29,7 +29,9 @@ def create_access_token(user_id: str, username: str, roles: list[str]) -> str:
 
 
 def generate_refresh_token() -> str:
-    return secrets.token_urlsafe(32)
+    # 190 random bytes -> ~254 base64url chars, in the same order of magnitude
+    # as an access token JWT (whose exact length varies with username/roles).
+    return secrets.token_urlsafe(190)
 
 
 def decode_token(token: str) -> dict:

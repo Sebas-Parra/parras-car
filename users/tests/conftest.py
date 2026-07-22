@@ -10,7 +10,7 @@ from app.entities.person import Person
 from app.entities.role import Role
 from app.entities.user import User
 from app.main import app
-from app.utils.security import hash_password
+from app.utils.security import create_access_token, hash_password
 
 SQLALCHEMY_TEST_DATABASE_URL = "sqlite://"
 
@@ -21,7 +21,7 @@ engine = create_engine(
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-ROLE_NAMES = ["estudiante", "profesor", "administrador", "visitante"]
+ROLE_NAMES = ["estudiante", "profesor", "administrador", "visitante", "cliente"]
 ADMIN_PASSWORD = "Admin123!"
 
 
@@ -76,5 +76,23 @@ def client(db_session):
 @pytest.fixture()
 def role_ids(db_session):
     return {role.name: str(role.id) for role in db_session.query(Role).all()}
+
+
+@pytest.fixture()
+def admin_auth_headers(db_session):
+    """Bearer token headers for the fixture's seeded admin/Admin123! user.
+
+    Built directly with create_access_token (rather than via POST /auth/login)
+    so these HTTP-level tests can exercise the real controller -> Depends()
+    -> service wiring without depending on the auth flow itself.
+    """
+    admin_user = db_session.query(User).filter(User.username == "admin").one()
+    roles = [role.name for role in admin_user.roles]
+    token = create_access_token(
+        user_id=str(admin_user.id_person),
+        username=admin_user.username,
+        roles=roles,
+    )
+    return {"Authorization": f"Bearer {token}"}
 
 

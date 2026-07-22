@@ -1,12 +1,13 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from app.core.deps import get_db, require_admin, require_self_or_admin
 from app.dto.role import RoleAssign
 from app.dto.user import UserDetailRead, UserRead, UserUpdate
 from app.services import user_service
+from app.utils.client_ip import get_client_ip
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -37,30 +38,33 @@ def get_user(
 def update_user(
     user_id: UUID,
     data: UserUpdate,
+    request: Request,
     db: Session = Depends(get_db),
-    _: dict = Depends(require_self_or_admin),
+    current_user: dict = Depends(require_self_or_admin),
 ):
-    return user_service.update_user(db, user_id, data)
+    return user_service.update_user(db, user_id, data, current_user, ip=get_client_ip(request))
 
 
 # Admin / root only
 @router.patch("/{user_id}/deactivate", response_model=UserRead)
 def deactivate_user(
     user_id: UUID,
+    request: Request,
     db: Session = Depends(get_db),
-    _: dict = Depends(require_admin),
+    current_user: dict = Depends(require_admin),
 ):
-    return user_service.deactivate_user(db, user_id)
+    return user_service.deactivate_user(db, user_id, current_user, ip=get_client_ip(request))
 
 
 # Admin / root only
 @router.patch("/{user_id}/activate", response_model=UserRead)
 def activate_user(
     user_id: UUID,
+    request: Request,
     db: Session = Depends(get_db),
-    _: dict = Depends(require_admin),
+    current_user: dict = Depends(require_admin),
 ):
-    return user_service.activate_user(db, user_id)
+    return user_service.activate_user(db, user_id, current_user, ip=get_client_ip(request))
 
 
 # Admin / root only
@@ -68,10 +72,11 @@ def activate_user(
 def assign_role(
     user_id: UUID,
     data: RoleAssign,
+    request: Request,
     db: Session = Depends(get_db),
-    _: dict = Depends(require_admin),
+    current_user: dict = Depends(require_admin),
 ):
-    return user_service.assign_role(db, user_id, data.role_id)
+    return user_service.assign_role(db, user_id, data.role_id, current_user, ip=get_client_ip(request))
 
 
 # Admin / root only
@@ -79,7 +84,8 @@ def assign_role(
 def remove_role(
     user_id: UUID,
     role_id: UUID,
+    request: Request,
     db: Session = Depends(get_db),
-    _: dict = Depends(require_admin),
+    current_user: dict = Depends(require_admin),
 ):
-    return user_service.remove_role(db, user_id, role_id)
+    return user_service.remove_role(db, user_id, role_id, current_user, ip=get_client_ip(request))

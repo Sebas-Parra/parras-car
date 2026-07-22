@@ -2,6 +2,7 @@ package ec.edu.espe.zonas.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -11,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import ec.edu.espe.zonas.audit.AuditEvent;
+import ec.edu.espe.zonas.audit.AuditPublisher;
 import ec.edu.espe.zonas.dtos.ZoneRequestDto;
 import ec.edu.espe.zonas.dtos.ZoneResponseDto;
 import ec.edu.espe.zonas.entidades.Place;
@@ -18,6 +21,9 @@ import ec.edu.espe.zonas.entidades.Zone;
 import ec.edu.espe.zonas.entidades.enums.StatusOfPlace;
 import ec.edu.espe.zonas.repositories.PlaceRepository;
 import ec.edu.espe.zonas.repositories.ZoneRepository;
+import ec.edu.espe.zonas.security.AuthenticatedUser;
+import ec.edu.espe.zonas.security.ClientIp;
+import ec.edu.espe.zonas.security.CurrentUser;
 import ec.edu.espe.zonas.service.ZoneService;
 
 @Service
@@ -28,6 +34,9 @@ public class ZoneServiceImpl implements ZoneService {
 
     @Autowired
     private PlaceRepository placeRepository;
+
+    @Autowired
+    private AuditPublisher auditPublisher;
 
     @Override
     @Transactional(readOnly = true)
@@ -63,6 +72,7 @@ public class ZoneServiceImpl implements ZoneService {
         objZone.setUpdatedAt(LocalDateTime.now());
 
         zoneRepository.save(objZone);
+        emitEvent("CREATE", objZone, Map.of("name", objZone.getName(), "code", objZone.getCode()));
         return toResponseDto(objZone);
     }
 
@@ -92,6 +102,7 @@ public class ZoneServiceImpl implements ZoneService {
         zone.setUpdatedAt(LocalDateTime.now());
 
         Zone saved = zoneRepository.save(zone);
+        emitEvent("UPDATE", saved, Map.of("name", saved.getName(), "capacity", saved.getCapacity()));
         return toResponseDto(saved);
     }
 
@@ -123,6 +134,7 @@ public class ZoneServiceImpl implements ZoneService {
         zone.setStatus(newStatus);
         zone.setUpdatedAt(LocalDateTime.now());
         zoneRepository.save(zone);
+        emitEvent("UPDATE", zone, Map.of("status", newStatus));
     }
 
     @Override
@@ -137,6 +149,21 @@ public class ZoneServiceImpl implements ZoneService {
         }
 
         zoneRepository.delete(zone);
+        emitEvent("DELETE", zone, Map.of("name", zone.getName()));
+    }
+
+    private void emitEvent(String accion, Zone zone, Map<String, Object> datosExtra) {
+        AuthenticatedUser actor = CurrentUser.get();
+        AuditEvent event = new AuditEvent(
+                "ms-zonas",
+                accion,
+                "ZONA",
+                zone.getId() != null ? zone.getId().toString() : null,
+                datosExtra,
+                actor.username(),
+                actor.roles().isEmpty() ? "" : actor.roles().get(0),
+                ClientIp.get());
+        auditPublisher.publish(event);
     }
 
     private ZoneResponseDto toResponseDto(Zone zone) {

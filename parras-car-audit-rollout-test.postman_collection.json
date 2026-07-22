@@ -1,0 +1,351 @@
+{
+  "info": {
+    "_postman_id": "9e3f1a2b-4c5d-4e6f-8a7b-1c2d3e4f5a6b",
+    "name": "Parras-Car — Audit Rollout Test Suite",
+    "description": "Ejercita create/update/delete en cada microservicio (users, vehicles, zones, assignments, tickets) para generar eventos de auditoría en ms-audit. Ejecutar las carpetas en orden de arriba hacia abajo — cada una encadena tokens/IDs a las variables de colección automáticamente vía scripts de test. Antes de re-ejecutar, cambia `cliente_cedula`/`cliente_email`/`vehicle_plate` (tienen restricciones de unicidad).\n\nRequiere el stack completo levantado: `docker compose up -d --build`.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "users_url", "value": "http://localhost:8000", "type": "string" },
+    { "key": "vehicles_url", "value": "http://localhost:3000", "type": "string" },
+    { "key": "zones_url", "value": "http://localhost:8080", "type": "string" },
+    { "key": "assignments_url", "value": "http://localhost:8001", "type": "string" },
+    { "key": "tickets_url", "value": "http://localhost:3001", "type": "string" },
+    { "key": "ms_audit_url", "value": "http://localhost:9000/audit", "type": "string" },
+    { "key": "cliente_cedula", "value": "1710000017", "type": "string" },
+    { "key": "cliente_email", "value": "pepe@example.com", "type": "string" },
+    { "key": "cliente_password", "value": "Password123", "type": "string" },
+    { "key": "vehicle_plate", "value": "ABC-1234", "type": "string" },
+    { "key": "admin_token", "value": "", "type": "string" },
+    { "key": "cliente_token", "value": "", "type": "string" },
+    { "key": "cliente_username", "value": "", "type": "string" },
+    { "key": "cliente_person_id", "value": "", "type": "string" },
+    { "key": "vehicle_id", "value": "", "type": "string" },
+    { "key": "zone_id", "value": "", "type": "string" },
+    { "key": "place_id", "value": "", "type": "string" },
+    { "key": "ticket_id", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "1. Auth (users)",
+      "item": [
+        {
+          "name": "Register cliente (public) — audita CREATE / USUARIO",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cedula\": \"{{cliente_cedula}}\",\n  \"first_name\": \"Pepe\",\n  \"middle_name\": \"Mario\",\n  \"last_name\": \"Diaz\",\n  \"email\": \"{{cliente_email}}\",\n  \"phone\": \"0991234567\",\n  \"address\": \"Calle Falsa 123\",\n  \"nationality\": \"Ecuatoriana\",\n  \"password\": \"{{cliente_password}}\"\n}"
+            },
+            "url": { "raw": "{{users_url}}/persons", "host": ["{{users_url}}"], "path": ["persons"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('cliente_person_id', body.id);",
+                  "pm.collectionVariables.set('cliente_username', body.user.username);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login admin (seeded) — audita LOGIN",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"Admin123!\"\n}"
+            },
+            "url": { "raw": "{{users_url}}/auth/login", "host": ["{{users_url}}"], "path": ["auth", "login"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('admin_token', pm.response.json().access_token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login cliente (recién registrado) — audita LOGIN",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{cliente_username}}\",\n  \"password\": \"{{cliente_password}}\"\n}"
+            },
+            "url": { "raw": "{{users_url}}/auth/login", "host": ["{{users_url}}"], "path": ["auth", "login"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('cliente_token', pm.response.json().access_token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update cliente profile — audita UPDATE / USUARIO",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{cliente_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"0987654321\"\n}"
+            },
+            "url": {
+              "raw": "{{users_url}}/persons/{{cliente_person_id}}",
+              "host": ["{{users_url}}"],
+              "path": ["persons", "{{cliente_person_id}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Vehicles",
+      "item": [
+        {
+          "name": "Create vehicle (cliente) — audita CREATE / VEHICULO",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{cliente_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"car\",\n  \"datos\": {\n    \"plate\": \"{{vehicle_plate}}\",\n    \"brand\": \"Toyota\",\n    \"model\": \"Corolla\",\n    \"color\": \"Rojo\",\n    \"year\": 2022,\n    \"clasification\": \"GASOLINE\",\n    \"numberOfDoors\": 4,\n    \"trunkCapacity\": 450\n  }\n}"
+            },
+            "url": { "raw": "{{vehicles_url}}/vehicles", "host": ["{{vehicles_url}}"], "path": ["vehicles"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('vehicle_id', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Zones",
+      "item": [
+        {
+          "name": "Create zone (admin) — audita CREATE / ZONA",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Zona Norte\",\n  \"description\": \"Parqueadero principal\",\n  \"capacity\": 20,\n  \"type\": \"REGULAR\"\n}"
+            },
+            "url": { "raw": "{{zones_url}}/api/v1/zones", "host": ["{{zones_url}}"], "path": ["api", "v1", "zones"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('zone_id', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create place (admin) — audita CREATE / PLACE",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idZone\": \"{{zone_id}}\",\n  \"description\": \"Espacio A1\",\n  \"type\": \"CAR\"\n}"
+            },
+            "url": { "raw": "{{zones_url}}/api/v1/places", "host": ["{{zones_url}}"], "path": ["api", "v1", "places"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('place_id', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Change zone status (admin) — audita UPDATE / ZONA",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": {
+              "raw": "{{zones_url}}/api/v1/zones/{{zone_id}}/status",
+              "host": ["{{zones_url}}"],
+              "path": ["api", "v1", "zones", "{{zone_id}}", "status"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Assignments",
+      "item": [
+        {
+          "name": "Create assignment (admin) — audita CREATE / ASSIGNMENT",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{cliente_person_id}}\",\n  \"vehicle_id\": \"{{vehicle_id}}\"\n}"
+            },
+            "url": { "raw": "{{assignments_url}}/assignments", "host": ["{{assignments_url}}"], "path": ["assignments"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.test('201 Created', () => pm.response.to.have.status(201));"] }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Tickets",
+      "item": [
+        {
+          "name": "Create ticket (admin) — audita CREATE / TICKET",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idEspacio\": \"{{place_id}}\",\n  \"placa\": \"{{vehicle_plate}}\"\n}"
+            },
+            "url": { "raw": "{{tickets_url}}/tickets", "host": ["{{tickets_url}}"], "path": ["tickets"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('201 Created', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('ticket_id', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pay ticket (admin) — audita UPDATE / TICKET",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": {
+              "raw": "{{tickets_url}}/tickets/{{ticket_id}}/pay",
+              "host": ["{{tickets_url}}"],
+              "path": ["tickets", "{{ticket_id}}", "pay"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.test('200 OK', () => pm.response.to.have.status(200));"] }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6. Verify audit trail (ms-audit)",
+      "item": [
+        {
+          "name": "GET /audit (admin) — lista todos los eventos registrados",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "{{ms_audit_url}}/api/v1/audit", "host": ["{{ms_audit_url}}"], "path": ["api", "v1", "audit"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('200 OK', () => pm.response.to.have.status(200));",
+                  "const events = pm.response.json();",
+                  "pm.test('hay al menos un evento auditado', () => pm.expect(events.length).to.be.greaterThan(0));",
+                  "console.log('Eventos de auditoría:', events.map(e => `${e.service}/${e.action}/${e.entity}`));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /audit sin token — debe dar 401 (endpoint protegido)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{ms_audit_url}}/api/v1/audit", "host": ["{{ms_audit_url}}"], "path": ["api", "v1", "audit"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["pm.test('401 Unauthorized', () => pm.response.to.have.status(401));"] }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

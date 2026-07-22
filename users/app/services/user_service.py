@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.dto.user import UserUpdate
 from app.entities.user import User
 from app.repositories import role_repository, user_repository
+from app.services.audit_publisher import publish_audit_event
 
 
 def get_user(db: Session, user_id: UUID) -> User:
@@ -19,7 +20,14 @@ def list_users(db: Session, skip: int = 0, limit: int = 100) -> list[User]:
     return user_repository.list_all(db, skip, limit)
 
 
-def update_user(db: Session, user_id: UUID, data: UserUpdate) -> User:
+def _actor_role(current_user: dict) -> str:
+    roles = current_user.get("roles") or []
+    return roles[0] if roles else ""
+
+
+def update_user(
+    db: Session, user_id: UUID, data: UserUpdate, current_user: dict, ip: str | None = None
+) -> User:
     user = get_user(db, user_id)
     update_data = data.model_dump(exclude_unset=True)
 
@@ -32,18 +40,36 @@ def update_user(db: Session, user_id: UUID, data: UserUpdate) -> User:
 
     db.commit()
     db.refresh(user)
+
+    publish_audit_event(
+        accion="UPDATE",
+        entidad_id=str(user.id_person),
+        usuario=current_user.get("username", ""),
+        rol=_actor_role(current_user),
+        datos=update_data,
+        ip=ip,
+    )
     return user
 
 
-def deactivate_user(db: Session, user_id: UUID) -> User:
+def deactivate_user(db: Session, user_id: UUID, current_user: dict, ip: str | None = None) -> User:
     user = get_user(db, user_id)
     user.active = False
     db.commit()
     db.refresh(user)
+
+    publish_audit_event(
+        accion="DELETE",
+        entidad_id=str(user.id_person),
+        usuario=current_user.get("username", ""),
+        rol=_actor_role(current_user),
+        datos={"active": False},
+        ip=ip,
+    )
     return user
 
 
-def activate_user(db: Session, user_id: UUID) -> User:
+def activate_user(db: Session, user_id: UUID, current_user: dict, ip: str | None = None) -> User:
     user = get_user(db, user_id)
     if not user.person.active:
         raise HTTPException(
@@ -53,10 +79,19 @@ def activate_user(db: Session, user_id: UUID) -> User:
     user.active = True
     db.commit()
     db.refresh(user)
+
+    publish_audit_event(
+        accion="UPDATE",
+        entidad_id=str(user.id_person),
+        usuario=current_user.get("username", ""),
+        rol=_actor_role(current_user),
+        datos={"active": True},
+        ip=ip,
+    )
     return user
 
 
-def assign_role(db: Session, user_id: UUID, role_id: UUID) -> User:
+def assign_role(db: Session, user_id: UUID, role_id: UUID, current_user: dict, ip: str | None = None) -> User:
     user = get_user(db, user_id)
     role = role_repository.get_by_id(db, role_id)
     if role is None:
@@ -66,10 +101,19 @@ def assign_role(db: Session, user_id: UUID, role_id: UUID) -> User:
     user.roles.append(role)
     db.commit()
     db.refresh(user)
+
+    publish_audit_event(
+        accion="UPDATE",
+        entidad_id=str(user.id_person),
+        usuario=current_user.get("username", ""),
+        rol=_actor_role(current_user),
+        datos={"role_added": role.name},
+        ip=ip,
+    )
     return user
 
 
-def remove_role(db: Session, user_id: UUID, role_id: UUID) -> User:
+def remove_role(db: Session, user_id: UUID, role_id: UUID, current_user: dict, ip: str | None = None) -> User:
     user = get_user(db, user_id)
     role = role_repository.get_by_id(db, role_id)
     if role is None or role not in user.roles:
@@ -77,4 +121,13 @@ def remove_role(db: Session, user_id: UUID, role_id: UUID) -> User:
     user.roles.remove(role)
     db.commit()
     db.refresh(user)
+
+    publish_audit_event(
+        accion="UPDATE",
+        entidad_id=str(user.id_person),
+        usuario=current_user.get("username", ""),
+        rol=_actor_role(current_user),
+        datos={"role_removed": role.name},
+        ip=ip,
+    )
     return user

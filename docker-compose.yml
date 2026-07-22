@@ -119,6 +119,24 @@ services:
     networks:
       - parras_network
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: parras-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', 'check_port_connectivity']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - parras_network
+
   # ─── Microservices ────────────────────────────────────────────
 
   users:
@@ -130,15 +148,25 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg2://${DB_USER}:${DB_PASSWORD}@users-db:5432/${DB_NAME_USERS}
       JWT_SECRET: ${JWT_SECRET}
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE}
+      RABBITMQ_ROUTING_KEY: ${RABBITMQ_ROUTING_KEY}
     ports:
       - '8000:8000'
     depends_on:
       users-db:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    links:
+      - users-db
     networks:
       - parras_network
     command: >
-      sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+      sh -c "until alembic upgrade head; do echo 'Waiting for users-db...' && sleep 2; done; uvicorn app.main:app --host 0.0.0.0 --port 8000"
 
   vehicles:
     build:
@@ -165,6 +193,8 @@ services:
     depends_on:
       vehicles-db:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     networks:
       - parras_network
 
@@ -182,10 +212,18 @@ services:
       DB_NAME: ${DB_NAME_ZONES}
       SERVER_PORT: 8080
       JWT_SECRET: ${JWT_SECRET}
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE}
+      RABBITMQ_ROUTING_KEY: ${RABBITMQ_ROUTING_KEY}
     ports:
       - '8080:8080'
     depends_on:
       zones-db:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     networks:
       - parras_network
@@ -201,10 +239,18 @@ services:
       VEHICLES_SERVICE_URL: ${VEHICLES_SERVICE_URL}
       USERS_SERVICE_URL: ${USERS_SERVICE_URL}
       JWT_SECRET: ${JWT_SECRET}
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE}
+      RABBITMQ_ROUTING_KEY: ${RABBITMQ_ROUTING_KEY}
     ports:
       - '8001:8001'
     depends_on:
       assignments-db:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
       users:
         condition: service_started
@@ -229,6 +275,12 @@ services:
       DB_NOMBRE: ${DB_NAME_TICKETS}
       PORT: 3000
       JWT_SECRET: ${JWT_SECRET}
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE}
+      RABBITMQ_ROUTING_KEY: ${RABBITMQ_ROUTING_KEY}
       ZONES_SERVICE_URL: ${ZONES_SERVICE_URL}
       VEHICLES_SERVICE_URL: ${VEHICLES_SERVICE_URL}
       ASSIGNMENTS_SERVICE_URL: ${ASSIGNMENTS_SERVICE_URL}
@@ -246,12 +298,47 @@ services:
     depends_on:
       tickets-db:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
       zones:
         condition: service_started
       vehicles:
         condition: service_started
       assignments:
         condition: service_started
+    networks:
+      - parras_network
+
+  ms-audit:
+    build:
+      context: ./ms-audit
+      dockerfile: Dockerfile
+    container_name: parras-ms-audit
+    restart: unless-stopped
+    environment:
+      DB_HOST: audit-db
+      DB_PORT: 5432
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME_AUDIT}
+      PORT: 3002
+      JWT_SECRET: ${JWT_SECRET}
+      RABBITMQ_HOST: ${RABBITMQ_HOST}
+      RABBITMQ_PORT: ${RABBITMQ_PORT}
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+      RABBITMQ_QUEUE: ${RABBITMQ_QUEUE}
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE}
+      RABBITMQ_ROUTING_KEY: ${RABBITMQ_ROUTING_KEY}
+      THROTTLE_TTL: 60
+      THROTTLE_LIMIT: 10
+    ports:
+      - '3002:3002'
+    depends_on:
+      audit-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     networks:
       - parras_network
 

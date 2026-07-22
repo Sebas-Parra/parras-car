@@ -11,6 +11,8 @@ import { ZonesClient } from './clients/zones.client';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { EstadoTicket } from './entities/enum/estado-ticket.enum';
 import { Ticket } from './entities/ticket.entity';
+import { AuditEvent, EventPublisher } from './event-published.service';
+import { SseService } from 'src/sse/sse.services';
 
 // Tarifa base por hora o fracción según el TIPO DE ESPACIO (USD). La tarifa
 // no depende del vehículo: una camioneta usa un espacio CAR y paga como CAR.
@@ -51,6 +53,11 @@ function computeRate(tipoEspacio?: string, tipoZona?: string): number {
   return Math.round(base * mult * 100) / 100;
 }
 
+export interface ActingUser {
+  username: string;
+  roles: string[];
+}
+
 @Injectable()
 export class TicketsService {
   constructor(
@@ -59,12 +66,36 @@ export class TicketsService {
     private readonly zonesClient: ZonesClient,
     private readonly vehiclesClient: VehiclesClient,
     private readonly assignmentsClient: AssignmentsClient,
-  ) {}
+    private readonly eventPublisher: EventPublisher,
+    private readonly sseService: SseService,
+  ) { }
+
+  private async emitEvent(
+    accion: string,
+    ticket: Ticket,
+    actingUser: ActingUser,
+    ip?: string,
+    datosExtra?: any,
+  ) {
+    const event: AuditEvent = {
+      servicio: 'ms-tickets',
+      accion,
+      entidad: 'TICKET',
+      entidadId: ticket.id,
+      datos: { ...ticket, ...datosExtra },
+      usuario: actingUser.username,
+      rol: actingUser.roles[0],
+      ip,
+    };
+    await this.eventPublisher.publish(event);
+  }
 
   async create(
     dto: CreateTicketDto,
     idEmpleado: string,
     authHeader: string,
+    actingUser: ActingUser,
+    ip?: string,
   ): Promise<Ticket> {
     const vehicle = await this.vehiclesClient.findByPlate(dto.placa, authHeader);
     if (!vehicle) {
@@ -110,7 +141,7 @@ export class TicketsService {
     if (!vehicle.tipo || !allowedTipos.includes(vehicle.tipo)) {
       throw new ConflictException(
         `El espacio '${place.code}' es de tipo ${place.type} y no admite ` +
-          `vehículos de tipo '${vehicle.tipo ?? 'desconocido'}'`,
+        `vehículos de tipo '${vehicle.tipo ?? 'desconocido'}'`,
       );
     }
 
@@ -148,6 +179,11 @@ export class TicketsService {
       throw error;
     }
 
+    await this.emitEvent('CREATE', saved, actingUser, ip);
+    await this.sseService.emitEvent('espacio-actualizado', {
+      id: saved.idEspacio,
+      estado: 'OCCUPIED',
+    })
     return saved;
   }
 
@@ -163,7 +199,13 @@ export class TicketsService {
     return ticket;
   }
 
-  async pay(id: string, idEmpleado: string, authHeader: string): Promise<Ticket> {
+  async pay(
+    id: string,
+    idEmpleado: string,
+    authHeader: string,
+    actingUser: ActingUser,
+    ip?: string,
+  ): Promise<Ticket> {
     const ticket = await this.findOne(id);
     if (ticket.estado !== EstadoTicket.ACTIVO) {
       throw new ConflictException(
@@ -177,10 +219,17 @@ export class TicketsService {
     ticket.idEmpleadoPago = idEmpleado;
     const saved = await this.ticketRepository.save(ticket);
     await this.zonesClient.setStatus(ticket.idEspacio, 'AVAILABLE', authHeader);
+    await this.emitEvent('UPDATE', saved, actingUser, ip);
     return saved;
   }
 
-  async cancel(id: string, idEmpleado: string, authHeader: string): Promise<Ticket> {
+  async cancel(
+    id: string,
+    idEmpleado: string,
+    authHeader: string,
+    actingUser: ActingUser,
+    ip?: string,
+  ): Promise<Ticket> {
     const ticket = await this.findOne(id);
     if (ticket.estado !== EstadoTicket.ACTIVO) {
       throw new ConflictException(
@@ -192,6 +241,7 @@ export class TicketsService {
     ticket.idEmpleadoPago = idEmpleado;
     const saved = await this.ticketRepository.save(ticket);
     await this.zonesClient.setStatus(ticket.idEspacio, 'AVAILABLE', authHeader);
+    await this.emitEvent('DELETE', saved, actingUser, ip);
     return saved;
   }
 

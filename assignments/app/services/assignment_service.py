@@ -8,19 +8,28 @@ from app.entities.assignment_audit import AssignmentAudit
 from app.repositories import assignment_repository
 from app.services import vehicles_client
 from app.services.assignment_validator import AssignmentValidator
+from app.services.audit_publisher import publish_audit_event
 from app.services.audit_service import AuditService
 
 
 class AssignmentService:
     """Orchestrates the assignment lifecycle.
-    Audit recording is decoupled — handled transparently by ORM event listeners.
+    Local audit recording is decoupled — handled transparently by ORM event listeners.
+    Centralized ms-audit publishing happens explicitly here, alongside it.
     """
 
     def __init__(self, validator: AssignmentValidator, audit: AuditService) -> None:
         self._validator = validator
         self._audit = audit
 
-    def create(self, db: Session, data: AssignmentCreate, token: str) -> AssignmentRead:
+    def create(
+        self,
+        db: Session,
+        data: AssignmentCreate,
+        token: str,
+        current_user: dict,
+        ip: str | None = None,
+    ) -> AssignmentRead:
         self._validator.require_user_active(data.user_id, token)
         self._validator.require_vehicle_active(data.vehicle_id, token)
         self._validator.require_vehicle_available(db, data.vehicle_id, data.user_id)
@@ -32,14 +41,18 @@ class AssignmentService:
             existing.active = True  # triggers after_update listener → MODIFICACION audit
             db.commit()
             db.refresh(existing)
+            self._emit_audit_event("UPDATE", data.user_id, data.vehicle_id, current_user, ip)
             return existing
 
         assignment = assignment_repository.create(db, data.user_id, data.vehicle_id)  # triggers after_insert → CREACION audit
         db.commit()
         db.refresh(assignment)
+        self._emit_audit_event("CREATE", data.user_id, data.vehicle_id, current_user, ip)
         return assignment
 
-    def delete(self, db: Session, user_id: UUID, vehicle_id: UUID) -> AssignmentRead:
+    def delete(
+        self, db: Session, user_id: UUID, vehicle_id: UUID, current_user: dict, ip: str | None = None
+    ) -> AssignmentRead:
         assignment = assignment_repository.get_by_ids(db, user_id, vehicle_id)
         if not assignment or not assignment.active:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Active assignment not found")
@@ -47,9 +60,18 @@ class AssignmentService:
         assignment_repository.soft_delete(db, assignment)  # triggers after_update listener → ELIMINACION audit
         db.commit()
         db.refresh(assignment)
+        self._emit_audit_event("DELETE", user_id, vehicle_id, current_user, ip)
         return assignment
 
-    def transfer(self, db: Session, vehicle_id: UUID, data: AssignmentTransfer, token: str) -> AssignmentRead:
+    def transfer(
+        self,
+        db: Session,
+        vehicle_id: UUID,
+        data: AssignmentTransfer,
+        token: str,
+        current_user: dict,
+        ip: str | None = None,
+    ) -> AssignmentRead:
         self._validator.require_different_users(data.from_user_id, data.to_user_id)
         self._validator.require_user_active(data.from_user_id, token)
         self._validator.require_user_active(data.to_user_id, token)
@@ -71,6 +93,15 @@ class AssignmentService:
 
         db.commit()
         db.refresh(new_assignment)
+
+        publish_audit_event(
+            accion="UPDATE",
+            entidad_id=str(vehicle_id),
+            usuario=current_user.get("username", ""),
+            rol=(current_user.get("roles") or [""])[0],
+            datos={"from_user_id": str(data.from_user_id), "to_user_id": str(data.to_user_id)},
+            ip=ip,
+        )
         return new_assignment
 
     def get_fleet(self, db: Session, user_id: UUID, token: str) -> FleetResponse:
@@ -107,3 +138,16 @@ class AssignmentService:
 
     def get_assignment_audit(self, db: Session, user_id: UUID, vehicle_id: UUID) -> list[AssignmentAudit]:
         return self._audit.list_by_assignment(db, user_id, vehicle_id)
+
+    def _emit_audit_event(
+        self, accion: str, user_id: UUID, vehicle_id: UUID, current_user: dict, ip: str | None = None
+    ) -> None:
+        roles = current_user.get("roles") or []
+        publish_audit_event(
+            accion=accion,
+            entidad_id=f"{user_id}:{vehicle_id}",
+            usuario=current_user.get("username", ""),
+            rol=roles[0] if roles else "",
+            datos={"user_id": str(user_id), "vehicle_id": str(vehicle_id)},
+            ip=ip,
+        )

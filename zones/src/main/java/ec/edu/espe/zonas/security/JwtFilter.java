@@ -55,14 +55,20 @@ public class JwtFilter extends OncePerRequestFilter {
                         .getPayload();
 
                 List<?> rawRoles = claims.get("roles", List.class);
-                List<GrantedAuthority> authorities = rawRoles != null
-                        ? rawRoles.stream()
-                                .map(r -> new SimpleGrantedAuthority("ROLE_" + r.toString().toUpperCase()))
-                                .collect(Collectors.toList())
+                List<String> roleNames = rawRoles != null
+                        ? rawRoles.stream().map(Object::toString).collect(Collectors.toList())
                         : Collections.emptyList();
+                List<GrantedAuthority> authorities = roleNames.stream()
+                        .map(r -> new SimpleGrantedAuthority("ROLE_" + r.toUpperCase()))
+                        .collect(Collectors.toList());
+
+                AuthenticatedUser principal = new AuthenticatedUser(
+                        claims.getSubject(),
+                        claims.get("username", String.class),
+                        roleNames);
 
                 UsernamePasswordAuthenticationToken auth =
-                        new UsernamePasswordAuthenticationToken(claims.getSubject(), null, authorities);
+                        new UsernamePasswordAuthenticationToken(principal, null, authorities);
                 SecurityContextHolder.getContext().setAuthentication(auth);
 
             } catch (JwtException e) {

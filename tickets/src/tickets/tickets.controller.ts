@@ -14,10 +14,15 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { CreateTicketDto } from './dto/create-ticket.dto';
-import { TicketsService } from './tickets.service';
+import { getClientIp } from './get-client-ip';
+import { ActingUser, TicketsService } from './tickets.service';
 
 interface AuthenticatedRequest extends Request {
   user: { userId: string; username: string; roles: string[] };
+}
+
+function actingUserOf(req: AuthenticatedRequest): ActingUser {
+  return { username: req.user.username, roles: req.user.roles };
 }
 
 @Controller('tickets')
@@ -36,6 +41,8 @@ export class TicketsController {
       createTicketDto,
       req.user.userId,
       req.headers.authorization ?? '',
+      actingUserOf(req),
+      getClientIp(req),
     );
   }
 
@@ -59,6 +66,8 @@ export class TicketsController {
       id,
       req.user.userId,
       req.headers.authorization ?? '',
+      actingUserOf(req),
+      getClientIp(req),
     );
   }
 
@@ -70,6 +79,8 @@ export class TicketsController {
       id,
       req.user.userId,
       req.headers.authorization ?? '',
+      actingUserOf(req),
+      getClientIp(req),
     );
   }
 }

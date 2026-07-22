@@ -1,0 +1,145 @@
+# Copia literal de gateway/kong.yml: los hostnames que referencia
+# (http://users:8000, http://zones:8080, etc.) coinciden 1:1 con los
+# Services de este mismo namespace, así que no requiere cambios.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kong-declarative-config
+  namespace: parras-car
+data:
+  kong.yml: |
+    _format_version: "3.0"
+
+    consumers:
+      - username: parras-app
+        jwt_secrets:
+          - key: parras-app-key
+            algorithm: HS256
+            secret: 6f2f368a76edefcc1859716acadb5cd68ac14bd4186334c03ba341da97dff77c
+
+    services:
+      # ── Users — rutas protegidas (JWT) ────────────────────────────────────────
+      - name: users-service
+        url: http://users:8000
+        routes:
+          - name: users-health-route
+            paths:
+              - /users/health
+            strip_path: true
+
+          - name: users-route
+            paths:
+              - /users
+            strip_path: true
+            plugins:
+              - name: jwt
+
+      # ── Users — rutas públicas (sin JWT) ──────────────────────────────────────
+      - name: users-login-service
+        url: http://users:8000/auth/login
+        routes:
+          - name: users-login-route
+            paths:
+              - /users/auth/login
+            methods:
+              - POST
+            strip_path: true
+
+      - name: users-register-service
+        url: http://users:8000/persons
+        routes:
+          - name: users-register-route
+            paths:
+              - /users/persons
+            methods:
+              - POST
+            strip_path: true
+
+      - name: users-refresh-service
+        url: http://users:8000/auth/refresh
+        routes:
+          - name: users-refresh-route
+            paths:
+              - /users/auth/refresh
+            methods:
+              - POST
+            strip_path: true
+
+      - name: users-logout-service
+        url: http://users:8000/auth/logout
+        routes:
+          - name: users-logout-route
+            paths:
+              - /users/auth/logout
+            methods:
+              - POST
+            strip_path: true
+
+      # ── Vehicles ──────────────────────────────────────────────────────────────
+      - name: vehicles-service
+        url: http://vehicles:3000
+        routes:
+          - name: vehicles-route
+            paths:
+              - /vehicles
+            strip_path: true
+            plugins:
+              - name: jwt
+
+      # ── Zones ─────────────────────────────────────────────────────────────────
+      - name: zones-service
+        url: http://zones:8080
+        routes:
+          - name: zones-route
+            paths:
+              - /zones
+            strip_path: true
+            plugins:
+              - name: jwt
+
+      # ── Assignments ───────────────────────────────────────────────────────────
+      - name: assignments-service
+        url: http://assignments:8001
+        routes:
+          - name: assignments-health-route
+            paths:
+              - /assignments/health
+            strip_path: true
+
+          - name: assignments-route
+            paths:
+              - /assignments
+            strip_path: true
+            plugins:
+              - name: jwt
+
+      # ── Tickets ───────────────────────────────────────────────────────────────
+      - name: tickets-service
+        url: http://tickets:3000
+        routes:
+          - name: tickets-route
+            paths:
+              - /tickets
+            strip_path: true
+            plugins:
+              - name: jwt
+
+      # ── Audit ─────────────────────────────────────────────────────────────────
+      - name: ms-audit-service
+        url: http://ms-audit:3002
+        routes:
+          - name: ms-audit-route
+            paths:
+              - /audit
+            strip_path: true
+            plugins:
+              - name: jwt
+
+      # ── Swagger UI ────────────────────────────────────────────────────────────
+      - name: swagger-ui-service
+        url: http://swagger-ui:8080
+        routes:
+          - name: docs-route
+            paths:
+              - /docs
+            strip_path: false

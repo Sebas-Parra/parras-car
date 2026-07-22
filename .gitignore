@@ -11,3 +11,10 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 htmlcov/
+
+# OS / editor noise
+.DS_Store
+*.log
+.vscode/
+.idea/
+Notes.txt

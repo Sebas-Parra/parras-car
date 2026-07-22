@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.core.deps import get_bearer_token, get_current_user, get_db, require_admin, require_self_or_admin
@@ -9,6 +9,7 @@ from app.dto.audit import AuditRead
 from app.services.assignment_service import AssignmentService
 from app.services.assignment_validator import AssignmentValidator
 from app.services.audit_service import AuditService
+from app.utils.client_ip import get_client_ip
 
 router = APIRouter(prefix="/assignments", tags=["assignments"])
 
@@ -21,6 +22,7 @@ def get_assignment_service() -> AssignmentService:
 @router.post("", response_model=AssignmentRead, status_code=201)
 def create_assignment(
     data: AssignmentCreate,
+    request: Request,
     db: Session = Depends(get_db),
     svc: AssignmentService = Depends(get_assignment_service),
     current_user: dict = Depends(get_current_user),
@@ -33,7 +35,7 @@ def create_assignment(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Solo puedes asignarte vehículos a ti mismo.",
         )
-    return svc.create(db, data, token)
+    return svc.create(db, data, token, current_user, ip=get_client_ip(request))
 
 
 # Admin / root only
@@ -41,11 +43,12 @@ def create_assignment(
 def delete_assignment(
     user_id: UUID,
     vehicle_id: UUID,
+    request: Request,
     db: Session = Depends(get_db),
     svc: AssignmentService = Depends(get_assignment_service),
-    _: dict = Depends(require_admin),
+    current_user: dict = Depends(require_admin),
 ):
-    return svc.delete(db, user_id, vehicle_id)
+    return svc.delete(db, user_id, vehicle_id, current_user, ip=get_client_ip(request))
 
 
 # Admin / root only
@@ -53,12 +56,13 @@ def delete_assignment(
 def transfer_assignment(
     vehicle_id: UUID,
     data: AssignmentTransfer,
+    request: Request,
     db: Session = Depends(get_db),
     svc: AssignmentService = Depends(get_assignment_service),
-    _: dict = Depends(require_admin),
+    current_user: dict = Depends(require_admin),
     token: str = Depends(get_bearer_token),
 ):
-    return svc.transfer(db, vehicle_id, data, token)
+    return svc.transfer(db, vehicle_id, data, token, current_user, ip=get_client_ip(request))
 
 
 # No auth — internal call from vehicles service (server-to-server, no user token)

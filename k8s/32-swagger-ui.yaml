@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: swagger-ui
+  namespace: parras-car
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: swagger-ui
+  template:
+    metadata:
+      labels:
+        app: swagger-ui
+    spec:
+      containers:
+        - name: swagger-ui
+          image: swaggerapi/swagger-ui:latest
+          env:
+            - name: BASE_URL
+              value: /docs
+            - name: URLS
+              value: >-
+                [{"url":"/users/openapi.json","name":"Users"},{"url":"/vehicles/api-json","name":"Vehicles"},{"url":"/zones/v3/api-docs","name":"Zones"},{"url":"/assignments/openapi.json","name":"Assignments"},{"url":"/tickets/api-json","name":"Tickets"}]
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: swagger-ui
+  namespace: parras-car
+spec:
+  selector:
+    app: swagger-ui
+  ports:
+    - port: 8080
+      targetPort: 8080

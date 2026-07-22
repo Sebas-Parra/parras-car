@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zones
+  namespace: parras-car
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zones
+  template:
+    metadata:
+      labels:
+        app: zones
+    spec:
+      initContainers:
+        - name: wait-for-deps
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z zones-db 5432; do echo "esperando zones-db..."; sleep 2; done
+              until nc -z rabbitmq 5672; do echo "esperando rabbitmq..."; sleep 2; done
+      containers:
+        - name: zones
+          image: parras-car-zones:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DB_HOST
+              value: zones-db
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USER
+              valueFrom: { secretKeyRef: { name: parras-secrets, key: DB_USER } }
+            - name: DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: parras-secrets, key: DB_PASSWORD } }
+            - name: DB_NAME
+              valueFrom: { configMapKeyRef: { name: parras-config, key: DB_NAME_ZONES } }
+            - name: SERVER_PORT
+              value: "8080"
+            - name: JWT_SECRET
+              valueFrom: { secretKeyRef: { name: parras-secrets, key: JWT_SECRET } }
+            - name: RABBITMQ_HOST
+              valueFrom: { configMapKeyRef: { name: parras-config, key: RABBITMQ_HOST } }
+            - name: RABBITMQ_PORT
+              valueFrom: { configMapKeyRef: { name: parras-config, key: RABBITMQ_PORT } }
+            - name: RABBITMQ_USER
+              valueFrom: { secretKeyRef: { name: parras-secrets, key: RABBITMQ_USER } }
+            - name: RABBITMQ_PASSWORD
+              valueFrom: { secretKeyRef: { name: parras-secrets, key: RABBITMQ_PASSWORD } }
+            - name: RABBITMQ_EXCHANGE
+              valueFrom: { configMapKeyRef: { name: parras-config, key: RABBITMQ_EXCHANGE } }
+            - name: RABBITMQ_ROUTING_KEY
+              valueFrom: { configMapKeyRef: { name: parras-config, key: RABBITMQ_ROUTING_KEY } }
+          readinessProbe:
+            httpGet: { path: /api/v1/places, port: 8080 }
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 6
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zones
+  namespace: parras-car
+spec:
+  selector:
+    app: zones
+  ports:
+    - port: 8080
+      targetPort: 8080

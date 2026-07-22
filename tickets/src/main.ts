@@ -10,6 +10,12 @@ import { AllExceptionsFilter } from './tickets/all-exceptions.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  // Dashboard de monitoreo de espacios consume /sse/espacios vía EventSource
+  // desde un origen distinto (Vite dev server, etc.) — habilitamos CORS para esa lectura.
+  app.enableCors({
+    origin: true,
+    methods: ['GET'],
+  });
   app.useGlobalFilters(new AllExceptionsFilter());
   app.useGlobalPipes(
     new ValidationPipe({

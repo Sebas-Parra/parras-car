@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: parras-config
+  namespace: parras-car
+data:
+  DB_NAME_USERS: auth_db
+  DB_NAME_VEHICLES: vehicles_db
+  DB_NAME_ZONES: zonas_db
+  DB_NAME_ASSIGNMENTS: assignments_db
+  DB_NAME_TICKETS: tickets_db
+  DB_NAME_AUDIT: audit_db
+
+  RABBITMQ_HOST: rabbitmq
+  RABBITMQ_PORT: "5672"
+  RABBITMQ_EXCHANGE: audit_exchange
+  RABBITMQ_ROUTING_KEY: audit_event
+  RABBITMQ_QUEUE: audit_queue
+
+  USERS_SERVICE_URL: http://users:8000
+  VEHICLES_SERVICE_URL: http://vehicles:3000
+  ZONES_SERVICE_URL: http://zones:8080
+  ASSIGNMENTS_SERVICE_URL: http://assignments:8001
+
+  TICKET_PRICE: "1.00"
+  PLACE_RATE_CAR: "1.00"
+  PLACE_RATE_BIKE: "0.50"
+  PLACE_RATE_BUS: "2.00"
+  ZONE_MULT_REGULAR: "1"
+  ZONE_MULT_VIP: "5"
+  ZONE_MULT_INTERNAL: "3"
+  ZONE_MULT_EXTERNAL: "2"
+  ZONE_MULT_PREFERENTIAL: "0.5"

@@ -1,0 +1,109 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: assignments
+  namespace: parras-car
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: assignments
+  template:
+    metadata:
+      labels:
+        app: assignments
+    spec:
+      initContainers:
+        - name: wait-for-deps
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z assignments-db 5432; do echo "esperando assignments-db..."; sleep 2; done
+              until nc -z rabbitmq 5672; do echo "esperando rabbitmq..."; sleep 2; done
+        - name: migrate
+          image: parras-car-assignments:latest
+          imagePullPolicy: Never
+          command:
+            - sh
+            - -c
+            - |
+              until alembic upgrade head; do echo "Waiting for assignments-db..."; sleep 2; done
+          env:
+            - name: DB_USER
+              valueFrom: { secretKeyRef: { name: parras-secrets, key: DB_USER } }
+            - name: DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: parras-secrets, key: DB_PASSWORD } }
+            - name: DB_NAME
+              valueFrom: { configMapKeyRef: { name: parras-config, key: DB_NAME_ASSIGNMENTS } }
+            - name: DATABASE_URL
+              value: postgresql+psycopg2://$(DB_USER):$(DB_PASSWORD)@assignments-db:5432/$(DB_NAME)
+            - name: VEHICLES_SERVICE_URL
+              valueFrom: { configMapKeyRef: { name: parras-config, key: VEHICLES_SERVICE_URL } }
+            - name: USERS_SERVICE_URL
+              valueFrom: { configMapKeyRef: { name: parras-config, key: USERS_SERVICE_URL } }
+            - name: JWT_SECRET
+              valueFrom: { secretKeyRef: { name: parras-secrets, key: JWT_SECRET } }
+            - name: RABBITMQ_HOST
+              valueFrom: { configMapKeyRef: { name: parras-config, key: RABBITMQ_HOST } }
+            - name: RABBITMQ_PORT
+              valueFrom: { configMapKeyRef: { name: parras-config, key: RABBITMQ_PORT } }
+            - name: RABBITMQ_USER
+              valueFrom: { secretKeyRef: { name: parras-secrets, key: RABBITMQ_USER } }
+            - name: RABBITMQ_PASSWORD
+              valueFrom: { secretKeyRef: { name: parras-secrets, key: RABBITMQ_PASSWORD } }
+            - name: RABBITMQ_EXCHANGE
+              valueFrom: { configMapKeyRef: { name: parras-config, key: RABBITMQ_EXCHANGE } }
+            - name: RABBITMQ_ROUTING_KEY
+              valueFrom: { configMapKeyRef: { name: parras-config, key: RABBITMQ_ROUTING_KEY } }
+      containers:
+        - name: assignments
+          image: parras-car-assignments:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8001
+          env:
+            - name: DB_USER
+              valueFrom: { secretKeyRef: { name: parras-secrets, key: DB_USER } }
+            - name: DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: parras-secrets, key: DB_PASSWORD } }
+            - name: DB_NAME
+              valueFrom: { configMapKeyRef: { name: parras-config, key: DB_NAME_ASSIGNMENTS } }
+            - name: DATABASE_URL
+              value: postgresql+psycopg2://$(DB_USER):$(DB_PASSWORD)@assignments-db:5432/$(DB_NAME)
+            - name: VEHICLES_SERVICE_URL
+              valueFrom: { configMapKeyRef: { name: parras-config, key: VEHICLES_SERVICE_URL } }
+            - name: USERS_SERVICE_URL
+              valueFrom: { configMapKeyRef: { name: parras-config, key: USERS_SERVICE_URL } }
+            - name: JWT_SECRET
+              valueFrom: { secretKeyRef: { name: parras-secrets, key: JWT_SECRET } }
+            - name: RABBITMQ_HOST
+              valueFrom: { configMapKeyRef: { name: parras-config, key: RABBITMQ_HOST } }
+            - name: RABBITMQ_PORT
+              valueFrom: { configMapKeyRef: { name: parras-config, key: RABBITMQ_PORT } }
+            - name: RABBITMQ_USER
+              valueFrom: { secretKeyRef: { name: parras-secrets, key: RABBITMQ_USER } }
+            - name: RABBITMQ_PASSWORD
+              valueFrom: { secretKeyRef: { name: parras-secrets, key: RABBITMQ_PASSWORD } }
+            - name: RABBITMQ_EXCHANGE
+              valueFrom: { configMapKeyRef: { name: parras-config, key: RABBITMQ_EXCHANGE } }
+            - name: RABBITMQ_ROUTING_KEY
+              valueFrom: { configMapKeyRef: { name: parras-config, key: RABBITMQ_ROUTING_KEY } }
+          readinessProbe:
+            httpGet: { path: /health, port: 8001 }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 6
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: assignments
+  namespace: parras-car
+spec:
+  selector:
+    app: assignments
+  ports:
+    - port: 8001
+      targetPort: 8001

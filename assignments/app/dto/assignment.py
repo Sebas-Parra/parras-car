@@ -39,3 +39,8 @@ class FleetResponse(BaseModel):
     user_id: UUID
     total: int
     vehicles: list[VehicleDetail]
+
+
+class FleetVehicleIdsResponse(BaseModel):
+    user_id: UUID
+    vehicle_ids: list[UUID]

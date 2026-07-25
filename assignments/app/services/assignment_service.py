@@ -3,7 +3,14 @@ from uuid import UUID
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.dto.assignment import AssignmentCreate, AssignmentRead, AssignmentTransfer, FleetResponse, VehicleDetail
+from app.dto.assignment import (
+    AssignmentCreate,
+    AssignmentRead,
+    AssignmentTransfer,
+    FleetResponse,
+    FleetVehicleIdsResponse,
+    VehicleDetail,
+)
 from app.entities.assignment_audit import AssignmentAudit
 from app.repositories import assignment_repository
 from app.services import vehicles_client
@@ -103,6 +110,17 @@ class AssignmentService:
             ip=ip,
         )
         return new_assignment
+
+    def get_fleet_vehicle_ids(self, db: Session, user_id: UUID) -> FleetVehicleIdsResponse:
+        """Solo IDs, sin consultar el servicio de vehículos — evita el ciclo
+        vehicles -> assignments -> vehicles que se dispara al validar
+        propiedad de un vehículo desde vehicles.findOne/findAll.
+        """
+        assignments = assignment_repository.list_active_by_user(db, user_id)
+        return FleetVehicleIdsResponse(
+            user_id=user_id,
+            vehicle_ids=[a.vehicle_id for a in assignments],
+        )
 
     def get_fleet(self, db: Session, user_id: UUID, token: str) -> FleetResponse:
         assignments = assignment_repository.list_active_by_user(db, user_id)

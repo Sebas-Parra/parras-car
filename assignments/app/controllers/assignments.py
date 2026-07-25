@@ -4,7 +4,13 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.core.deps import get_bearer_token, get_current_user, get_db, require_admin, require_self_or_admin
-from app.dto.assignment import AssignmentCreate, AssignmentRead, AssignmentTransfer, FleetResponse
+from app.dto.assignment import (
+    AssignmentCreate,
+    AssignmentRead,
+    AssignmentTransfer,
+    FleetResponse,
+    FleetVehicleIdsResponse,
+)
 from app.dto.audit import AuditRead
 from app.services.assignment_service import AssignmentService
 from app.services.assignment_validator import AssignmentValidator
@@ -86,6 +92,18 @@ def list_audit(
     _: dict = Depends(require_admin),
 ):
     return svc.list_audit(db)
+
+
+# No auth — internal call from vehicles service (server-to-server, no user token).
+# Solo IDs: NO llama al servicio de vehículos, a diferencia de /fleet.
+# Esto evita el ciclo vehicles.findOne() -> aquí -> vehicles.findOne() -> ...
+@router.get("/{user_id}/vehicle-ids", response_model=FleetVehicleIdsResponse)
+def get_fleet_vehicle_ids(
+    user_id: UUID,
+    db: Session = Depends(get_db),
+    svc: AssignmentService = Depends(get_assignment_service),
+):
+    return svc.get_fleet_vehicle_ids(db, user_id)
 
 
 # Own data or admin/root — cliente solo ve su propia flota

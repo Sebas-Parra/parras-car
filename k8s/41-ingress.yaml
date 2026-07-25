@@ -1,0 +1,47 @@
+# Host de desarrollo local. Agregar a /etc/hosts:
+#   <IP de minikube>  parras-car.local
+# (obtené la IP con `minikube ip`)
+#
+# Dos Ingress separados sobre el mismo host: el de /api lleva
+# rewrite-target (necesita 2 grupos de captura) y el de / no debe
+# reescribir nada, así que van en objetos distintos en vez de compartir
+# una única anotación por-Ingress.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: parras-car-api-ingress
+  namespace: parras-car
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: parras-car.local
+      http:
+        paths:
+          - path: /api(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: kong
+                port:
+                  number: 8000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: parras-car-dashboard-ingress
+  namespace: parras-car
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: parras-car.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: dashboard
+                port:
+                  number: 80

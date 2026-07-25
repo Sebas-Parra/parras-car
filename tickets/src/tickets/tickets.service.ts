@@ -182,8 +182,14 @@ export class TicketsService {
     await this.emitEvent('CREATE', saved, actingUser, ip);
     await this.sseService.emitEvent('espacio-actualizado', {
       id: saved.idEspacio,
+      codigo: saved.codigoEspacio,
       estado: 'OCCUPIED',
-    })
+      evento: 'ticket-creado',
+      placa: saved.placa,
+      tipoVehiculo: saved.tipoVehiculo,
+      tarifaHora: saved.tarifaHora,
+      codigoTicket: saved.codigo,
+    });
     return saved;
   }
 
@@ -220,6 +226,14 @@ export class TicketsService {
     const saved = await this.ticketRepository.save(ticket);
     await this.zonesClient.setStatus(ticket.idEspacio, 'AVAILABLE', authHeader);
     await this.emitEvent('UPDATE', saved, actingUser, ip);
+    await this.sseService.emitEvent('espacio-actualizado', {
+      id: saved.idEspacio,
+      estado: 'AVAILABLE',
+      evento: 'ticket-pagado',
+      codigo: saved.codigo,
+      placa: saved.placa,
+      valor: saved.valorRecaudado,
+    });
     return saved;
   }
 
@@ -242,6 +256,13 @@ export class TicketsService {
     const saved = await this.ticketRepository.save(ticket);
     await this.zonesClient.setStatus(ticket.idEspacio, 'AVAILABLE', authHeader);
     await this.emitEvent('DELETE', saved, actingUser, ip);
+    await this.sseService.emitEvent('espacio-actualizado', {
+      id: saved.idEspacio,
+      estado: 'AVAILABLE',
+      evento: 'ticket-cancelado',
+      codigo: saved.codigo,
+      placa: saved.placa,
+    });
     return saved;
   }
 

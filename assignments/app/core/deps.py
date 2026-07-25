@@ -1,5 +1,6 @@
 from collections.abc import Generator
 
+import httpx
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
@@ -11,6 +12,19 @@ from app.db.base import SessionLocal
 _bearer = HTTPBearer(auto_error=False)
 
 _ADMIN_ROLES = {"admin", "root"}
+
+
+def _fetch_user_roles(user_id: str) -> list[str]:
+    try:
+        response = httpx.get(
+            f"{settings.users_service_url}/users/{user_id}/roles",
+            timeout=5.0,
+        )
+        if response.status_code == 200:
+            return response.json().get("roles", [])
+        return []
+    except httpx.RequestError:
+        return []
 
 
 def get_db() -> Generator[Session, None, None]:
@@ -39,7 +53,7 @@ def get_current_user(
             detail="No autenticado. Se requiere token de acceso.",
         )
     try:
-        return jwt.decode(
+        payload = jwt.decode(
             credentials.credentials,
             settings.jwt_secret,
             algorithms=[settings.jwt_algorithm],
@@ -50,6 +64,10 @@ def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token inválido o expirado.",
         )
+
+    # Roles NO están en el JWT (por seguridad); se obtienen del servicio de usuarios.
+    payload["roles"] = _fetch_user_roles(payload["sub"])
+    return payload
 
 
 def require_admin(current_user: dict = Depends(get_current_user)) -> dict:

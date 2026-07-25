@@ -15,13 +15,17 @@ def verify_password(password: str, password_hash: str) -> bool:
     return bcrypt.checkpw(password.encode("utf-8"), password_hash.encode("utf-8"))
 
 
-def create_access_token(user_id: str, username: str, roles: list[str]) -> str:
+def create_access_token(user_id: str, username: str, roles: list[str] = None) -> str:
+    """
+    Crea un JWT sin incluir roles (evita que el cliente pueda modificar permisos).
+    Los roles deben ser verificados del lado del servidor consultando la BD.
+    El parámetro 'roles' se ignora aquí pero se mantiene para compatibilidad.
+    """
     now = datetime.now(timezone.utc)
     payload = {
         "iss": settings.jwt_issuer,
         "sub": user_id,
         "username": username,
-        "roles": roles,
         "iat": now,
         "exp": now + timedelta(minutes=settings.jwt_expire_minutes),
     }

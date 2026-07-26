@@ -29,8 +29,8 @@ class AuditService:
             new_data={"user_id": str(to_user_id), "vehicle_id": str(vehicle_id), "active": True},
         )
 
-    def list_all(self, db: Session) -> list[AssignmentAudit]:
-        return audit_repository.list_all(db)
+    def list_all(self, db: Session, skip: int = 0, limit: int = 100) -> tuple[list[AssignmentAudit], int]:
+        return audit_repository.list_all(db, skip, limit), audit_repository.count_all(db)
 
     def list_by_assignment(self, db: Session, user_id: UUID, vehicle_id: UUID) -> list[AssignmentAudit]:
         return audit_repository.list_by_assignment(db, user_id, vehicle_id)

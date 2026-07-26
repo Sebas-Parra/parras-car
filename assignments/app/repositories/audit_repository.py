@@ -25,8 +25,18 @@ def create_audit(
     return audit
 
 
-def list_all(db: Session) -> list[AssignmentAudit]:
-    return db.query(AssignmentAudit).order_by(AssignmentAudit.timestamp.desc()).all()
+def list_all(db: Session, skip: int = 0, limit: int = 100) -> list[AssignmentAudit]:
+    return (
+        db.query(AssignmentAudit)
+        .order_by(AssignmentAudit.timestamp.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+
+def count_all(db: Session) -> int:
+    return db.query(AssignmentAudit).count()
 
 
 def list_by_assignment(db: Session, user_id: UUID, vehicle_id: UUID) -> list[AssignmentAudit]:

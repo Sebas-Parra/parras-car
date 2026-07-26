@@ -16,3 +16,10 @@ class AuditRead(BaseModel):
     new_data: dict | None = None
 
     model_config = {"from_attributes": True}
+
+
+class AuditListResponse(BaseModel):
+    data: list[AuditRead]
+    total: int
+    page: int
+    page_size: int

@@ -87,6 +87,19 @@ data:
               - name: jwt
 
       # ── Zones ─────────────────────────────────────────────────────────────────
+      # Lectura pública del listado de espacios — usada por el dashboard de
+      # monitoreo antes/sin login. Debe ir antes de la ruta genérica /zones para
+      # no heredar el plugin jwt (Kong igual prioriza el match más específico).
+      - name: zones-places-public-service
+        url: http://zones:8080/api/v1/places
+        routes:
+          - name: zones-places-public-route
+            paths:
+              - /zones/api/v1/places
+            methods:
+              - GET
+            strip_path: true
+
       - name: zones-service
         url: http://zones:8080
         routes:
@@ -114,6 +127,17 @@ data:
               - name: jwt
 
       # ── Tickets ───────────────────────────────────────────────────────────────
+      # Stream SSE público — el dashboard de monitoreo lo consume sin login.
+      - name: tickets-sse-public-service
+        url: http://tickets:3000/sse/espacios
+        routes:
+          - name: tickets-sse-public-route
+            paths:
+              - /tickets/sse/espacios
+            methods:
+              - GET
+            strip_path: true
+
       - name: tickets-service
         url: http://tickets:3000
         routes:

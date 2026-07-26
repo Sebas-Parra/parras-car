@@ -65,5 +65,5 @@ export const useEspacios = () => {
     };
   }, [cargarEspacios]);
 
-  return { espacios, connected, lastUpdate };
+  return { espacios, connected, lastUpdate, refetch: cargarEspacios };
 };

@@ -32,6 +32,10 @@ server:
 jwt:
   secret: ${JWT_SECRET}
 
+users:
+  service:
+    url: ${USERS_SERVICE_URL:http://users:8000}
+
 springdoc:
   api-docs:
     path: /v3/api-docs

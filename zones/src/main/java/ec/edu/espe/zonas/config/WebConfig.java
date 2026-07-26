@@ -17,10 +17,14 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        // Dashboard de monitoreo de espacios (estático, se abre desde file:// o
-        // un puerto distinto) — solo necesita leer /api/v1/places.
-        registry.addMapping("/api/v1/places/**")
-                .allowedMethods("GET")
+        // El navegador adjunta el header Origin incluso en requests same-origin
+        // para métodos no-GET (POST/PUT/PATCH/DELETE) — sin permitir esos
+        // métodos acá, Spring corta la request con "Invalid CORS request"
+        // antes de llegar a la capa de autorización por rol (SecurityConfig).
+        // La restricción de QUIÉN puede escribir sigue siendo responsabilidad
+        // de SecurityConfig (hasAnyRole/hasRole), no de esta config CORS.
+        registry.addMapping("/api/v1/**")
+                .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE")
                 .allowedOriginPatterns("*");
     }
 

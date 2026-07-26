@@ -39,14 +39,14 @@ export class VehiclesController {
 
   // Cualquier usuario autenticado — consultar catálogo
   @Get()
-  findAll() {
-    return this.vehiclesService.findAll();
+  findAll(@Req() req: AuthenticatedRequest) {
+    return this.vehiclesService.findAll(req.user);
   }
 
   // Cualquier usuario autenticado — consultar vehículo
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.vehiclesService.findOne(id);
+  findOne(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+    return this.vehiclesService.findOne(id, req.user);
   }
 
   // Admin / root — actualizar datos del vehículo

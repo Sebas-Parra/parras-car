@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Request
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.deps import get_db, require_admin, require_self_or_admin
@@ -10,6 +11,21 @@ from app.services import user_service
 from app.utils.client_ip import get_client_ip
 
 router = APIRouter(prefix="/users", tags=["users"])
+
+
+class UserRolesRead(BaseModel):
+    roles: list[str]
+
+
+# Public endpoint for inter-service communication (no auth required)
+@router.get("/{user_id}/roles", response_model=UserRolesRead)
+def get_user_roles(
+    user_id: UUID,
+    db: Session = Depends(get_db),
+):
+    user = user_service.get_user(db, user_id)
+    roles = [r.name for r in user.roles]
+    return UserRolesRead(roles=roles)
 
 
 # Admin / root only

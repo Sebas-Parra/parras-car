@@ -1,21 +1,23 @@
-import { useState } from 'react';
-import { useAuth } from '../context/AuthContext.jsx';
+import { useState } from "react";
+import { useAuth } from "../context/AuthContext.jsx";
+import Button from "./Button.jsx";
+import logo from "../assets/logo.webp";
 
-const LoginPage = () => {
+const LoginPage = ({ onRegisterClick }) => {
   const { login } = useAuth();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
     try {
       await login(username, password);
     } catch (err) {
-      setError(err.message || 'No se pudo iniciar sesión');
+      setError(err.message || "No se pudo iniciar sesión");
     } finally {
       setLoading(false);
     }
@@ -24,12 +26,13 @@ const LoginPage = () => {
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
       <div className="w-full max-w-sm rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
-        <div className="mb-6 flex items-center gap-2">
-          <span className="text-2xl">🅿️</span>
-          <div>
-            <p className="text-sm font-semibold text-slate-900">Parras Car</p>
-            <p className="text-xs text-slate-500">Panel de monitoreo</p>
-          </div>
+        <div className="mb-6 flex flex-col items-center text-center">
+          <img
+            src={logo}
+            alt="Parras Car"
+            className="-mb-4 h-36 w-auto object-contain"
+          />
+          <p className="text-xl font-semibold text-slate-900">Parras Car</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -58,14 +61,25 @@ const LoginPage = () => {
             />
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
-          <button
+          <Button
             type="submit"
-            disabled={loading}
-            className="w-full rounded-md bg-slate-900 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
+            variant="primary"
+            loading={loading}
+            className="w-full"
           >
-            {loading ? 'Ingresando...' : 'Ingresar'}
-          </button>
+            {loading ? "Ingresando..." : "Ingresar"}
+          </Button>
         </form>
+        <p className="mt-4 text-center text-sm text-slate-500">
+          ¿No tienes cuenta?{" "}
+          <button
+            type="button"
+            onClick={onRegisterClick}
+            className="font-medium text-slate-900 underline underline-offset-2 hover:text-slate-700"
+          >
+            Crear cuenta
+          </button>
+        </p>
       </div>
     </div>
   );

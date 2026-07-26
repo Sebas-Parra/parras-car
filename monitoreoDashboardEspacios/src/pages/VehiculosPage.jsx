@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import PageHeader from '../components/PageHeader.jsx';
 import VehicleFormModal from '../components/VehicleFormModal.jsx';
+import Button from '../components/Button.jsx';
+import { IconPlus, IconEdit, IconTrash, IconCheck } from '../components/icons.jsx';
 import {
   fetchVehiculos,
   activateVehiculo,
@@ -68,21 +70,17 @@ const VehiculosPage = () => {
   return (
     <>
       <PageHeader title="Vehículos" subtitle="Vehículos registrados en el sistema">
-        <button
-          type="button"
-          onClick={() => setModal('new')}
-          className="whitespace-nowrap rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800"
-        >
-          + Nuevo vehículo
-        </button>
+        <Button variant="primary" icon={IconPlus} onClick={() => setModal('new')}>
+          Nuevo vehículo
+        </Button>
       </PageHeader>
 
       {error && (
         <div className="flex items-center justify-between rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
           <span>{error}</span>
-          <button type="button" className="font-medium underline" onClick={() => setError('')}>
+          <Button variant="link" size="none" onClick={() => setError('')}>
             Cerrar
-          </button>
+          </Button>
         </div>
       )}
 
@@ -127,21 +125,27 @@ const VehiculosPage = () => {
                         {v.active ? 'Activo' : 'Inactivo'}
                       </span>
                     </td>
-                    <td className="space-x-3 px-4 py-3 text-right text-sm">
+                    <td className="space-x-2 px-4 py-3 text-right text-sm">
                       {canManage && (
-                        <button type="button" onClick={() => setModal(v)} className="font-medium text-slate-600 hover:text-slate-900">
+                        <Button variant="secondary" size="sm" icon={IconEdit} onClick={() => setModal(v)}>
                           Editar
-                        </button>
+                        </Button>
                       )}
                       {canManage && v.active && (
-                        <button type="button" onClick={() => handleDelete(v)} className="font-medium text-red-600 hover:text-red-800">
+                        <Button variant="danger" size="sm" icon={IconTrash} onClick={() => handleDelete(v)}>
                           Desactivar
-                        </button>
+                        </Button>
                       )}
                       {canManage && !v.active && (
-                        <button type="button" onClick={() => handleActivate(v)} className="font-medium text-emerald-600 hover:text-emerald-800">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          icon={IconCheck}
+                          className="!border-emerald-300 !text-emerald-700 hover:!bg-emerald-50"
+                          onClick={() => handleActivate(v)}
+                        >
                           Reactivar
-                        </button>
+                        </Button>
                       )}
                     </td>
                   </tr>

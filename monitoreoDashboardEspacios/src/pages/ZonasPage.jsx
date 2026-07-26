@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import PageHeader from '../components/PageHeader.jsx';
 import ZoneFormModal from '../components/ZoneFormModal.jsx';
+import Button from '../components/Button.jsx';
+import { IconPlus, IconEdit, IconTrash } from '../components/icons.jsx';
 import { fetchZonas, deleteZona } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -38,22 +40,18 @@ const ZonasPage = () => {
     <>
       <PageHeader title="Zonas" subtitle="Zonas de estacionamiento del sistema">
         {canManage && (
-          <button
-            type="button"
-            onClick={() => setModal('new')}
-            className="whitespace-nowrap rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800"
-          >
-            + Nueva zona
-          </button>
+          <Button variant="primary" icon={IconPlus} onClick={() => setModal('new')}>
+            Nueva zona
+          </Button>
         )}
       </PageHeader>
 
       {error && (
         <div className="flex items-center justify-between rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
           <span>{error}</span>
-          <button type="button" className="font-medium underline" onClick={() => setError('')}>
+          <Button variant="link" size="none" onClick={() => setError('')}>
             Cerrar
-          </button>
+          </Button>
         </div>
       )}
 
@@ -97,16 +95,16 @@ const ZonasPage = () => {
                         {z.status === 1 ? 'Activa' : 'Inactiva'}
                       </span>
                     </td>
-                    <td className="space-x-3 px-4 py-3 text-right text-sm">
+                    <td className="space-x-2 px-4 py-3 text-right text-sm">
                       {canManage && (
-                        <button type="button" onClick={() => setModal(z)} className="font-medium text-slate-600 hover:text-slate-900">
+                        <Button variant="secondary" size="sm" icon={IconEdit} onClick={() => setModal(z)}>
                           Editar
-                        </button>
+                        </Button>
                       )}
                       {canDelete && (
-                        <button type="button" onClick={() => handleDelete(z)} className="font-medium text-red-600 hover:text-red-800">
+                        <Button variant="danger" size="sm" icon={IconTrash} onClick={() => handleDelete(z)}>
                           Eliminar
-                        </button>
+                        </Button>
                       )}
                     </td>
                   </tr>

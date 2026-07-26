@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import PageHeader from '../components/PageHeader.jsx';
 import Modal from '../components/Modal.jsx';
+import Button from '../components/Button.jsx';
+import { IconPlus, IconCheck, IconX } from '../components/icons.jsx';
 import { fetchTickets, fetchEspacios, fetchVehiculos, createTicket, payTicket, cancelTicket } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -76,13 +78,9 @@ const NewTicketModal = ({ onClose, onCreated, token }) => {
           )}
         </div>
         {error && <p className="text-sm text-red-600">{error}</p>}
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded-md bg-slate-900 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
-        >
+        <Button type="submit" variant="primary" loading={loading} className="w-full">
           {loading ? 'Creando...' : 'Crear ticket'}
-        </button>
+        </Button>
       </form>
     </Modal>
   );
@@ -131,22 +129,18 @@ const TicketsPage = () => {
     <>
       <PageHeader title="Tickets" subtitle="Tickets de estacionamiento emitidos">
         {canOperar && (
-          <button
-            type="button"
-            onClick={() => setShowNew(true)}
-            className="whitespace-nowrap rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800"
-          >
-            + Nuevo ticket
-          </button>
+          <Button variant="primary" icon={IconPlus} onClick={() => setShowNew(true)}>
+            Nuevo ticket
+          </Button>
         )}
       </PageHeader>
 
       {error && (
         <div className="flex items-center justify-between rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
           <span>{error}</span>
-          <button type="button" className="font-medium underline" onClick={() => setError('')}>
+          <Button variant="link" size="none" onClick={() => setError('')}>
             Cerrar
-          </button>
+          </Button>
         </div>
       )}
 
@@ -194,12 +188,18 @@ const TicketsPage = () => {
                     <td className="space-x-3 px-4 py-3 text-right text-sm">
                       {canOperar && t.estado === 'ACTIVO' && (
                         <>
-                          <button type="button" onClick={() => handlePagar(t.id)} className="font-medium text-emerald-600 hover:text-emerald-800">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            icon={IconCheck}
+                            className="!border-emerald-300 !text-emerald-700 hover:!bg-emerald-50"
+                            onClick={() => handlePagar(t.id)}
+                          >
                             Pagar
-                          </button>
-                          <button type="button" onClick={() => handleAnular(t.id)} className="font-medium text-red-600 hover:text-red-800">
+                          </Button>
+                          <Button variant="danger" size="sm" icon={IconX} onClick={() => handleAnular(t.id)}>
                             Anular
-                          </button>
+                          </Button>
                         </>
                       )}
                     </td>

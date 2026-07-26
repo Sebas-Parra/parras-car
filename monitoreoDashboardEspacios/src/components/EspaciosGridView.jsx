@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import EstadoSelect from './EstadoSelect.jsx';
+import Button from './Button.jsx';
+import { IconTrash } from './icons.jsx';
 import { ESTADO_MAP_INVERSE } from '../api.js';
 
 const ESTADO_ICONS = {
@@ -220,13 +222,9 @@ const EspaciosGridView = ({
 
                 {/* Botón de delete */}
                 {canDelete && !hasActiveTicket && (
-                  <button
-                    type="button"
-                    onClick={() => onDelete(espacio)}
-                    className="w-full rounded-lg bg-red-100 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-200 transition-colors"
-                  >
+                  <Button variant="danger" icon={IconTrash} onClick={() => onDelete(espacio)} className="w-full">
                     Desactivar
-                  </button>
+                  </Button>
                 )}
 
                 {/* Indicador de ticket activo */}

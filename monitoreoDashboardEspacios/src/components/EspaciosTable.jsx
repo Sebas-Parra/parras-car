@@ -1,5 +1,7 @@
 import EstadoBadge from './EstadoBadge.jsx';
 import EstadoSelect from './EstadoSelect.jsx';
+import Button from './Button.jsx';
+import { IconTrash } from './icons.jsx';
 import { ESTADO_MAP_INVERSE } from '../api.js';
 
 const EspaciosTable = ({
@@ -78,13 +80,9 @@ const EspaciosTable = ({
                 {canDelete && (
                   <td className="px-4 py-3 text-right text-sm">
                     {!espaciosConTicketActivo.has(espacio.id) && (
-                      <button
-                        type="button"
-                        onClick={() => onDelete(espacio)}
-                        className="font-medium text-red-600 hover:text-red-800"
-                      >
+                      <Button variant="danger" size="sm" icon={IconTrash} onClick={() => onDelete(espacio)}>
                         Desactivar
-                      </button>
+                      </Button>
                     )}
                   </td>
                 )}

@@ -12,7 +12,7 @@ def test_login_publishes_login_event(mock_publish, db_session):
     kwargs = mock_publish.call_args.kwargs
     assert kwargs["accion"] == "LOGIN"
     assert kwargs["usuario"] == "admin"
-    assert kwargs["rol"] == "administrador"
+    assert kwargs["rol"] == "admin"
 
 
 @patch("app.services.auth_service.publish_audit_event")
@@ -36,7 +36,7 @@ def test_logout_publishes_logout_event(mock_publish, db_session):
     kwargs = mock_publish.call_args.kwargs
     assert kwargs["accion"] == "LOGOUT"
     assert kwargs["usuario"] == "admin"
-    assert kwargs["rol"] == "administrador"
+    assert kwargs["rol"] == "admin"
 
 
 @patch("app.services.auth_service.publish_audit_event")

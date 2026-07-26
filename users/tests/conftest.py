@@ -21,7 +21,7 @@ engine = create_engine(
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-ROLE_NAMES = ["estudiante", "profesor", "administrador", "visitante", "cliente"]
+ROLE_NAMES = ["estudiante", "profesor", "administrador", "visitante", "cliente", "admin", "root"]
 ADMIN_PASSWORD = "Admin123!"
 
 
@@ -43,7 +43,7 @@ def db_session():
         session.add(admin_person)
         session.flush()
 
-        admin_role = session.query(Role).filter(Role.name == "administrador").one()
+        admin_role = session.query(Role).filter(Role.name == "admin").one()
         admin_user = User(
             id_person=admin_person.id,
             username="admin",

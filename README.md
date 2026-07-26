@@ -21,6 +21,7 @@
 - [Bases de datos](#bases-de-datos)
 - [Cómo levantar el proyecto](#cómo-levantar-el-proyecto)
 - [Puntos de entrada](#puntos-de-entrada)
+- [Tests y cobertura](#tests-y-cobertura)
 - [Documentación de la API](#documentación-de-la-api)
 
 ---
@@ -211,6 +212,31 @@ docker compose down -v
 | Users | `GET /users/health` |
 | Vehicles | `GET /vehicles/` |
 | Zones | `GET /zones/api/v1/zones` |
+
+---
+
+## Tests y cobertura
+
+Cada microservicio corre sus tests localmente (fuera de Docker), con **cobertura mínima requerida: 80%**.
+
+| Servicio | Comando |
+|---|---|
+| `users` (FastAPI) | `cd users && JWT_SECRET=test-secret .venv/bin/python -m pytest --cov=app --cov-report=term-missing` |
+| `assignments` (FastAPI) | `cd assignments && .venv/bin/python -m pytest --cov=app --cov-report=term-missing` |
+| `vehicles` (NestJS) | `cd vehicles && pnpm run test:cov` |
+| `tickets` (NestJS) | `cd tickets && pnpm run test:cov` |
+| `ms-audit` (NestJS) | `cd ms-audit && pnpm run test:cov` |
+| `zones` (Spring Boot) | `cd zones && ./mvnw verify` (reporte en `target/site/jacoco/index.html`) |
+
+Los servicios Python necesitan un venv local (no se crea con Docker):
+
+```bash
+cd <servicio>       # users o assignments
+python3.12 -m venv .venv
+.venv/bin/pip install -r requirements.txt pytest-cov
+```
+
+> `gateway` es solo configuración de Kong, sin código propio — no aplica.
 
 ---
 

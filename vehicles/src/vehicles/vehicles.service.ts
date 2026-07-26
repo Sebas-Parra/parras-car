@@ -94,7 +94,13 @@ export class VehiclesService {
     return saved
   }
 
-  async findAll(actingUser?: ActingUser): Promise<Vehicle[]> {
+  async findAll(
+    actingUser: ActingUser | undefined,
+    page: number,
+    pageSize: number,
+  ): Promise<{ data: Vehicle[]; total: number; page: number; pageSize: number }> {
+    const skip = (page - 1) * pageSize;
+
     // If user is 'cliente', only return their assigned vehicles
     if (actingUser?.roles.includes('cliente')) {
       this.logger.debug(`Filtering vehicles for cliente user: ${actingUser.username}`);
@@ -119,15 +125,18 @@ export class VehiclesService {
 
         if (vehicleIds.length === 0) {
           this.logger.debug(`User ${actingUser.username} has no assigned vehicles`);
-          return [];
+          return { data: [], total: 0, page, pageSize };
         }
 
         this.logger.debug(
           `Returning ${vehicleIds.length} vehicles for user ${actingUser.username}`,
         );
-        return this.repositoryVehicle.find({
+        const [data, total] = await this.repositoryVehicle.findAndCount({
           where: { id: In(vehicleIds) },
+          skip,
+          take: pageSize,
         });
+        return { data, total, page, pageSize };
       } catch (error) {
         if (error instanceof ServiceUnavailableException) {
           throw error;
@@ -142,7 +151,15 @@ export class VehiclesService {
 
     // Admins and others see all vehicles
     this.logger.debug(`Returning all vehicles for user: ${actingUser?.username}`);
-    return this.repositoryVehicle.find();
+    const [data, total] = await this.repositoryVehicle.findAndCount({ skip, take: pageSize });
+    return { data, total, page, pageSize };
+  }
+
+  // Búsqueda directa por placa (única) — usada por tickets al emitir un
+  // ticket. Antes se resolvía trayendo TODO el catálogo y filtrando en
+  // memoria; con /vehicles paginado eso se rompía pasado el vehículo #20.
+  async findByPlate(plate: string): Promise<Vehicle | null> {
+    return this.repositoryVehicle.findOne({ where: { plate } });
   }
 
   async findOne(id: string, actingUser?: ActingUser): Promise<Vehicle> {

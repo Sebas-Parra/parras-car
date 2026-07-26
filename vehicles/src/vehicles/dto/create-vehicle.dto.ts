@@ -27,10 +27,11 @@ export function normalizeTipoVehiculo(value: unknown): unknown {
 }
 
 export class BaseVehicleDto {
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim().toUpperCase() : value))
   @IsString()
   @IsNotEmpty()
   @Matches(/^[A-Z]{3}-\d{4}$/, {
-    message: 'Plate must be in the format ABC-1234',
+    message: 'La placa debe tener el formato ABC-1234',
   })
   plate!: string;
 
@@ -38,14 +39,14 @@ export class BaseVehicleDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(2, {
-    message: 'Brand must be at least 2 characters long',
+    message: 'La marca debe tener al menos 2 caracteres',
   })
   @MaxLength(30, {
-    message: 'Brand must be at most 30 characters long',
+    message: 'La marca debe tener como máximo 30 caracteres',
   })
   @Matches(/^[\p{L}\s-]+$/u, {
     message:
-      'Brand can only contain letters, spaces, and hyphens (e.g. Citroën, Mercedes-Benz)',
+      'La marca solo puede contener letras, espacios y guiones (ej. Citroën, Mercedes-Benz)',
   })
   brand!: string;
 
@@ -53,14 +54,14 @@ export class BaseVehicleDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(2, {
-    message: 'Model must be at least 2 characters long',
+    message: 'El modelo debe tener al menos 2 caracteres',
   })
   @MaxLength(50, {
-    message: 'Model must be at most 50 characters long',
+    message: 'El modelo debe tener como máximo 50 caracteres',
   })
   @Matches(/^[\p{L}\p{N}\s-]+$/u, {
     message:
-      'Model can only contain letters, numbers, spaces, and hyphens (e.g. CX-5, F-150, Corolla)',
+      'El modelo solo puede contener letras, números, espacios y guiones (ej. CX-5, F-150, Corolla)',
   })
   model!: string;
 
@@ -68,33 +69,33 @@ export class BaseVehicleDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(2, {
-    message: 'Color must be at least 2 characters long',
+    message: 'El color debe tener al menos 2 caracteres',
   })
   @MaxLength(50, {
-    message: 'Color must be at most 50 characters long',
+    message: 'El color debe tener como máximo 50 caracteres',
   })
   @Matches(/^[\p{L}\s-]+$/u, {
     message:
-      'Color can only contain letters, spaces, and hyphens (e.g. Blue, Azul Marino, Gris-Perla)',
+      'El color solo puede contener letras, espacios y guiones (ej. Azul, Azul Marino, Gris Perla)',
   })
   color!: string;
 
   @IsNotEmpty()
   @IsInt({
-    message: 'Year must be an integer',
+    message: 'El año debe ser un número entero',
   })
   @Min(1885, {
-    message: 'Year must be greater than or equal to 1885',
+    message: 'El año debe ser mayor o igual a 1885',
   })
   @Max(new Date().getFullYear() + 1, {
-    message: `Year must be less than or equal to ${new Date().getFullYear() + 1}`,
+    message: `El año debe ser menor o igual a ${new Date().getFullYear() + 1}`,
   })
   year!: number;
 
   @Transform(({ value }) => (typeof value === 'string' ? value.toUpperCase() : value))
   @IsNotEmpty()
   @IsEnum(Clasification, {
-    message: 'Clasification must be one of: ELECTRIC, HYBRID, GASOLINE, DIESEL',
+    message: 'La clasificación debe ser una de: ELECTRIC, HYBRID, GASOLINE, DIESEL',
   })
   clasification!: Clasification;
 }
@@ -102,13 +103,13 @@ export class BaseVehicleDto {
 export class CarDto extends BaseVehicleDto {
   @IsNotEmpty()
   @IsInt({
-    message: 'Number of doors must be an integer',
+    message: 'El número de puertas debe ser un número entero',
   })
   @Min(2, {
-    message: 'Number of doors must be at least 2',
+    message: 'El número de puertas debe ser al menos 2',
   })
   @Max(6, {
-    message: 'Number of doors must be at most 6',
+    message: 'El número de puertas debe ser como máximo 6',
   })
   numberOfDoors!: number;
 
@@ -116,22 +117,23 @@ export class CarDto extends BaseVehicleDto {
   @IsNumber(
     {},
     {
-      message: 'Trunk capacity must be a number',
+      message: 'La capacidad del baúl debe ser un número',
     },
   )
   @Min(0, {
-    message: 'Trunk capacity must be greater than or equal to 0 liters',
+    message: 'La capacidad del baúl debe ser mayor o igual a 0 litros',
   })
   @Max(2000, {
-    message: 'Trunk capacity must be less than or equal to 2000 liters',
+    message: 'La capacidad del baúl debe ser menor o igual a 2000 litros',
   })
   trunkCapacity!: number;
 }
 
 export class MotorcycleDto extends BaseVehicleDto {
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim().toUpperCase() : value))
   @IsNotEmpty()
   @Matches(/^[A-Z]{2}-\d{3}[A-Z]$/, {
-    message: 'Plate must be in the format AB-123C',
+    message: 'La placa debe tener el formato AB-123C',
   })
   declare plate: string;
 
@@ -139,7 +141,7 @@ export class MotorcycleDto extends BaseVehicleDto {
   @IsNotEmpty()
   @IsEnum(TypeOfMotorbike, {
     message:
-      'Type of motorbike must be one of: ENDURO, SPORT, CRUISER, SCOOTER, TOURING',
+      'El tipo de motocicleta debe ser uno de: ENDURO, SPORT, CRUISER, SCOOTER, TOURING',
   })
   typeOfMotorbike!: TypeOfMotorbike;
 }
@@ -148,21 +150,21 @@ export class PickupTruckDto extends BaseVehicleDto {
   @IsNumber(
     {},
     {
-      message: 'Trunk capacity must be a number',
+      message: 'La capacidad de carga debe ser un número',
     },
   )
   @IsNotEmpty()
   @IsNumber(
     {},
     {
-      message: 'Payload capacity must be a number',
+      message: 'La capacidad de carga debe ser un número',
     },
   )
   @Min(0, {
-    message: 'Payload capacity must be greater than or equal to 0 kg',
+    message: 'La capacidad de carga debe ser mayor o igual a 0 kg',
   })
   @Max(50000, {
-    message: 'Payload capacity must be less than or equal to 50000 kg',
+    message: 'La capacidad de carga debe ser menor o igual a 50000 kg',
   })
   payloadCapacity!: number;
 
@@ -170,7 +172,7 @@ export class PickupTruckDto extends BaseVehicleDto {
   @IsNotEmpty()
   @Matches(/^[\p{L}\s-]+$/u, {
     message:
-      'Cab type can only contain letters, spaces, and hyphens (e.g. Regular, Extended, Crew)',
+      'La cabina solo puede contener letras, espacios y guiones (ej. Regular, Extendida, Doble)',
   })
   cab!: string;
 }

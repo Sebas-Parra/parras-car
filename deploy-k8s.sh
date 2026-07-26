@@ -32,21 +32,21 @@ echo ""
 # 1. Dashboard (React + Vite)
 echo "🎨 1/3 Construyendo dashboard..."
 cd "$PROJECT_ROOT/monitoreoDashboardEspacios"
-docker build -t parras-car-dashboard:latest .
+docker build -t yepez-sagnay-parra-dashboard:latest .
 echo "✓ Dashboard construido"
 echo ""
 
 # 2. Tickets service (NestJS)
 echo "🎫 2/3 Construyendo tickets service..."
 cd "$PROJECT_ROOT/tickets"
-docker build -t parras-car-tickets:latest .
+docker build -t yepez-sagnay-parra-tickets:latest .
 echo "✓ Tickets service construido"
 echo ""
 
 # 3. Vehicles service (NestJS)
 echo "🚗 3/3 Construyendo vehicles service..."
 cd "$PROJECT_ROOT/vehicles"
-docker build -t parras-car-vehicles:latest .
+docker build -t yepez-sagnay-parra-vehicles:latest .
 echo "✓ Vehicles service construido"
 echo ""
 
@@ -94,17 +94,17 @@ echo ""
 echo "✅ ¡Despliegue completado!"
 echo ""
 echo "📊 Estado de los pods:"
-kubectl get pods -n parras-car
+kubectl get pods -n yepez-sagnay-parra
 echo ""
 echo "🌐 Acceso a los servicios:"
-echo "  • Dashboard:     http://$(minikube ip):$(kubectl get svc -n parras-car dashboard -o jsonpath='{.spec.ports[0].nodePort}')"
-echo "  • API Gateway:   http://$(minikube ip):$(kubectl get svc -n parras-car kong-admin -o jsonpath='{.spec.ports[0].nodePort}' 2>/dev/null || echo '9001')"
+echo "  • Dashboard:     http://$(minikube ip):$(kubectl get svc -n yepez-sagnay-parra dashboard -o jsonpath='{.spec.ports[0].nodePort}')"
+echo "  • API Gateway:   http://$(minikube ip):$(kubectl get svc -n yepez-sagnay-parra kong-admin -o jsonpath='{.spec.ports[0].nodePort}' 2>/dev/null || echo '9001')"
 echo "  • Swagger UI:    http://$(minikube ip):9000/docs"
 echo ""
 echo "💡 Para ver logs de un pod:"
-echo "  kubectl logs -n parras-car <pod-name> -f"
+echo "  kubectl logs -n yepez-sagnay-parra <pod-name> -f"
 echo ""
 echo "🔄 Para redeploy (sin reconstruir):"
-echo "  kubectl rollout restart deployment/dashboard -n parras-car"
-echo "  kubectl rollout restart deployment/vehicles -n parras-car"
-echo "  kubectl rollout restart deployment/tickets -n parras-car"
+echo "  kubectl rollout restart deployment/dashboard -n yepez-sagnay-parra"
+echo "  kubectl rollout restart deployment/vehicles -n yepez-sagnay-parra"
+echo "  kubectl rollout restart deployment/tickets -n yepez-sagnay-parra"

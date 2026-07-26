@@ -1,5 +1,5 @@
 # Host de desarrollo local. Agregar a /etc/hosts:
-#   <IP de minikube>  parras-car.local
+#   <IP de minikube>  yepez-sagnay-parra.local
 # (obtené la IP con `minikube ip`)
 #
 # Dos Ingress separados sobre el mismo host: el de /api lleva
@@ -9,14 +9,14 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: parras-car-api-ingress
-  namespace: parras-car
+  name: yepez-sagnay-parra-api-ingress
+  namespace: yepez-sagnay-parra
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   ingressClassName: nginx
   rules:
-    - host: parras-car.local
+    - host: yepez-sagnay-parra.local
       http:
         paths:
           - path: /api(/|$)(.*)
@@ -30,12 +30,12 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: parras-car-dashboard-ingress
-  namespace: parras-car
+  name: yepez-sagnay-parra-dashboard-ingress
+  namespace: yepez-sagnay-parra
 spec:
   ingressClassName: nginx
   rules:
-    - host: parras-car.local
+    - host: yepez-sagnay-parra.local
       http:
         paths:
           - path: /

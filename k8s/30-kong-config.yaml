@@ -5,7 +5,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: kong-declarative-config
-  namespace: parras-car
+  namespace: yepez-sagnay-parra
 data:
   kong.yml: |
     _format_version: "3.0"

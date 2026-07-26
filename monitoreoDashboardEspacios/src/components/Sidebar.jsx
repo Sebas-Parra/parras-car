@@ -63,23 +63,26 @@ const Sidebar = ({ open = false, onClose }) => {
         }`}
       >
         <div className="flex items-center gap-3 border-b border-slate-800 px-6 py-5">
-          <img src={logo} alt="Parras Car" className="h-10 w-10 shrink-0 object-contain" />
-          <div>
-            <p className="text-sm font-semibold tracking-wide text-white">
-              Parras Car
-            </p>
-            <p className="text-xs text-slate-400">Panel de monitoreo</p>
-          </div>
+          <img
+            src={logo}
+            alt="Parras Car"
+            className="h-24 w-24 shrink-0 object-contain"
+          />
+          <p className="text-lg font-semibold leading-tight tracking-wide text-white">
+            Parras
+            <br />
+            Car
+          </p>
         </div>
         <nav className="flex-1 space-y-1 px-3 py-4">
-          {NAV_ITEMS.filter((item) => !item.roles || hasRole(...item.roles)).map(
-            ({ to, label, Icon }) => (
-              <NavLink key={to} to={to} className={linkClass} onClick={onClose}>
-                <Icon className="h-4 w-4" />
-                {label}
-              </NavLink>
-            ),
-          )}
+          {NAV_ITEMS.filter(
+            (item) => !item.roles || hasRole(...item.roles),
+          ).map(({ to, label, Icon }) => (
+            <NavLink key={to} to={to} className={linkClass} onClick={onClose}>
+              <Icon className="h-4 w-4" />
+              {label}
+            </NavLink>
+          ))}
         </nav>
         <div className="border-t border-slate-800 px-6 py-4 text-xs text-slate-500">
           v1.0.0

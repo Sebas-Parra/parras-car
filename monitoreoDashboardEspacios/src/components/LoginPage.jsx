@@ -1,23 +1,23 @@
-import { useState } from 'react';
-import { useAuth } from '../context/AuthContext.jsx';
-import Button from './Button.jsx';
-import logo from '../assets/logo.webp';
+import { useState } from "react";
+import { useAuth } from "../context/AuthContext.jsx";
+import Button from "./Button.jsx";
+import logo from "../assets/logo.webp";
 
 const LoginPage = ({ onRegisterClick }) => {
   const { login } = useAuth();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
     try {
       await login(username, password);
     } catch (err) {
-      setError(err.message || 'No se pudo iniciar sesión');
+      setError(err.message || "No se pudo iniciar sesión");
     } finally {
       setLoading(false);
     }
@@ -26,12 +26,13 @@ const LoginPage = ({ onRegisterClick }) => {
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
       <div className="w-full max-w-sm rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
-        <div className="mb-6 flex items-center gap-3">
-          <img src={logo} alt="Parras Car" className="h-12 w-12 shrink-0 object-contain" />
-          <div>
-            <p className="text-sm font-semibold text-slate-900">Parras Car</p>
-            <p className="text-xs text-slate-500">Panel de monitoreo</p>
-          </div>
+        <div className="mb-6 flex flex-col items-center gap-2 text-center">
+          <img
+            src={logo}
+            alt="Parras Car"
+            className="h-36 w-auto object-contain"
+          />
+          <p className="text-xl font-semibold text-slate-900">Parras Car</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -60,12 +61,17 @@ const LoginPage = ({ onRegisterClick }) => {
             />
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
-          <Button type="submit" variant="primary" loading={loading} className="w-full">
-            {loading ? 'Ingresando...' : 'Ingresar'}
+          <Button
+            type="submit"
+            variant="primary"
+            loading={loading}
+            className="w-full"
+          >
+            {loading ? "Ingresando..." : "Ingresar"}
           </Button>
         </form>
         <p className="mt-4 text-center text-sm text-slate-500">
-          ¿No tienes cuenta?{' '}
+          ¿No tienes cuenta?{" "}
           <button
             type="button"
             onClick={onRegisterClick}

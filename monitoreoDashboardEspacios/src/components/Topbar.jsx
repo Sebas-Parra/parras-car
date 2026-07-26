@@ -1,6 +1,6 @@
 import { useAuth } from '../context/AuthContext.jsx';
 import Button from './Button.jsx';
-import { IconMenu } from './icons.jsx';
+import { IconMenu, IconLogout } from './icons.jsx';
 
 const Topbar = ({ onMenuClick }) => {
   const { username, roles, logout } = useAuth();
@@ -15,12 +15,14 @@ const Topbar = ({ onMenuClick }) => {
       >
         <IconMenu className="h-5 w-5" />
       </button>
-      <div className="flex items-center gap-3">
-        <div className="text-right">
+      <div className="ml-auto flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <p className="text-sm font-medium text-slate-900">{username}</p>
-          <p className="text-xs text-slate-500">{roles.join(', ')}</p>
+          <span className="inline-flex items-center rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-700">
+            {roles.join(', ')}
+          </span>
         </div>
-        <Button variant="ghost" size="sm" onClick={logout}>
+        <Button variant="danger" size="sm" icon={IconLogout} onClick={logout}>
           Cerrar sesión
         </Button>
       </div>

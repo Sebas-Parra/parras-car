@@ -1,26 +1,27 @@
-import { useState } from 'react';
-import { registerPerson } from '../api.js';
-import Button from './Button.jsx';
-import logo from '../assets/logo.webp';
+import { useState } from "react";
+import { registerPerson } from "../api.js";
+import Button from "./Button.jsx";
+import logo from "../assets/logo.webp";
 
 const inputClass =
-  'w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500';
-const labelClass = 'mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500';
+  "w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500";
+const labelClass =
+  "mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500";
 
 const RegisterPage = ({ onDone }) => {
-  const [cedula, setCedula] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [cedula, setCedula] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
     try {
       await registerPerson({
@@ -33,7 +34,7 @@ const RegisterPage = ({ onDone }) => {
       });
       setSuccess(true);
     } catch (err) {
-      setError(err.message || 'No se pudo crear la cuenta');
+      setError(err.message || "No se pudo crear la cuenta");
     } finally {
       setLoading(false);
     }
@@ -42,17 +43,21 @@ const RegisterPage = ({ onDone }) => {
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-8">
       <div className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
-        <div className="mb-6 flex items-center gap-3">
-          <img src={logo} alt="Parras Car" className="h-12 w-12 shrink-0 object-contain" />
-          <div>
-            <p className="text-sm font-semibold text-slate-900">Parras Car</p>
-            <p className="text-xs text-slate-500">Crear cuenta</p>
-          </div>
+        <div className="mb-6 flex flex-col items-center gap-2 text-center">
+          <img
+            src={logo}
+            alt="Parras Car"
+            className="h-36 w-auto object-contain"
+          />
+          <p className="text-xl font-semibold text-slate-900">Parras Car</p>
+          <p className="text-sm text-slate-500">Crear cuenta</p>
         </div>
 
         {success ? (
           <div className="space-y-4 text-center">
-            <p className="text-sm text-emerald-700">Cuenta creada correctamente, ya puedes iniciar sesión.</p>
+            <p className="text-sm text-emerald-700">
+              Cuenta creada correctamente, ya puedes iniciar sesión.
+            </p>
             <Button variant="primary" className="w-full" onClick={onDone}>
               Ir a iniciar sesión
             </Button>
@@ -60,30 +65,52 @@ const RegisterPage = ({ onDone }) => {
         ) : (
           <>
             <form onSubmit={handleSubmit} className="space-y-3">
-              <p className="text-xs text-slate-500">
-                Tu cuenta se crea con el rol <span className="font-medium">cliente</span> por defecto.
-              </p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className={labelClass}>Cédula</label>
-                  <input value={cedula} onChange={(e) => setCedula(e.target.value)} required className={inputClass} />
+                  <input
+                    value={cedula}
+                    onChange={(e) => setCedula(e.target.value)}
+                    required
+                    className={inputClass}
+                  />
                 </div>
                 <div>
                   <label className={labelClass}>Teléfono (opcional)</label>
-                  <input value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} />
+                  <input
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className={inputClass}
+                  />
                 </div>
                 <div>
                   <label className={labelClass}>Nombres</label>
-                  <input value={firstName} onChange={(e) => setFirstName(e.target.value)} required className={inputClass} />
+                  <input
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    required
+                    className={inputClass}
+                  />
                 </div>
                 <div>
                   <label className={labelClass}>Apellidos</label>
-                  <input value={lastName} onChange={(e) => setLastName(e.target.value)} required className={inputClass} />
+                  <input
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    required
+                    className={inputClass}
+                  />
                 </div>
               </div>
               <div>
                 <label className={labelClass}>Email</label>
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className={inputClass} />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className={inputClass}
+                />
               </div>
               <div>
                 <label className={labelClass}>Contraseña</label>
@@ -97,12 +124,17 @@ const RegisterPage = ({ onDone }) => {
                 />
               </div>
               {error && <p className="text-sm text-red-600">{error}</p>}
-              <Button type="submit" variant="primary" loading={loading} className="w-full">
-                {loading ? 'Creando...' : 'Crear cuenta'}
+              <Button
+                type="submit"
+                variant="primary"
+                loading={loading}
+                className="w-full"
+              >
+                {loading ? "Creando..." : "Crear cuenta"}
               </Button>
             </form>
             <p className="mt-4 text-center text-sm text-slate-500">
-              ¿Ya tienes cuenta?{' '}
+              ¿Ya tienes cuenta?{" "}
               <button
                 type="button"
                 onClick={onDone}

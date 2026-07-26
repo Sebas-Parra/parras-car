@@ -1,18 +1,30 @@
 import { useEffect, useState } from 'react';
 import PageHeader from '../components/PageHeader.jsx';
+import Pagination from '../components/Pagination.jsx';
 import { fetchAuditoria } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
 const AuditoriaPage = () => {
   const { token } = useAuth();
   const [eventos, setEventos] = useState(null);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetchAuditoria(token)
-      .then(setEventos)
+    fetchAuditoria(token, page, pageSize)
+      .then((res) => {
+        setEventos(res.data);
+        setTotal(res.total);
+      })
       .catch((err) => setError(err.message || 'No se pudo cargar la auditoría'));
-  }, [token]);
+  }, [token, page, pageSize]);
+
+  const handlePageSizeChange = (size) => {
+    setPageSize(size);
+    setPage(1);
+  };
 
   return (
     <>
@@ -65,6 +77,13 @@ const AuditoriaPage = () => {
               </tbody>
             </table>
           </div>
+          <Pagination
+            page={page}
+            pageSize={pageSize}
+            total={total}
+            onPageChange={setPage}
+            onPageSizeChange={handlePageSizeChange}
+          />
         </div>
       )}
     </>

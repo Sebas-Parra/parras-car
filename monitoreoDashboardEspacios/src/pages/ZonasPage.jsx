@@ -1,12 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
 import PageHeader from '../components/PageHeader.jsx';
 import ZoneFormModal from '../components/ZoneFormModal.jsx';
+import Pagination from '../components/Pagination.jsx';
 import { fetchZonas, deleteZona } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
 const ZonasPage = () => {
   const { token, hasRole } = useAuth();
   const [zonas, setZonas] = useState(null);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [error, setError] = useState('');
   const [modal, setModal] = useState(null); // null | 'new' | zona object para editar
 
@@ -14,10 +18,18 @@ const ZonasPage = () => {
   const canDelete = hasRole('root');
 
   const cargar = useCallback(() => {
-    fetchZonas(token)
-      .then(setZonas)
+    fetchZonas(token, page, pageSize)
+      .then((res) => {
+        setZonas(res.data);
+        setTotal(res.total);
+      })
       .catch((err) => setError(err.message || 'No se pudieron cargar las zonas'));
-  }, [token]);
+  }, [token, page, pageSize]);
+
+  const handlePageSizeChange = (size) => {
+    setPageSize(size);
+    setPage(1);
+  };
 
   useEffect(() => {
     cargar();
@@ -114,6 +126,7 @@ const ZonasPage = () => {
               </tbody>
             </table>
           </div>
+          <Pagination page={page} pageSize={pageSize} total={total} onPageChange={setPage} onPageSizeChange={handlePageSizeChange} />
         </div>
       )}
 

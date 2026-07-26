@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import PageHeader from '../components/PageHeader.jsx';
 import VehicleFormModal from '../components/VehicleFormModal.jsx';
+import Pagination from '../components/Pagination.jsx';
 import {
   fetchVehiculos,
   activateVehiculo,
   deleteVehiculo,
-  fetchTickets,
+  fetchTicketsActivos,
   fetchAsignacionPorVehiculo,
   TIPO_VEHICULO_LABELS,
 } from '../api.js';
@@ -14,16 +15,27 @@ import { useAuth } from '../context/AuthContext.jsx';
 const VehiculosPage = () => {
   const { token, hasRole } = useAuth();
   const [vehiculos, setVehiculos] = useState(null);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [error, setError] = useState('');
   const [modal, setModal] = useState(null); // null | 'new' | vehiculo object
 
   const canManage = hasRole('admin', 'root');
 
   const cargar = useCallback(() => {
-    fetchVehiculos(token)
-      .then(setVehiculos)
+    fetchVehiculos(token, page, pageSize)
+      .then((res) => {
+        setVehiculos(res.data);
+        setTotal(res.total);
+      })
       .catch((err) => setError(err.message || 'No se pudieron cargar los vehículos'));
-  }, [token]);
+  }, [token, page, pageSize]);
+
+  const handlePageSizeChange = (size) => {
+    setPageSize(size);
+    setPage(1);
+  };
 
   useEffect(() => {
     cargar();
@@ -32,8 +44,8 @@ const VehiculosPage = () => {
   const handleDelete = async (v) => {
     setError('');
     try {
-      const tickets = await fetchTickets(token);
-      const ticketActivo = tickets.find((t) => t.idVehiculo === v.id && t.estado === 'ACTIVO');
+      const ticketsActivos = await fetchTicketsActivos(token);
+      const ticketActivo = ticketsActivos.find((t) => t.idVehiculo === v.id);
       if (ticketActivo) {
         setError(
           `No se puede desactivar ${v.plate}: está ocupando un espacio ahora mismo (ticket ${ticketActivo.codigo}). Pagá o anulá ese ticket primero.`,
@@ -149,6 +161,7 @@ const VehiculosPage = () => {
               </tbody>
             </table>
           </div>
+          <Pagination page={page} pageSize={pageSize} total={total} onPageChange={setPage} onPageSizeChange={handlePageSizeChange} />
         </div>
       )}
 

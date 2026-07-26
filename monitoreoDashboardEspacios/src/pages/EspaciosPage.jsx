@@ -7,7 +7,7 @@ import EspaciosGridView from '../components/EspaciosGridView.jsx';
 import NewPlaceModal from '../components/NewPlaceModal.jsx';
 import { useEspacios } from '../hooks/useEspacios.js';
 import { useAuth } from '../context/AuthContext.jsx';
-import { updateEspacioStatus, deleteEspacio, fetchTickets } from '../api.js';
+import { updateEspacioStatus, deleteEspacio, fetchTicketsActivos } from '../api.js';
 
 const formatDate = (date) => (date ? date.toLocaleString('es-ES', { hour12: false }) : '--');
 const ESTADOS = ['DISPONIBLE', 'OCUPADO', 'RESERVADO', 'MANTENIMIENTO'];
@@ -32,10 +32,9 @@ const EspaciosPage = () => {
   // realmente actualiza el estado del espacio en zones.
   useEffect(() => {
     if (!token) return;
-    fetchTickets(token)
+    fetchTicketsActivos(token)
       .then((data) => {
-        const activos = new Set(data.filter((t) => t.estado === 'ACTIVO').map((t) => t.idEspacio));
-        setEspaciosConTicketActivo(activos);
+        setEspaciosConTicketActivo(new Set(data.map((t) => t.idEspacio)));
       })
       .catch(() => {});
   }, [token, lastUpdate]);

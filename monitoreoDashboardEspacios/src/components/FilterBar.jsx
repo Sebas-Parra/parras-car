@@ -1,4 +1,5 @@
-import { IconSearch } from './icons.jsx';
+import Button from './Button.jsx';
+import { IconSearch, IconX } from './icons.jsx';
 
 const ESTADOS_FILTRO = [
   { value: 'TODOS', label: 'Todos los estados' },
@@ -54,13 +55,9 @@ const FilterBar = ({
       ))}
     </select>
     {hayFiltrosActivos && (
-      <button
-        type="button"
-        onClick={onLimpiar}
-        className="text-sm font-medium text-slate-500 hover:text-slate-700"
-      >
+      <Button variant="ghost" size="sm" icon={IconX} onClick={onLimpiar}>
         Limpiar filtros
-      </button>
+      </Button>
     )}
   </div>
 );

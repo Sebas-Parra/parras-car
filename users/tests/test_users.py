@@ -9,7 +9,10 @@ BASE_PERSON = {
 def test_list_users(client):
     response = client.get("/users")
     assert response.status_code == 200
-    assert any(user["username"] == "admin" for user in response.json())
+    body = response.json()
+    assert any(user["username"] == "admin" for user in body["data"])
+    assert body["total"] >= 1
+    assert body["page"] == 1
 
 
 def test_update_user_username(client, role_ids):

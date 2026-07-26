@@ -16,8 +16,8 @@ def get_user(db: Session, user_id: UUID) -> User:
     return user
 
 
-def list_users(db: Session, skip: int = 0, limit: int = 100) -> list[User]:
-    return user_repository.list_all(db, skip, limit)
+def list_users(db: Session, skip: int = 0, limit: int = 100) -> tuple[list[User], int]:
+    return user_repository.list_all(db, skip, limit), user_repository.count_all(db)
 
 
 def _actor_role(current_user: dict) -> str:

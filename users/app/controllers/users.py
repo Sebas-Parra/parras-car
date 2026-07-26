@@ -6,11 +6,16 @@ from sqlalchemy.orm import Session
 
 from app.core.deps import get_db, require_admin, require_self_or_admin
 from app.dto.role import RoleAssign
-from app.dto.user import UserDetailRead, UserRead, UserUpdate
+from app.dto.user import UserDetailRead, UserListResponse, UserRead, UserUpdate
 from app.services import user_service
 from app.utils.client_ip import get_client_ip
 
 router = APIRouter(prefix="/users", tags=["users"])
+
+# Catálogo acotado por la cantidad real de usuarios registrados (no crece sin
+# límite como tickets/auditoría), así que el tope es más alto para no romper
+# los buscadores tipo-combobox de otras páginas que necesitan ver todo.
+MAX_PAGE_SIZE = 500
 
 
 class UserRolesRead(BaseModel):
@@ -29,14 +34,17 @@ def get_user_roles(
 
 
 # Admin / root only
-@router.get("", response_model=list[UserRead])
+@router.get("", response_model=UserListResponse)
 def list_users(
-    skip: int = 0,
-    limit: int = 100,
+    page: int = 1,
+    page_size: int = 100,
     db: Session = Depends(get_db),
     _: dict = Depends(require_admin),
 ):
-    return user_service.list_users(db, skip, limit)
+    page = max(1, page)
+    page_size = min(max(1, page_size), MAX_PAGE_SIZE)
+    data, total = user_service.list_users(db, (page - 1) * page_size, page_size)
+    return UserListResponse(data=data, total=total, page=page, page_size=page_size)
 
 
 # Own data or admin/root

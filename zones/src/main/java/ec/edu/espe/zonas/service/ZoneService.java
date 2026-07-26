@@ -1,14 +1,14 @@
 package ec.edu.espe.zonas.service;
 
-import java.util.List;
 import java.util.UUID;
 
+import ec.edu.espe.zonas.dtos.PagedResponseDto;
 import ec.edu.espe.zonas.dtos.ZoneRequestDto;
 import ec.edu.espe.zonas.dtos.ZoneResponseDto;
 
 public interface ZoneService {
 
-    List<ZoneResponseDto> getAllZones();
+    PagedResponseDto<ZoneResponseDto> getAllZones(int page, int pageSize);
 
     ZoneResponseDto getZoneById(UUID idZone);
 

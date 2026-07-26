@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Modal from './Modal.jsx';
+import Button from './Button.jsx';
 import {
   createVehiculo,
   updateVehiculo,
@@ -165,13 +166,9 @@ const VehicleFormModal = ({ vehiculo, onClose, onSaved }) => {
         )}
 
         {error && <p className="text-sm text-red-600">{error}</p>}
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded-md bg-slate-900 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
-        >
+        <Button type="submit" variant="primary" loading={loading} className="w-full">
           {loading ? 'Guardando...' : isEdit ? 'Guardar cambios' : 'Crear vehículo'}
-        </button>
+        </Button>
       </form>
     </Modal>
   );

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import PageHeader from '../components/PageHeader.jsx';
 import Pagination from '../components/Pagination.jsx';
+import Button from '../components/Button.jsx';
 import { fetchAuditoria } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -33,9 +34,9 @@ const AuditoriaPage = () => {
       {error && (
         <div className="flex items-center justify-between rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
           <span>{error}</span>
-          <button type="button" className="font-medium underline" onClick={() => setError('')}>
+          <Button variant="link" size="none" onClick={() => setError('')}>
             Cerrar
-          </button>
+          </Button>
         </div>
       )}
 

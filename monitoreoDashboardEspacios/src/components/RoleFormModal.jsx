@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Modal from './Modal.jsx';
+import Button from './Button.jsx';
 import { createRole, updateRole } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -55,11 +56,23 @@ const RoleFormModal = ({ role, permisos, onClose, onSaved }) => {
       <form onSubmit={handleSubmit} className="space-y-3">
         <div>
           <label className={labelClass}>Nombre</label>
-          <input value={name} onChange={(e) => setName(e.target.value)} required className={inputClass} />
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            minLength={2}
+            maxLength={50}
+            className={inputClass}
+          />
         </div>
         <div>
-          <label className={labelClass}>Descripción</label>
-          <input value={description} onChange={(e) => setDescription(e.target.value)} className={inputClass} />
+          <label className={labelClass}>Descripción (opcional)</label>
+          <input
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            maxLength={255}
+            className={inputClass}
+          />
         </div>
 
         <div>
@@ -89,13 +102,9 @@ const RoleFormModal = ({ role, permisos, onClose, onSaved }) => {
         </div>
 
         {error && <p className="text-sm text-red-600">{error}</p>}
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded-md bg-slate-900 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
-        >
+        <Button type="submit" variant="primary" loading={loading} className="w-full">
           {loading ? 'Guardando...' : isEdit ? 'Guardar cambios' : 'Crear rol'}
-        </button>
+        </Button>
       </form>
     </Modal>
   );

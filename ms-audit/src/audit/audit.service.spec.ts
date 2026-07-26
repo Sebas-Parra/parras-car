@@ -6,13 +6,14 @@ import { CreateAuditEventDto } from './dto/create-audit-event.dto';
 
 describe('AuditService', () => {
   let service: AuditService;
-  let repo: { create: jest.Mock; save: jest.Mock; findAndCount: jest.Mock };
+  let repo: { create: jest.Mock; save: jest.Mock; findAndCount: jest.Mock; findOne: jest.Mock };
 
   beforeEach(async () => {
     repo = {
       create: jest.fn((x) => x),
       save: jest.fn((x) => Promise.resolve({ id: 'evt-1', ...x })),
       findAndCount: jest.fn(),
+      findOne: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -73,5 +74,19 @@ describe('AuditService', () => {
       });
       expect(result).toEqual({ data: [{ id: 'evt-1' }], total: 45, page: 3, pageSize: 10 });
     });
+  });
+
+  it('findOne returns the event matching the given id', async () => {
+    const event = { id: 'evt-1' };
+    repo.findOne.mockResolvedValue(event);
+
+    await expect(service.findOne('evt-1')).resolves.toEqual(event);
+    expect(repo.findOne).toHaveBeenCalledWith({ where: { id: 'evt-1' } });
+  });
+
+  it('findOne returns null when no event matches', async () => {
+    repo.findOne.mockResolvedValue(null);
+
+    await expect(service.findOne('missing')).resolves.toBeNull();
   });
 });

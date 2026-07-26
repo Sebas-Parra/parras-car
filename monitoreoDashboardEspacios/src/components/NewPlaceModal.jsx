@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Modal from './Modal.jsx';
 import SearchSelect from './SearchSelect.jsx';
+import Button from './Button.jsx';
 import { createEspacio, fetchZonas, TIPO_ESPACIO_OPTIONS, ESTADO_OPTIONS } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -89,13 +90,9 @@ const NewPlaceModal = ({ onClose, onCreated }) => {
             </div>
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-md bg-slate-900 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
-          >
+          <Button type="submit" variant="primary" loading={loading} className="w-full">
             {loading ? 'Creando...' : 'Crear espacio'}
-          </button>
+          </Button>
         </form>
       )}
       {error && zonas.length === 0 && <p className="mt-2 text-sm text-red-600">{error}</p>}

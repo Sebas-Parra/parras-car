@@ -59,7 +59,7 @@ def test_create_person_with_user_generates_sequential_username(client, role_ids)
     assert third_response.json()["user"]["username"] == "cmdiaz"
 
 
-def test_create_person_requires_middle_name(client, role_ids):
+def test_create_person_without_middle_name(client, role_ids):
     response = client.post(
         "/persons",
         json={
@@ -71,7 +71,9 @@ def test_create_person_requires_middle_name(client, role_ids):
             "role_ids": [role_ids["estudiante"]],
         },
     )
-    assert response.status_code == 422
+    assert response.status_code == 201
+    assert response.json()["middle_name"] is None
+    assert response.json()["user"]["username"] == "pdiaz"
 
 
 def test_create_person_rejects_invalid_cedula_length(client, role_ids):
@@ -206,13 +208,13 @@ def test_create_person_duplicate_cedula(client, role_ids):
     assert response.status_code == 409
 
 
-def test_list_persons(client):
-    response = client.get("/persons")
+def test_list_persons(client, admin_auth_headers):
+    response = client.get("/persons", headers=admin_auth_headers)
     assert response.status_code == 200
     assert any(person["cedula"] == "0000000000" for person in response.json())
 
 
-def test_update_person(client, role_ids):
+def test_update_person(client, role_ids, admin_auth_headers):
     create_response = client.post(
         "/persons",
         json={
@@ -227,12 +229,14 @@ def test_update_person(client, role_ids):
     )
     person_id = create_response.json()["id"]
 
-    response = client.put(f"/persons/{person_id}", json={"phone": "0991234567"})
+    response = client.put(
+        f"/persons/{person_id}", json={"phone": "0991234567"}, headers=admin_auth_headers
+    )
     assert response.status_code == 200
     assert response.json()["phone"] == "0991234567"
 
 
-def test_deactivate_person_cascades_to_user(client, db_session, role_ids):
+def test_deactivate_person_cascades_to_user(client, db_session, role_ids, admin_auth_headers):
     from app.entities.user import User
 
     create_response = client.post(
@@ -249,7 +253,7 @@ def test_deactivate_person_cascades_to_user(client, db_session, role_ids):
     )
     person_id = create_response.json()["id"]
 
-    response = client.patch(f"/persons/{person_id}/deactivate")
+    response = client.patch(f"/persons/{person_id}/deactivate", headers=admin_auth_headers)
     assert response.status_code == 200
     assert response.json()["active"] is False
 
@@ -258,7 +262,7 @@ def test_deactivate_person_cascades_to_user(client, db_session, role_ids):
     assert user.active is False
 
 
-def test_activate_person_does_not_reactivate_user(client, db_session, role_ids):
+def test_activate_person_does_not_reactivate_user(client, db_session, role_ids, admin_auth_headers):
     from app.entities.user import User
 
     create_response = client.post(
@@ -275,8 +279,8 @@ def test_activate_person_does_not_reactivate_user(client, db_session, role_ids):
     )
     person_id = create_response.json()["id"]
 
-    client.patch(f"/persons/{person_id}/deactivate")
-    response = client.patch(f"/persons/{person_id}/activate")
+    client.patch(f"/persons/{person_id}/deactivate", headers=admin_auth_headers)
+    response = client.patch(f"/persons/{person_id}/activate", headers=admin_auth_headers)
 
     assert response.status_code == 200
     assert response.json()["active"] is True

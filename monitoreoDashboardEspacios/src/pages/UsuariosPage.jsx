@@ -4,6 +4,8 @@ import RegisterUserModal from '../components/RegisterUserModal.jsx';
 import RolesModal from '../components/RolesModal.jsx';
 import RoleFormModal from '../components/RoleFormModal.jsx';
 import Pagination from '../components/Pagination.jsx';
+import Button from '../components/Button.jsx';
+import { IconPlus, IconKey, IconTrash, IconCheck } from '../components/icons.jsx';
 import { fetchUsers, fetchRoles, fetchPermissions, activateUser, deactivateUser } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -57,21 +59,17 @@ const UsuariosPage = () => {
   return (
     <>
       <PageHeader title="Usuarios" subtitle="Cuentas registradas en el sistema">
-        <button
-          type="button"
-          onClick={() => setShowRegister(true)}
-          className="whitespace-nowrap rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800"
-        >
-          + Nuevo usuario
-        </button>
+        <Button variant="primary" icon={IconPlus} onClick={() => setShowRegister(true)}>
+          Nuevo usuario
+        </Button>
       </PageHeader>
 
       {error && (
         <div className="flex items-center justify-between rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
           <span>{error}</span>
-          <button type="button" className="font-medium underline" onClick={() => setError('')}>
+          <Button variant="link" size="none" onClick={() => setError('')}>
             Cerrar
-          </button>
+          </Button>
         </div>
       )}
 
@@ -122,17 +120,25 @@ const UsuariosPage = () => {
                     <td className="px-4 py-3 text-sm text-slate-500">
                       {u.last_login ? new Date(u.last_login).toLocaleString('es-ES', { hour12: false }) : '--'}
                     </td>
-                    <td className="space-x-3 px-4 py-3 text-right text-sm">
-                      <button type="button" onClick={() => setRolesModalUser(u)} className="font-medium text-slate-600 hover:text-slate-900">
+                    <td className="space-x-2 px-4 py-3 text-right text-sm">
+                      <Button variant="secondary" size="sm" icon={IconKey} onClick={() => setRolesModalUser(u)}>
                         Roles
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleToggleActive(u)}
-                        className={`font-medium ${u.active ? 'text-red-600 hover:text-red-800' : 'text-emerald-600 hover:text-emerald-800'}`}
-                      >
-                        {u.active ? 'Desactivar' : 'Activar'}
-                      </button>
+                      </Button>
+                      {u.active ? (
+                        <Button variant="danger" size="sm" icon={IconTrash} onClick={() => handleToggleActive(u)}>
+                          Desactivar
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          icon={IconCheck}
+                          className="!border-emerald-300 !text-emerald-700 hover:!bg-emerald-50"
+                          onClick={() => handleToggleActive(u)}
+                        >
+                          Activar
+                        </Button>
+                      )}
                     </td>
                   </tr>
                 ))}

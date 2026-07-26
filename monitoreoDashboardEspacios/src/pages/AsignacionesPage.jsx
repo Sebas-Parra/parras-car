@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import PageHeader from '../components/PageHeader.jsx';
 import SearchSelect from '../components/SearchSelect.jsx';
 import Pagination from '../components/Pagination.jsx';
+import Button from '../components/Button.jsx';
+import { IconTrash, IconPlus, IconArrowsRightLeft } from '../components/icons.jsx';
 import {
   fetchFlota,
   fetchVehiculos,
@@ -139,17 +141,17 @@ const AsignacionesPage = () => {
       {error && (
         <div className="flex items-center justify-between rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
           <span>{error}</span>
-          <button type="button" className="font-medium underline" onClick={() => setError('')}>
+          <Button variant="link" size="none" onClick={() => setError('')}>
             Cerrar
-          </button>
+          </Button>
         </div>
       )}
       {info && (
         <div className="flex items-center justify-between rounded-md border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
           <span>{info}</span>
-          <button type="button" className="font-medium underline" onClick={() => setInfo('')}>
+          <Button variant="link" size="none" onClick={() => setInfo('')}>
             Cerrar
-          </button>
+          </Button>
         </div>
       )}
 
@@ -198,13 +200,9 @@ const AsignacionesPage = () => {
                       <td className="px-2 py-2 text-sm text-slate-600">{v.tipo}</td>
                       <td className="px-2 py-2 text-right text-sm">
                         {canManage && (
-                          <button
-                            type="button"
-                            onClick={() => handleQuitar(v.id)}
-                            className="font-medium text-red-600 hover:text-red-800"
-                          >
+                          <Button variant="danger" size="sm" icon={IconTrash} onClick={() => handleQuitar(v.id)}>
                             Quitar
-                          </button>
+                          </Button>
                         )}
                       </td>
                     </tr>
@@ -226,13 +224,9 @@ const AsignacionesPage = () => {
                 placeholder="Buscar vehículo..."
               />
             </div>
-            <button
-              type="submit"
-              disabled={!vehiculoAAsignar}
-              className="rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
-            >
+            <Button type="submit" variant="primary" icon={IconPlus} disabled={!vehiculoAAsignar}>
               Asignar
-            </button>
+            </Button>
           </form>
 
           {canManage && (
@@ -272,12 +266,9 @@ const AsignacionesPage = () => {
                   />
                 </div>
               </div>
-              <button
-                type="submit"
-                className="rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800"
-              >
+              <Button type="submit" variant="primary" icon={IconArrowsRightLeft}>
                 Transferir
-              </button>
+              </Button>
             </form>
           )}
         </div>

@@ -1,3 +1,4 @@
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { TicketsService } from './tickets.service';
@@ -8,6 +9,7 @@ import { ZonesClient } from './clients/zones.client';
 import { VehiclesClient } from './clients/vehicles.client';
 import { AssignmentsClient } from './clients/assignments.client';
 import { CreateTicketDto } from './dto/create-ticket.dto';
+import { SseService } from 'src/sse/sse.services';
 
 describe('TicketsService', () => {
   let service: TicketsService;
@@ -27,6 +29,7 @@ describe('TicketsService', () => {
   };
   let vehiclesClient: { findByPlate: jest.Mock };
   let assignmentsClient: { findActiveByVehicle: jest.Mock };
+  let sseService: { emitEvent: jest.Mock };
 
   const actingUser = { username: 'jdoe', roles: ['recaudador'] };
 
@@ -61,6 +64,7 @@ describe('TicketsService', () => {
     assignmentsClient = {
       findActiveByVehicle: jest.fn().mockResolvedValue(assignment),
     };
+    sseService = { emitEvent: jest.fn() };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -70,6 +74,7 @@ describe('TicketsService', () => {
         { provide: ZonesClient, useValue: zonesClient },
         { provide: VehiclesClient, useValue: vehiclesClient },
         { provide: AssignmentsClient, useValue: assignmentsClient },
+        { provide: SseService, useValue: sseService },
       ],
     }).compile();
 
@@ -261,5 +266,136 @@ describe('TicketsService', () => {
         pageSize: 2,
       });
     });
+  });
+
+  it('throws NotFoundException when the vehicle does not exist', async () => {
+    vehiclesClient.findByPlate.mockResolvedValue(null);
+    const dto: CreateTicketDto = { idEspacio: 'place-1', placa: 'ABC-123' };
+
+    await expect(
+      service.create(dto, 'empleado-1', 'Bearer token', actingUser),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('throws ConflictException when the vehicle is inactive', async () => {
+    vehiclesClient.findByPlate.mockResolvedValue({ ...vehicle, active: false });
+    const dto: CreateTicketDto = { idEspacio: 'place-1', placa: 'ABC-123' };
+
+    await expect(
+      service.create(dto, 'empleado-1', 'Bearer token', actingUser),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('throws ConflictException when the plate already has an active ticket', async () => {
+    repo.findOne.mockResolvedValue({ id: 'existing', codigo: 'TCK-A1-1' });
+    const dto: CreateTicketDto = { idEspacio: 'place-1', placa: 'ABC-123' };
+
+    await expect(
+      service.create(dto, 'empleado-1', 'Bearer token', actingUser),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('throws ConflictException when the vehicle has no active assignment', async () => {
+    assignmentsClient.findActiveByVehicle.mockResolvedValue(null);
+    const dto: CreateTicketDto = { idEspacio: 'place-1', placa: 'ABC-123' };
+
+    await expect(
+      service.create(dto, 'empleado-1', 'Bearer token', actingUser),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('throws NotFoundException when the place does not exist', async () => {
+    zonesClient.findPlaceById.mockResolvedValue(null);
+    const dto: CreateTicketDto = { idEspacio: 'place-1', placa: 'ABC-123' };
+
+    await expect(
+      service.create(dto, 'empleado-1', 'Bearer token', actingUser),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('throws ConflictException when the place is not available', async () => {
+    zonesClient.findPlaceById.mockResolvedValue({
+      ...place,
+      status: 'OCCUPIED',
+    });
+    const dto: CreateTicketDto = { idEspacio: 'place-1', placa: 'ABC-123' };
+
+    await expect(
+      service.create(dto, 'empleado-1', 'Bearer token', actingUser),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('throws ConflictException when the vehicle type is not compatible with the place type', async () => {
+    vehiclesClient.findByPlate.mockResolvedValue({
+      ...vehicle,
+      tipo: 'motocicleta',
+    });
+    const dto: CreateTicketDto = { idEspacio: 'place-1', placa: 'ABC-123' };
+
+    await expect(
+      service.create(dto, 'empleado-1', 'Bearer token', actingUser),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('deletes the created ticket and rethrows when setStatus fails after creation', async () => {
+    const failure = new Error('zones unavailable');
+    zonesClient.setStatus.mockRejectedValue(failure);
+    const dto: CreateTicketDto = { idEspacio: 'place-1', placa: 'ABC-123' };
+
+    await expect(
+      service.create(dto, 'empleado-1', 'Bearer token', actingUser),
+    ).rejects.toThrow(failure);
+
+    expect(repo.delete).toHaveBeenCalledWith('tick-1');
+    expect(publisher.publish).not.toHaveBeenCalled();
+  });
+
+  it('throws NotFoundException from findOne when the ticket does not exist', async () => {
+    repo.findOne.mockResolvedValue(null);
+
+    await expect(service.findOne('missing')).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+  });
+
+  it('throws ConflictException when paying a ticket that is not active', async () => {
+    repo.findOne.mockResolvedValue({
+      id: 'tick-1',
+      codigo: 'TCK-A1-1',
+      estado: EstadoTicket.PAGADO,
+    });
+
+    await expect(
+      service.pay('tick-1', 'empleado-1', 'Bearer token', actingUser),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('throws ConflictException when cancelling a ticket that is not active', async () => {
+    repo.findOne.mockResolvedValue({
+      id: 'tick-1',
+      codigo: 'TCK-A1-1',
+      estado: EstadoTicket.ANULADO,
+    });
+
+    await expect(
+      service.cancel('tick-1', 'empleado-1', 'Bearer token', actingUser),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('appends a numeric suffix when the generated ticket code already exists', async () => {
+    repo.findOne
+      .mockResolvedValueOnce(null) // no active ticket for the plate
+      .mockResolvedValueOnce({ codigo: 'duplicate' }) // first generated code taken
+      .mockResolvedValueOnce(null); // suffixed code is free
+    const dto: CreateTicketDto = { idEspacio: 'place-1', placa: 'ABC-123' };
+
+    const saved = await service.create(
+      dto,
+      'empleado-1',
+      'Bearer token',
+      actingUser,
+    );
+
+    expect(saved.codigo).toMatch(/-1$/);
   });
 });

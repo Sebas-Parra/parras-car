@@ -6,13 +6,13 @@ BASE_PERSON = {
 }
 
 
-def test_list_users(client):
-    response = client.get("/users")
+def test_list_users(client, admin_auth_headers):
+    response = client.get("/users", headers=admin_auth_headers)
     assert response.status_code == 200
     assert any(user["username"] == "admin" for user in response.json())
 
 
-def test_update_user_username(client, role_ids):
+def test_update_user_username(client, role_ids, admin_auth_headers):
     create_response = client.post(
         "/persons",
         json={
@@ -27,12 +27,14 @@ def test_update_user_username(client, role_ids):
     )
     person_id = create_response.json()["id"]
 
-    response = client.put(f"/users/{person_id}", json={"username": "newusername"})
+    response = client.put(
+        f"/users/{person_id}", json={"username": "newusername"}, headers=admin_auth_headers
+    )
     assert response.status_code == 200
     assert response.json()["username"] == "newusername"
 
 
-def test_update_user_duplicate_username(client, role_ids):
+def test_update_user_duplicate_username(client, role_ids, admin_auth_headers):
     client.post(
         "/persons",
         json={
@@ -60,11 +62,13 @@ def test_update_user_duplicate_username(client, role_ids):
     person_id = create_response.json()["id"]
 
     # "fuuser" is the auto-generated username of the first user (First User User)
-    response = client.put(f"/users/{person_id}", json={"username": "fuuser"})
+    response = client.put(
+        f"/users/{person_id}", json={"username": "fuuser"}, headers=admin_auth_headers
+    )
     assert response.status_code == 409
 
 
-def test_activate_user_blocked_when_person_inactive(client, role_ids):
+def test_activate_user_blocked_when_person_inactive(client, role_ids, admin_auth_headers):
     create_response = client.post(
         "/persons",
         json={
@@ -79,13 +83,13 @@ def test_activate_user_blocked_when_person_inactive(client, role_ids):
     )
     person_id = create_response.json()["id"]
 
-    client.patch(f"/persons/{person_id}/deactivate")
+    client.patch(f"/persons/{person_id}/deactivate", headers=admin_auth_headers)
 
-    response = client.patch(f"/users/{person_id}/activate")
+    response = client.patch(f"/users/{person_id}/activate", headers=admin_auth_headers)
     assert response.status_code == 409
 
 
-def test_deactivate_and_activate_user(client, role_ids):
+def test_deactivate_and_activate_user(client, role_ids, admin_auth_headers):
     create_response = client.post(
         "/persons",
         json={
@@ -100,16 +104,18 @@ def test_deactivate_and_activate_user(client, role_ids):
     )
     person_id = create_response.json()["id"]
 
-    deactivate_response = client.patch(f"/users/{person_id}/deactivate")
+    deactivate_response = client.patch(
+        f"/users/{person_id}/deactivate", headers=admin_auth_headers
+    )
     assert deactivate_response.status_code == 200
     assert deactivate_response.json()["active"] is False
 
-    activate_response = client.patch(f"/users/{person_id}/activate")
+    activate_response = client.patch(f"/users/{person_id}/activate", headers=admin_auth_headers)
     assert activate_response.status_code == 200
     assert activate_response.json()["active"] is True
 
 
-def test_assign_and_remove_role(client, role_ids):
+def test_assign_and_remove_role(client, role_ids, admin_auth_headers):
     create_response = client.post(
         "/persons",
         json={
@@ -127,18 +133,21 @@ def test_assign_and_remove_role(client, role_ids):
     assign_response = client.post(
         f"/users/{person_id}/roles",
         json={"role_id": role_ids["profesor"]},
+        headers=admin_auth_headers,
     )
     assert assign_response.status_code == 200
     role_names = {role["name"] for role in assign_response.json()["roles"]}
-    assert role_names == {"estudiante", "profesor"}
+    assert role_names == {"cliente", "profesor"}
 
-    remove_response = client.delete(f"/users/{person_id}/roles/{role_ids['profesor']}")
+    remove_response = client.delete(
+        f"/users/{person_id}/roles/{role_ids['profesor']}", headers=admin_auth_headers
+    )
     assert remove_response.status_code == 200
     role_names = {role["name"] for role in remove_response.json()["roles"]}
-    assert role_names == {"estudiante"}
+    assert role_names == {"cliente"}
 
 
-def test_assign_duplicate_role(client, role_ids):
+def test_assign_duplicate_role(client, role_ids, admin_auth_headers):
     create_response = client.post(
         "/persons",
         json={
@@ -155,12 +164,13 @@ def test_assign_duplicate_role(client, role_ids):
 
     response = client.post(
         f"/users/{person_id}/roles",
-        json={"role_id": role_ids["estudiante"]},
+        json={"role_id": role_ids["cliente"]},
+        headers=admin_auth_headers,
     )
     assert response.status_code == 409
 
 
-def test_remove_role_not_assigned(client, role_ids):
+def test_remove_role_not_assigned(client, role_ids, admin_auth_headers):
     create_response = client.post(
         "/persons",
         json={
@@ -175,5 +185,7 @@ def test_remove_role_not_assigned(client, role_ids):
     )
     person_id = create_response.json()["id"]
 
-    response = client.delete(f"/users/{person_id}/roles/{role_ids['profesor']}")
+    response = client.delete(
+        f"/users/{person_id}/roles/{role_ids['profesor']}", headers=admin_auth_headers
+    )
     assert response.status_code == 404

@@ -72,5 +72,9 @@ La API queda disponible en `http://localhost:8000`. Documentación interactiva
 ## Tests
 
 ```bash
-pytest
+python3.12 -m venv .venv
+.venv/bin/pip install -r requirements.txt pytest-cov
+JWT_SECRET=test-secret .venv/bin/python -m pytest --cov=app --cov-report=term-missing
 ```
+
+Cobertura mínima requerida: 80%.

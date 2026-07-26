@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
+import Button from './Button.jsx';
+import logo from '../assets/logo.png';
 
-const LoginPage = () => {
+const LoginPage = ({ onRegisterClick }) => {
   const { login } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -24,8 +26,10 @@ const LoginPage = () => {
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
       <div className="w-full max-w-sm rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
-        <div className="mb-6 flex items-center gap-2">
-          <span className="text-2xl">🅿️</span>
+        <div className="mb-6 flex items-center gap-3">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-slate-100 p-1.5">
+            <img src={logo} alt="Parras Car" className="h-full w-full object-contain" />
+          </div>
           <div>
             <p className="text-sm font-semibold text-slate-900">Parras Car</p>
             <p className="text-xs text-slate-500">Panel de monitoreo</p>
@@ -58,14 +62,20 @@ const LoginPage = () => {
             />
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-md bg-slate-900 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
-          >
+          <Button type="submit" variant="primary" loading={loading} className="w-full">
             {loading ? 'Ingresando...' : 'Ingresar'}
-          </button>
+          </Button>
         </form>
+        <p className="mt-4 text-center text-sm text-slate-500">
+          ¿No tienes cuenta?{' '}
+          <button
+            type="button"
+            onClick={onRegisterClick}
+            className="font-medium text-slate-900 underline underline-offset-2 hover:text-slate-700"
+          >
+            Crear cuenta
+          </button>
+        </p>
       </div>
     </div>
   );

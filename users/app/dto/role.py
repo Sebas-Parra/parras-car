@@ -3,6 +3,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.dto.permission import PermissionRead
+
 _NAME_REGEX = re.compile(r"^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ\s_]+$")
 
 
@@ -12,11 +14,14 @@ class RoleRead(BaseModel):
     id: UUID
     name: str
     description: str | None = None
+    permissions: list[PermissionRead] = []
 
 
 class RoleCreate(BaseModel):
     name: str = Field(min_length=2, max_length=50)
     description: str | None = Field(default=None, max_length=255)
+    # Si se omite, el rol se crea solo con los permisos marcados como públicos.
+    permission_ids: list[UUID] | None = None
 
     @field_validator("name", mode="before")
     @classmethod
@@ -40,6 +45,8 @@ class RoleCreate(BaseModel):
 class RoleUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=2, max_length=50)
     description: str | None = Field(default=None, max_length=255)
+    # Si se incluye, reemplaza por completo el conjunto de permisos del rol.
+    permission_ids: list[UUID] | None = None
 
     @field_validator("name", mode="before")
     @classmethod

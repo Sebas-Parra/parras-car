@@ -29,4 +29,10 @@ describe('RolesGuard', () => {
     const guard = new RolesGuard(reflector);
     expect(guard.canActivate(buildContext({ roles: ['cliente'] }))).toBe(false);
   });
+
+  it('denies access when there is no authenticated user on the request', () => {
+    const reflector = { getAllAndOverride: jest.fn().mockReturnValue(['admin', 'root']) } as unknown as Reflector;
+    const guard = new RolesGuard(reflector);
+    expect(guard.canActivate(buildContext(undefined))).toBe(false);
+  });
 });

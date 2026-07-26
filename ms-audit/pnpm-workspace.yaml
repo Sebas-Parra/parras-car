@@ -1,0 +1,6 @@
+allowBuilds:
+  '@scarf/scarf': true
+  unrs-resolver: true
+onlyBuiltDependencies:
+  - '@scarf/scarf'
+  - unrs-resolver

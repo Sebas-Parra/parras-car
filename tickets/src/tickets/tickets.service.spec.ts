@@ -13,9 +13,11 @@ describe('TicketsService', () => {
   let service: TicketsService;
   let repo: {
     findOne: jest.Mock;
+    find: jest.Mock;
     create: jest.Mock;
     save: jest.Mock;
     delete: jest.Mock;
+    findAndCount: jest.Mock;
   };
   let publisher: { publish: jest.Mock };
   let zonesClient: {
@@ -43,9 +45,11 @@ describe('TicketsService', () => {
   beforeEach(async () => {
     repo = {
       findOne: jest.fn().mockResolvedValue(null),
+      find: jest.fn(),
       create: jest.fn((x) => x),
       save: jest.fn((x) => Promise.resolve({ id: 'tick-1', ...x })),
       delete: jest.fn().mockResolvedValue(undefined),
+      findAndCount: jest.fn(),
     };
     publisher = { publish: jest.fn().mockResolvedValue(undefined) };
     zonesClient = {
@@ -224,5 +228,38 @@ describe('TicketsService', () => {
     expect(publisher.publish).toHaveBeenCalledWith(
       expect.objectContaining({ ip: '203.0.113.5' }),
     );
+  });
+
+  describe('findAll', () => {
+    it('paginates using skip/take derived from page and pageSize, newest first', async () => {
+      repo.findAndCount.mockResolvedValue([[{ id: 'tick-1' }], 55]);
+
+      const result = await service.findAll(2, 20);
+
+      expect(repo.findAndCount).toHaveBeenCalledWith({
+        order: { fechaHoraIngreso: 'DESC' },
+        skip: 20,
+        take: 20,
+      });
+      expect(result).toEqual({ data: [{ id: 'tick-1' }], total: 55, page: 2, pageSize: 20 });
+    });
+
+    it('returns every matching ticket unpaginated when filtering by estado', async () => {
+      repo.find.mockResolvedValue([{ id: 'tick-1' }, { id: 'tick-2' }]);
+
+      const result = await service.findAll(1, 20, EstadoTicket.ACTIVO);
+
+      expect(repo.find).toHaveBeenCalledWith({
+        where: { estado: EstadoTicket.ACTIVO },
+        order: { fechaHoraIngreso: 'DESC' },
+      });
+      expect(repo.findAndCount).not.toHaveBeenCalled();
+      expect(result).toEqual({
+        data: [{ id: 'tick-1' }, { id: 'tick-2' }],
+        total: 2,
+        page: 1,
+        pageSize: 2,
+      });
+    });
   });
 });

@@ -10,6 +10,20 @@ OPTIONAL_NAME_FIELD = Field(default=None, min_length=2, max_length=50)
 _NAME_REGEX = re.compile(r"^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ\s]+$")
 _PHONE_REGEX = re.compile(r"^[\d\s\+\-\(\)]+$")
 _ADDRESS_REGEX = re.compile(r"^[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ0-9\s,.\-#/()]+$")
+_EMAIL_BASIC_REGEX = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+_CEDULA_FORMAT_REGEX = re.compile(r"^\d{10}(\d{3})?$")
+
+
+def _validate_email_format(v: str) -> str:
+    if not _EMAIL_BASIC_REGEX.match(v.strip()):
+        raise ValueError("El email no tiene un formato válido (ejemplo: usuario@dominio.com)")
+    return v
+
+
+def _validate_cedula_format(v: str) -> str:
+    if not _CEDULA_FORMAT_REGEX.match(v.strip()):
+        raise ValueError("La cédula debe tener 10 dígitos, o 13 dígitos si es un RUC")
+    return v.strip()
 
 
 def _validate_name(v: str, label: str) -> str:
@@ -51,7 +65,7 @@ def _validate_ecuadorian_id(v: str) -> str:
 
 
 class PersonBase(BaseModel):
-    cedula: str = Field(pattern=r"^\d{10}(\d{3})?$")
+    cedula: str
     first_name: str = NAME_FIELD
     middle_name: str | None = OPTIONAL_NAME_FIELD
     last_name: str = NAME_FIELD
@@ -59,6 +73,16 @@ class PersonBase(BaseModel):
     phone: str | None = Field(default=None, max_length=20)
     address: str | None = None
     nationality: str | None = None
+
+    @field_validator("cedula", mode="before")
+    @classmethod
+    def validate_cedula_format(cls, v: str) -> str:
+        return _validate_cedula_format(v) if isinstance(v, str) else v
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def validate_email_format(cls, v: str) -> str:
+        return _validate_email_format(v) if isinstance(v, str) else v
 
     @field_validator("email", mode="after")
     @classmethod
@@ -102,6 +126,11 @@ class PersonUpdate(BaseModel):
     phone: str | None = Field(default=None, max_length=20)
     address: str | None = None
     nationality: str | None = None
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def validate_email_format(cls, v: str | None) -> str | None:
+        return _validate_email_format(v) if isinstance(v, str) else v
 
     @field_validator("email", mode="after")
     @classmethod

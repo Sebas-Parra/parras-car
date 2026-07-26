@@ -7,6 +7,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +16,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import ec.edu.espe.zonas.audit.AuditEvent;
 import ec.edu.espe.zonas.audit.AuditPublisher;
+import ec.edu.espe.zonas.dtos.PagedResponseDto;
 import ec.edu.espe.zonas.dtos.ZoneRequestDto;
 import ec.edu.espe.zonas.dtos.ZoneResponseDto;
 import ec.edu.espe.zonas.entidades.Place;
@@ -40,11 +43,14 @@ public class ZoneServiceImpl implements ZoneService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ZoneResponseDto> getAllZones() {
-        return zoneRepository.findAll()
-            .stream()
-            .map(this::toResponseDto)
-            .collect(Collectors.toList());
+    public PagedResponseDto<ZoneResponseDto> getAllZones(int page, int pageSize) {
+        Page<Zone> result = zoneRepository.findAll(PageRequest.of(page - 1, pageSize));
+        return PagedResponseDto.<ZoneResponseDto>builder()
+            .data(result.getContent().stream().map(this::toResponseDto).collect(Collectors.toList()))
+            .total(result.getTotalElements())
+            .page(page)
+            .pageSize(pageSize)
+            .build();
     }
 
     @Override

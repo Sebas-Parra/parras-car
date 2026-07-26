@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import PageHeader from '../components/PageHeader.jsx';
+import SearchSelect from '../components/SearchSelect.jsx';
+import Pagination from '../components/Pagination.jsx';
 import {
   fetchFlota,
   fetchVehiculos,
@@ -11,9 +13,10 @@ import {
 } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
-const selectClass =
-  'w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500';
 const labelClass = 'mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500';
+const getUserId = (u) => u.id_person;
+const getUserLabel = (u) => u.username;
+const getVehiculoLabel = (v) => `${v.plate} — ${v.brand} ${v.model}`;
 
 const AsignacionesPage = () => {
   const { token, userId, hasRole } = useAuth();
@@ -31,6 +34,19 @@ const AsignacionesPage = () => {
   const [transferDesde, setTransferDesde] = useState('');
   const [transferHacia, setTransferHacia] = useState('');
   const [auditoria, setAuditoria] = useState(null);
+  const [auditoriaTotal, setAuditoriaTotal] = useState(0);
+  const [auditoriaPage, setAuditoriaPage] = useState(1);
+  const [auditoriaPageSize, setAuditoriaPageSize] = useState(10);
+
+  const handleAuditoriaPageSizeChange = (size) => {
+    setAuditoriaPageSize(size);
+    setAuditoriaPage(1);
+  };
+
+  const flotaOptions = [
+    { id_person: userId, username: 'Yo mismo' },
+    ...usuarios.filter((u) => u.id_person !== userId),
+  ];
 
   const cargarFlota = useCallback(
     (uid) => {
@@ -50,26 +66,30 @@ const AsignacionesPage = () => {
   }, [usuarioObjetivo, cargarFlota]);
 
   useEffect(() => {
-    fetchVehiculos(token).then(setVehiculos).catch((err) => {
+    fetchVehiculos(token).then((res) => setVehiculos(res.data)).catch((err) => {
       console.error('Error cargando vehículos:', err);
     });
     if (canManage) {
       fetchUsers(token)
-        .then((data) => {
-          console.log('Usuarios cargados:', data);
-          setUsuarios(data);
-        })
+        .then((res) => setUsuarios(res.data))
         .catch((err) => {
           console.error('Error cargando usuarios:', err);
           setError(`Error al cargar usuarios: ${err.message}`);
         });
-      fetchAsignacionesAudit(token)
-        .then(setAuditoria)
-        .catch((err) => {
-          console.error('Error cargando auditoría:', err);
-        });
     }
   }, [token, canManage]);
+
+  useEffect(() => {
+    if (!canManage) return;
+    fetchAsignacionesAudit(token, auditoriaPage, auditoriaPageSize)
+      .then((res) => {
+        setAuditoria(res.data);
+        setAuditoriaTotal(res.total);
+      })
+      .catch((err) => {
+        console.error('Error cargando auditoría:', err);
+      });
+  }, [token, canManage, auditoriaPage, auditoriaPageSize]);
 
   const handleAsignar = async (e) => {
     e.preventDefault();
@@ -140,14 +160,14 @@ const AsignacionesPage = () => {
               <div className="flex-1">
                 <label className={labelClass}>Flota de</label>
                 {canManage ? (
-                  <select value={usuarioObjetivo} onChange={(e) => setUsuarioObjetivo(e.target.value)} className={selectClass}>
-                    <option value={userId}>Yo mismo</option>
-                    {usuarios.map((u) => (
-                      <option key={u.id_person} value={u.id_person}>
-                        {u.username}
-                      </option>
-                    ))}
-                  </select>
+                  <SearchSelect
+                    options={flotaOptions}
+                    value={usuarioObjetivo}
+                    onChange={setUsuarioObjetivo}
+                    getId={getUserId}
+                    getLabel={getUserLabel}
+                    placeholder="Buscar usuario..."
+                  />
                 ) : (
                   <p className="text-sm text-slate-600">Mi flota</p>
                 )}
@@ -198,14 +218,13 @@ const AsignacionesPage = () => {
             <h2 className="text-sm font-semibold text-slate-900">Asignar vehículo</h2>
             <div>
               <label className={labelClass}>Vehículo</label>
-              <select value={vehiculoAAsignar} onChange={(e) => setVehiculoAAsignar(e.target.value)} required className={selectClass}>
-                <option value="">Seleccioná un vehículo...</option>
-                {vehiculos.map((v) => (
-                  <option key={v.id} value={v.id}>
-                    {v.plate} — {v.brand} {v.model}
-                  </option>
-                ))}
-              </select>
+              <SearchSelect
+                options={vehiculos}
+                value={vehiculoAAsignar}
+                onChange={setVehiculoAAsignar}
+                getLabel={getVehiculoLabel}
+                placeholder="Buscar vehículo..."
+              />
             </div>
             <button
               type="submit"
@@ -222,36 +241,35 @@ const AsignacionesPage = () => {
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <div>
                   <label className={labelClass}>Vehículo</label>
-                  <select value={transferVehiculo} onChange={(e) => setTransferVehiculo(e.target.value)} required className={selectClass}>
-                    <option value="">Seleccioná...</option>
-                    {vehiculos.map((v) => (
-                      <option key={v.id} value={v.id}>
-                        {v.plate}
-                      </option>
-                    ))}
-                  </select>
+                  <SearchSelect
+                    options={vehiculos}
+                    value={transferVehiculo}
+                    onChange={setTransferVehiculo}
+                    getLabel={(v) => v.plate}
+                    placeholder="Buscar vehículo..."
+                  />
                 </div>
                 <div>
                   <label className={labelClass}>Desde</label>
-                  <select value={transferDesde} onChange={(e) => setTransferDesde(e.target.value)} required className={selectClass}>
-                    <option value="">Seleccioná...</option>
-                    {usuarios.map((u) => (
-                      <option key={u.id_person} value={u.id_person}>
-                        {u.username}
-                      </option>
-                    ))}
-                  </select>
+                  <SearchSelect
+                    options={usuarios}
+                    value={transferDesde}
+                    onChange={setTransferDesde}
+                    getId={getUserId}
+                    getLabel={getUserLabel}
+                    placeholder="Buscar usuario..."
+                  />
                 </div>
                 <div>
                   <label className={labelClass}>Hacia</label>
-                  <select value={transferHacia} onChange={(e) => setTransferHacia(e.target.value)} required className={selectClass}>
-                    <option value="">Seleccioná...</option>
-                    {usuarios.map((u) => (
-                      <option key={u.id_person} value={u.id_person}>
-                        {u.username}
-                      </option>
-                    ))}
-                  </select>
+                  <SearchSelect
+                    options={usuarios}
+                    value={transferHacia}
+                    onChange={setTransferHacia}
+                    getId={getUserId}
+                    getLabel={getUserLabel}
+                    placeholder="Buscar usuario..."
+                  />
                 </div>
               </div>
               <button
@@ -272,14 +290,23 @@ const AsignacionesPage = () => {
             ) : auditoria.length === 0 ? (
               <p className="text-sm text-slate-500">Sin eventos registrados.</p>
             ) : (
-              <ul className="space-y-2 text-xs text-slate-600">
-                {auditoria.map((a) => (
-                  <li key={a.id} className="border-b border-slate-100 pb-2">
-                    <span className="font-medium text-slate-900">{a.action}</span> ·{' '}
-                    {new Date(a.timestamp).toLocaleString('es-ES', { hour12: false })}
-                  </li>
-                ))}
-              </ul>
+              <>
+                <ul className="space-y-2 text-xs text-slate-600">
+                  {auditoria.map((a) => (
+                    <li key={a.id} className="border-b border-slate-100 pb-2">
+                      <span className="font-medium text-slate-900">{a.action}</span> ·{' '}
+                      {new Date(a.timestamp).toLocaleString('es-ES', { hour12: false })}
+                    </li>
+                  ))}
+                </ul>
+                <Pagination
+                  page={auditoriaPage}
+                  pageSize={auditoriaPageSize}
+                  total={auditoriaTotal}
+                  onPageChange={setAuditoriaPage}
+                  onPageSizeChange={handleAuditoriaPageSizeChange}
+                />
+              </>
             )}
           </div>
         )}

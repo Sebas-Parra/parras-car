@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from app.controllers import auth, persons, roles, users
+from app.controllers import auth, permissions, persons, roles, users
 
 app = FastAPI(
     title="Users Service",
@@ -12,6 +12,7 @@ app.include_router(auth.router)
 app.include_router(persons.router)
 app.include_router(users.router)
 app.include_router(roles.router)
+app.include_router(permissions.router)
 
 
 @app.get("/health")

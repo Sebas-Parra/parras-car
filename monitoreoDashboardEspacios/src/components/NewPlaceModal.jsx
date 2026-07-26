@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import Modal from './Modal.jsx';
+import SearchSelect from './SearchSelect.jsx';
 import { createEspacio, fetchZonas, TIPO_ESPACIO_OPTIONS, ESTADO_OPTIONS } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -20,10 +21,7 @@ const NewPlaceModal = ({ onClose, onCreated }) => {
 
   useEffect(() => {
     fetchZonas(token)
-      .then((data) => {
-        setZonas(data);
-        if (data.length > 0) setIdZone(data[0].id);
-      })
+      .then((res) => setZonas(res.data))
       .catch((err) => setError(err.message || 'No se pudieron cargar las zonas'))
       .finally(() => setLoadingZonas(false));
   }, [token]);
@@ -31,6 +29,10 @@ const NewPlaceModal = ({ onClose, onCreated }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    if (!idZone) {
+      setError('Seleccioná una zona');
+      return;
+    }
     setLoading(true);
     try {
       await createEspacio({ idZone, description: description || undefined, type, status }, token);
@@ -53,13 +55,7 @@ const NewPlaceModal = ({ onClose, onCreated }) => {
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
             <label className={labelClass}>Zona</label>
-            <select value={idZone} onChange={(e) => setIdZone(e.target.value)} required className={inputClass}>
-              {zonas.map((z) => (
-                <option key={z.id} value={z.id}>
-                  {z.name}
-                </option>
-              ))}
-            </select>
+            <SearchSelect options={zonas} value={idZone} onChange={setIdZone} placeholder="Buscar zona..." />
           </div>
           <div>
             <label className={labelClass}>Descripción (opcional)</label>

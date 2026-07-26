@@ -25,7 +25,10 @@ public class PlaceRequestDto {
 
     @Size(max = 31, message = "La descripción no puede superar los 31 caracteres")
     @Pattern(regexp = "^$|^.*\\S.*$", message = "La descripción no puede contener solo espacios")
-    @Pattern(regexp = "^[^<>]*$", message = "La descripción no puede contener caracteres HTML (< o >)")
+    @Pattern(
+        regexp = "^$|^[\\p{L}0-9\\s,.\\-#/()]+$",
+        message = "La descripción solo puede contener letras, números, espacios y los caracteres: , . - # / ( )"
+    )
     private String description;
 
     @Enumerated(EnumType.STRING)

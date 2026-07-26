@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import PageHeader from '../components/PageHeader.jsx';
 import Modal from '../components/Modal.jsx';
+import SearchSelect from '../components/SearchSelect.jsx';
+import Pagination from '../components/Pagination.jsx';
 import { fetchTickets, fetchEspacios, fetchVehiculos, createTicket, payTicket, cancelTicket } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -25,16 +27,21 @@ const NewTicketModal = ({ onClose, onCreated, token }) => {
   useEffect(() => {
     fetchEspacios().then((data) => setEspacios(data ?? []));
     fetchVehiculos(token)
-      .then((data) => {
-        setVehiculos(data);
-        if (data.length > 0) setPlaca(data[0].plate);
-      })
+      .then((res) => setVehiculos(res.data))
       .catch(() => {});
   }, [token]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    if (!idEspacio) {
+      setError('Seleccioná un espacio');
+      return;
+    }
+    if (!placa) {
+      setError('Seleccioná una placa');
+      return;
+    }
     setLoading(true);
     try {
       await createTicket({ idEspacio, placa: placa.toUpperCase() }, token);
@@ -52,25 +59,25 @@ const NewTicketModal = ({ onClose, onCreated, token }) => {
       <form onSubmit={handleSubmit} className="space-y-3">
         <div>
           <label className={labelClass}>Espacio</label>
-          <select value={idEspacio} onChange={(e) => setIdEspacio(e.target.value)} required className={inputClass}>
-            <option value="">Seleccioná un espacio...</option>
-            {espacios.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.nombre} — {e.nombreZona}
-              </option>
-            ))}
-          </select>
+          <SearchSelect
+            options={espacios}
+            value={idEspacio}
+            onChange={setIdEspacio}
+            getLabel={(e) => `${e.nombre} — ${e.nombreZona}`}
+            placeholder="Buscar espacio..."
+          />
         </div>
         <div>
           <label className={labelClass}>Placa</label>
           {vehiculos.length > 0 ? (
-            <select value={placa} onChange={(e) => setPlaca(e.target.value)} required className={inputClass}>
-              {vehiculos.map((v) => (
-                <option key={v.id} value={v.plate}>
-                  {v.plate} — {v.brand} {v.model}
-                </option>
-              ))}
-            </select>
+            <SearchSelect
+              options={vehiculos}
+              value={placa}
+              onChange={setPlaca}
+              getId={(v) => v.plate}
+              getLabel={(v) => `${v.plate} — ${v.brand} ${v.model}`}
+              placeholder="Buscar placa..."
+            />
           ) : (
             <input value={placa} onChange={(e) => setPlaca(e.target.value)} required className={inputClass} />
           )}
@@ -91,16 +98,27 @@ const NewTicketModal = ({ onClose, onCreated, token }) => {
 const TicketsPage = () => {
   const { token, hasRole } = useAuth();
   const [tickets, setTickets] = useState(null);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [error, setError] = useState('');
   const [showNew, setShowNew] = useState(false);
 
   const canOperar = hasRole('admin', 'root', 'recaudador');
 
   const cargar = useCallback(() => {
-    fetchTickets(token)
-      .then(setTickets)
+    fetchTickets(token, page, pageSize)
+      .then((res) => {
+        setTickets(res.data);
+        setTotal(res.total);
+      })
       .catch((err) => setError(err.message || 'No se pudieron cargar los tickets'));
-  }, [token]);
+  }, [token, page, pageSize]);
+
+  const handlePageSizeChange = (size) => {
+    setPageSize(size);
+    setPage(1);
+  };
 
   useEffect(() => {
     cargar();
@@ -208,6 +226,13 @@ const TicketsPage = () => {
               </tbody>
             </table>
           </div>
+          <Pagination
+            page={page}
+            pageSize={pageSize}
+            total={total}
+            onPageChange={setPage}
+            onPageSizeChange={handlePageSizeChange}
+          />
         </div>
       )}
 

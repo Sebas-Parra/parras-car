@@ -40,7 +40,7 @@ const RegisterUserModal = ({ onClose, onCreated }) => {
 
   return (
     <Modal title="Nuevo usuario" onClose={onClose}>
-      <form onSubmit={handleSubmit} className="space-y-3">
+      <form onSubmit={handleSubmit} noValidate className="space-y-3">
         <p className="text-xs text-slate-500">
           Se registra con el rol <span className="font-medium">cliente</span> por defecto — el rol se puede cambiar
           después desde la tabla.

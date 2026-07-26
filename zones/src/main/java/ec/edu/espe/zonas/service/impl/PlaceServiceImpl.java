@@ -68,6 +68,9 @@ public class PlaceServiceImpl implements PlaceService {
         }
 
         Place newPlace = mappers.toEntityPlace(request);
+        if (request.getDescription() != null) {
+            newPlace.setDescription(request.getDescription().trim().isEmpty() ? null : request.getDescription().trim());
+        }
         newPlace.setCode(generatedCode);
         newPlace.setZone(objZona);
         newPlace.setStatus(StatusOfPlace.AVAILABLE);

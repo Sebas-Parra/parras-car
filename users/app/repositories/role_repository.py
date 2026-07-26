@@ -3,6 +3,7 @@ from uuid import UUID
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from app.entities.permission import Permission
 from app.entities.role import Role
 
 
@@ -22,9 +23,16 @@ def list_all(db: Session) -> list[Role]:
     return db.query(Role).order_by(Role.name).all()
 
 
-def create(db: Session, name: str, description: str | None) -> Role:
-    role = Role(name=name, description=description)
+def create(db: Session, name: str, description: str | None, permissions: list[Permission]) -> Role:
+    role = Role(name=name, description=description, permissions=permissions)
     db.add(role)
+    db.commit()
+    db.refresh(role)
+    return role
+
+
+def set_permissions(db: Session, role: Role, permissions: list[Permission]) -> Role:
+    role.permissions = permissions
     db.commit()
     db.refresh(role)
     return role

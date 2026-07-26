@@ -28,8 +28,16 @@ export class AuditService {
     return this.auditRepo.save(newEvent);
   }
 
-  async findAll(): Promise<EventAudit[]> {
-    return this.auditRepo.find({ order: { timestamp: 'DESC' } });
+  async findAll(
+    page: number,
+    pageSize: number,
+  ): Promise<{ data: EventAudit[]; total: number; page: number; pageSize: number }> {
+    const [data, total] = await this.auditRepo.findAndCount({
+      order: { timestamp: 'DESC' },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    });
+    return { data, total, page, pageSize };
   }
 
   async findOne(id: string): Promise<EventAudit | null> {

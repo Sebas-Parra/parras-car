@@ -107,3 +107,12 @@ export const IconCheck = (props) => (
     <polyline points="20 6 9 17 4 12" />
   </svg>
 );
+
+export const IconArrowsRightLeft = (props) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <polyline points="17 2 21 6 17 10" />
+    <path d="M3 6h18" />
+    <polyline points="7 22 3 18 7 14" />
+    <path d="M21 18H3" />
+  </svg>
+);

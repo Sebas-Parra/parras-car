@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import Button from './Button.jsx';
-import logo from '../assets/logo.png';
+import logo from '../assets/logo.webp';
 
 const LoginPage = ({ onRegisterClick }) => {
   const { login } = useAuth();
@@ -27,9 +27,7 @@ const LoginPage = ({ onRegisterClick }) => {
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
       <div className="w-full max-w-sm rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
         <div className="mb-6 flex items-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-slate-100 p-1.5">
-            <img src={logo} alt="Parras Car" className="h-full w-full object-contain" />
-          </div>
+          <img src={logo} alt="Parras Car" className="h-12 w-12 shrink-0 object-contain" />
           <div>
             <p className="text-sm font-semibold text-slate-900">Parras Car</p>
             <p className="text-xs text-slate-500">Panel de monitoreo</p>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { registerPerson } from '../api.js';
 import Button from './Button.jsx';
-import logo from '../assets/logo.png';
+import logo from '../assets/logo.webp';
 
 const inputClass =
   'w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500';
@@ -43,9 +43,7 @@ const RegisterPage = ({ onDone }) => {
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-8">
       <div className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
         <div className="mb-6 flex items-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-slate-100 p-1.5">
-            <img src={logo} alt="Parras Car" className="h-full w-full object-contain" />
-          </div>
+          <img src={logo} alt="Parras Car" className="h-12 w-12 shrink-0 object-contain" />
           <div>
             <p className="text-sm font-semibold text-slate-900">Parras Car</p>
             <p className="text-xs text-slate-500">Crear cuenta</p>

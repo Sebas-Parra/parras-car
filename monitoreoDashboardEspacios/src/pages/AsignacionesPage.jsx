@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import PageHeader from '../components/PageHeader.jsx';
 import Button from '../components/Button.jsx';
-import { IconTrash } from '../components/icons.jsx';
+import { IconTrash, IconPlus, IconArrowsRightLeft } from '../components/icons.jsx';
 import {
   fetchFlota,
   fetchVehiculos,
@@ -205,7 +205,7 @@ const AsignacionesPage = () => {
                 ))}
               </select>
             </div>
-            <Button type="submit" variant="primary" disabled={!vehiculoAAsignar}>
+            <Button type="submit" variant="primary" icon={IconPlus} disabled={!vehiculoAAsignar}>
               Asignar
             </Button>
           </form>
@@ -248,7 +248,7 @@ const AsignacionesPage = () => {
                   </select>
                 </div>
               </div>
-              <Button type="submit" variant="primary">
+              <Button type="submit" variant="primary" icon={IconArrowsRightLeft}>
                 Transferir
               </Button>
             </form>

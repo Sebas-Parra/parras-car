@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
-import logo from "../assets/logo.png";
+import logo from "../assets/logo.webp";
 import {
   IconLayers,
   IconMap,
@@ -63,9 +63,7 @@ const Sidebar = ({ open = false, onClose }) => {
         }`}
       >
         <div className="flex items-center gap-3 border-b border-slate-800 px-6 py-5">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-white p-1 shadow-sm">
-            <img src={logo} alt="Parras Car" className="h-full w-full object-contain" />
-          </div>
+          <img src={logo} alt="Parras Car" className="h-10 w-10 shrink-0 object-contain" />
           <div>
             <p className="text-sm font-semibold tracking-wide text-white">
               Parras Car

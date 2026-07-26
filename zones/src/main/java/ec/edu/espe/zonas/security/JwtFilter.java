@@ -42,7 +42,8 @@ public class JwtFilter extends OncePerRequestFilter {
     @Value("${users.service.url}")
     private String usersServiceUrl;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    // Not final so tests can substitute a mock via reflection without changing runtime wiring.
+    private RestTemplate restTemplate = new RestTemplate();
 
     private SecretKey secretKey;
 

@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: zonas
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
+  jackson:
+    mapper:
+      accept-case-insensitive-enums: true
+  datasource:
+    url: jdbc:h2:mem:zonas_test;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    username: sa
+    password: sa
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: false
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+
+server:
+  port: 0
+
+jwt:
+  secret: test-secret-test-secret-test-secret-32bytes
+
+users:
+  service:
+    url: http://localhost:0
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+audit:
+  rabbitmq:
+    exchange: audit_exchange
+    routing-key: audit_event

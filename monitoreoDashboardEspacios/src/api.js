@@ -113,6 +113,8 @@ export const removeRole = (userId, roleId, token) =>
 
 export const fetchRoles = (token) => request(API_ROLES, { token });
 export const createRole = (payload, token) => request(API_ROLES, { method: 'POST', body: payload, token });
+export const updateRole = (roleId, payload, token) =>
+  request(`${API_ROLES}/${roleId}`, { method: 'PUT', body: payload, token });
 export const deleteRole = (roleId, token) => request(`${API_ROLES}/${roleId}`, { method: 'DELETE', token });
 
 // ─── Vehículos ──────────────────────────────────────────────────────────

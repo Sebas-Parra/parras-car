@@ -5,6 +5,8 @@ import FilterBar from '../components/FilterBar.jsx';
 import EspaciosTable from '../components/EspaciosTable.jsx';
 import EspaciosGridView from '../components/EspaciosGridView.jsx';
 import NewPlaceModal from '../components/NewPlaceModal.jsx';
+import Button from '../components/Button.jsx';
+import { IconPlus } from '../components/icons.jsx';
 import { useEspacios } from '../hooks/useEspacios.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { updateEspacioStatus, deleteEspacio, fetchTickets } from '../api.js';
@@ -113,40 +115,28 @@ const EspaciosPage = () => {
           </span>
 
           <div className="flex items-center gap-1 rounded-md border border-slate-200 bg-white p-1">
-            <button
-              type="button"
+            <Button
+              variant={viewMode === 'grid' ? 'primary' : 'ghost'}
+              size="sm"
               onClick={() => setViewMode('grid')}
-              className={`rounded px-3 py-1 text-sm font-medium transition-colors ${
-                viewMode === 'grid'
-                  ? 'bg-slate-900 text-white'
-                  : 'text-slate-600 hover:bg-slate-100'
-              }`}
               title="Vista de grid"
             >
               ⊞
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant={viewMode === 'table' ? 'primary' : 'ghost'}
+              size="sm"
               onClick={() => setViewMode('table')}
-              className={`rounded px-3 py-1 text-sm font-medium transition-colors ${
-                viewMode === 'table'
-                  ? 'bg-slate-900 text-white'
-                  : 'text-slate-600 hover:bg-slate-100'
-              }`}
               title="Vista de tabla"
             >
               ≡
-            </button>
+            </Button>
           </div>
 
           {canManage && (
-            <button
-              type="button"
-              onClick={() => setShowNewPlace(true)}
-              className="whitespace-nowrap rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800"
-            >
-              + Nuevo espacio
-            </button>
+            <Button variant="primary" icon={IconPlus} onClick={() => setShowNewPlace(true)}>
+              Nuevo espacio
+            </Button>
           )}
         </div>
       </PageHeader>
@@ -154,9 +144,9 @@ const EspaciosPage = () => {
       {actionError && (
         <div className="flex items-center justify-between rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
           <span>{actionError}</span>
-          <button type="button" className="font-medium underline" onClick={() => setActionError('')}>
+          <Button variant="link" size="none" onClick={() => setActionError('')}>
             Cerrar
-          </button>
+          </Button>
         </div>
       )}
 

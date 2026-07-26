@@ -26,11 +26,11 @@ const LoginPage = ({ onRegisterClick }) => {
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
       <div className="w-full max-w-sm rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
-        <div className="mb-6 flex flex-col items-center gap-2 text-center">
+        <div className="mb-6 flex flex-col items-center text-center">
           <img
             src={logo}
             alt="Parras Car"
-            className="h-36 w-auto object-contain"
+            className="-mb-4 h-36 w-auto object-contain"
           />
           <p className="text-xl font-semibold text-slate-900">Parras Car</p>
         </div>

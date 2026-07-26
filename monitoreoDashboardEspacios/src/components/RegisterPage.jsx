@@ -43,11 +43,11 @@ const RegisterPage = ({ onDone }) => {
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-8">
       <div className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
-        <div className="mb-6 flex flex-col items-center gap-2 text-center">
+        <div className="mb-6 flex flex-col items-center text-center">
           <img
             src={logo}
             alt="Parras Car"
-            className="h-36 w-auto object-contain"
+            className="-mb-4 h-36 w-auto object-contain"
           />
           <p className="text-xl font-semibold text-slate-900">Parras Car</p>
           <p className="text-sm text-slate-500">Crear cuenta</p>

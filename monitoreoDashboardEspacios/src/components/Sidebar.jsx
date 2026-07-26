@@ -62,16 +62,14 @@ const Sidebar = ({ open = false, onClose }) => {
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex items-center gap-3 border-b border-slate-800 px-6 py-5">
+        <div className="flex flex-col items-center border-b border-slate-800 px-6 py-5">
           <img
             src={logo}
             alt="Parras Car"
-            className="h-24 w-24 shrink-0 object-contain"
+            className="-mb-4 h-20 w-20 shrink-0 object-contain"
           />
-          <p className="text-lg font-semibold leading-tight tracking-wide text-white">
-            Parras
-            <br />
-            Car
+          <p className="whitespace-nowrap text-lg font-semibold tracking-wide text-white">
+            Parras Car
           </p>
         </div>
         <nav className="flex-1 space-y-1 px-3 py-4">

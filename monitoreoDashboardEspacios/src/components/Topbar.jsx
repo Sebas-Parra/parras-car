@@ -22,7 +22,7 @@ const Topbar = ({ onMenuClick }) => {
             {roles.join(', ')}
           </span>
         </div>
-        <Button variant="danger" size="sm" icon={IconLogout} onClick={logout}>
+        <Button variant="danger-outline" size="sm" icon={IconLogout} onClick={logout}>
           Cerrar sesión
         </Button>
       </div>

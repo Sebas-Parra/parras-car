@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: tickets
-  namespace: parras-car
+  namespace: yepez-sagnay-parra
 spec:
   replicas: 1
   selector:
@@ -24,7 +24,7 @@ spec:
               until nc -z rabbitmq 5672; do echo "esperando rabbitmq..."; sleep 2; done
       containers:
         - name: tickets
-          image: parras-car-tickets:latest
+          image: yepez-sagnay-parra-tickets:latest
           imagePullPolicy: Never
           ports:
             - containerPort: 3000
@@ -84,7 +84,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: tickets
-  namespace: parras-car
+  namespace: yepez-sagnay-parra
 spec:
   selector:
     app: tickets

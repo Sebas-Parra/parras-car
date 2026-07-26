@@ -60,9 +60,9 @@ cd /path/to/parras-car
 1. ✅ Verifica que Minikube está activo
 2. 🐳 Configura Docker para usar Minikube
 3. 🏗️ Reconstruye las 3 imágenes Docker:
-   - `parras-car-dashboard:latest`
-   - `parras-car-tickets:latest`
-   - `parras-car-vehicles:latest`
+   - `yepez-sagnay-parra-dashboard:latest`
+   - `yepez-sagnay-parra-tickets:latest`
+   - `yepez-sagnay-parra-vehicles:latest`
 4. 🔧 Aplica todos los manifiestos de Kubernetes (en orden)
 5. 📊 Muestra URLs de acceso y estado de pods
 
@@ -70,13 +70,13 @@ cd /path/to/parras-car
 
 ```bash
 # Ver todos los pods
-kubectl get pods -n parras-car
+kubectl get pods -n yepez-sagnay-parra
 
 # Ver servicios
-kubectl get svc -n parras-car
+kubectl get svc -n yepez-sagnay-parra
 
 # Ver deployments
-kubectl get deployments -n parras-car
+kubectl get deployments -n yepez-sagnay-parra
 ```
 
 Esperado: Todos los pods deben estar en estado **Running** o **Completed**.
@@ -106,14 +106,14 @@ minikube tunnel
 
 # En otra terminal, accede via localhost
 # El puerto se asigna automáticamente
-kubectl get svc -n parras-car
+kubectl get svc -n yepez-sagnay-parra
 ```
 
 ### **Opción 3: Port Forward**
 
 ```bash
 # Redirige el puerto del dashboard localmente
-kubectl port-forward -n parras-car svc/dashboard 5173:80
+kubectl port-forward -n yepez-sagnay-parra svc/dashboard 5173:80
 
 # Ahora accede a http://localhost:5173
 ```
@@ -127,10 +127,10 @@ kubectl port-forward -n parras-car svc/dashboard 5173:80
 ```bash
 # Reconstruye solo la imagen que cambiaste
 cd monitoreoDashboardEspacios  # o vehicles, o tickets
-docker build -t parras-car-dashboard:latest .
+docker build -t yepez-sagnay-parra-dashboard:latest .
 
 # Reinicia el deployment
-kubectl rollout restart deployment/dashboard -n parras-car
+kubectl rollout restart deployment/dashboard -n yepez-sagnay-parra
 ```
 
 ### **Cambios en dependencias o Dockerfile**
@@ -148,7 +148,7 @@ kubectl apply -f k8s/01-secret.yaml
 kubectl apply -f k8s/02-configmap.yaml
 
 # Reinicia los deployments para que lean los nuevos valores
-kubectl rollout restart deployment -n parras-car
+kubectl rollout restart deployment -n yepez-sagnay-parra
 ```
 
 ---
@@ -159,13 +159,13 @@ kubectl rollout restart deployment -n parras-car
 
 ```bash
 # Ver detalles del pod
-kubectl describe pod <pod-name> -n parras-car
+kubectl describe pod <pod-name> -n yepez-sagnay-parra
 
 # Ver logs
-kubectl logs <pod-name> -n parras-car -f
+kubectl logs <pod-name> -n yepez-sagnay-parra -f
 
 # Eventos del namespace
-kubectl get events -n parras-car
+kubectl get events -n yepez-sagnay-parra
 ```
 
 ### **La imagen no se actualiza**
@@ -177,10 +177,10 @@ Asegúrate de:
 
 ```bash
 # Opción 1: Forza recreación de pods
-kubectl rollout restart deployment/dashboard -n parras-car
+kubectl rollout restart deployment/dashboard -n yepez-sagnay-parra
 
 # Opción 2: Elimina el pod manualmente
-kubectl delete pod -l app=dashboard -n parras-car
+kubectl delete pod -l app=dashboard -n yepez-sagnay-parra
 ```
 
 ### **Minikube se reinició y todo quebró**
@@ -196,10 +196,10 @@ eval $(minikube docker-env)
 Problema típico: Nginx no está sirviendo correctamente. Verifica:
 ```bash
 # Ver logs del nginx/dashboard
-kubectl logs -n parras-car deployment/dashboard
+kubectl logs -n yepez-sagnay-parra deployment/dashboard
 
 # Verifica el configmap de nginx
-kubectl get cm -n parras-car
+kubectl get cm -n yepez-sagnay-parra
 ```
 
 ---
@@ -210,20 +210,20 @@ kubectl get cm -n parras-car
 
 ```bash
 # Todos los servicios
-kubectl logs -n parras-car -f --tail=100
+kubectl logs -n yepez-sagnay-parra -f --tail=100
 
 # Un servicio específico
-kubectl logs -n parras-car -f deployment/vehicles
+kubectl logs -n yepez-sagnay-parra -f deployment/vehicles
 
 # Últimas 50 líneas
-kubectl logs -n parras-car deployment/tickets --tail=50
+kubectl logs -n yepez-sagnay-parra deployment/tickets --tail=50
 ```
 
 ### **Ver métricas**
 
 ```bash
 # Uso de CPU/Memoria de cada pod
-kubectl top pods -n parras-car
+kubectl top pods -n yepez-sagnay-parra
 
 # Si no funciona, instala metrics-server
 minikube addons enable metrics-server
@@ -233,16 +233,16 @@ minikube addons enable metrics-server
 
 ```bash
 # Terminal interactiva
-kubectl exec -it <pod-name> -n parras-car -- /bin/sh
+kubectl exec -it <pod-name> -n yepez-sagnay-parra -- /bin/sh
 
 # Ejecutar un comando
-kubectl exec <pod-name> -n parras-car -- curl http://localhost:3000/health
+kubectl exec <pod-name> -n yepez-sagnay-parra -- curl http://localhost:3000/health
 ```
 
 ### **Ver variables de entorno de un pod**
 
 ```bash
-kubectl exec <pod-name> -n parras-car -- env | grep DB_
+kubectl exec <pod-name> -n yepez-sagnay-parra -- env | grep DB_
 ```
 
 ---
@@ -251,7 +251,7 @@ kubectl exec <pod-name> -n parras-car -- env | grep DB_
 
 ```bash
 # Eliminar todo el namespace (borra TODO)
-kubectl delete namespace parras-car
+kubectl delete namespace yepez-sagnay-parra
 
 # Parar Minikube sin eliminar datos
 minikube stop

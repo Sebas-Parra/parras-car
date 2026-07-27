@@ -31,6 +31,7 @@ import ec.edu.espe.zonas.dtos.UpdatePlaceStatusDto;
 import ec.edu.espe.zonas.entidades.enums.StatusOfPlace;
 import ec.edu.espe.zonas.entidades.enums.TypeOfPlace;
 import ec.edu.espe.zonas.service.PlaceService;
+import ec.edu.espe.zonas.sse.SseService;
 
 @ExtendWith(MockitoExtension.class)
 class PlaceControllerTest {
@@ -38,12 +39,15 @@ class PlaceControllerTest {
     @Mock
     private PlaceService placeService;
 
+    @Mock
+    private SseService sseService;
+
     private MockMvc mockMvc;
     private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 
     @BeforeEach
     void setUp() {
-        PlaceController controller = new PlaceController(placeService);
+        PlaceController controller = new PlaceController(placeService, sseService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 

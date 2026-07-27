@@ -23,6 +23,7 @@ import ec.edu.espe.zonas.security.AuthenticatedUser;
 import ec.edu.espe.zonas.security.ClientIp;
 import ec.edu.espe.zonas.security.CurrentUser;
 import ec.edu.espe.zonas.service.PlaceService;
+import ec.edu.espe.zonas.sse.SseService;
 import ec.edu.espe.zonas.utils.UtilsMappers;
 import lombok.RequiredArgsConstructor;
 
@@ -33,6 +34,7 @@ public class PlaceServiceImpl implements PlaceService {
     private final ZoneRepository zoneRepository;
     private final UtilsMappers mappers;
     private final AuditPublisher auditPublisher;
+    private final SseService sseService;
 
     @Override
     @Transactional(readOnly = true)
@@ -80,6 +82,7 @@ public class PlaceServiceImpl implements PlaceService {
 
         Place savedPlace = placeRepository.save(newPlace);
         emitEvent("CREATE", savedPlace, Map.of("code", savedPlace.getCode()));
+        sseService.emit(Map.of("accion", "CREATE", "id", savedPlace.getId().toString()));
         return mappers.toPlaceResponseDto(savedPlace);
     }
 
@@ -119,6 +122,7 @@ public class PlaceServiceImpl implements PlaceService {
         existing.setUpdatedAt(LocalDateTime.now());
         Place saved = placeRepository.save(existing);
         emitEvent("UPDATE", saved, Map.of("code", saved.getCode()));
+        sseService.emit(Map.of("accion", "UPDATE", "id", saved.getId().toString()));
         return mappers.toPlaceResponseDto(saved);
     }
 
@@ -134,6 +138,7 @@ public class PlaceServiceImpl implements PlaceService {
 
         placeRepository.delete(place);
         emitEvent("DELETE", place, Map.of("code", place.getCode()));
+        sseService.emit(Map.of("accion", "DELETE", "id", id.toString()));
     }
 
     @Override
@@ -145,6 +150,7 @@ public class PlaceServiceImpl implements PlaceService {
         place.setUpdatedAt(LocalDateTime.now());
         Place saved = placeRepository.save(place);
         emitEvent("UPDATE", saved, Map.of("status", status.name()));
+        sseService.emit(Map.of("accion", "UPDATE", "id", saved.getId().toString()));
         return mappers.toPlaceResponseDto(saved);
     }
 

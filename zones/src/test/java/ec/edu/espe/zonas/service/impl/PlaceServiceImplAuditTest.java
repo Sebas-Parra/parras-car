@@ -33,6 +33,7 @@ import ec.edu.espe.zonas.entidades.enums.TypeOfZone;
 import ec.edu.espe.zonas.repositories.PlaceRepository;
 import ec.edu.espe.zonas.repositories.ZoneRepository;
 import ec.edu.espe.zonas.security.AuthenticatedUser;
+import ec.edu.espe.zonas.sse.SseService;
 import ec.edu.espe.zonas.utils.UtilsMappers;
 
 @ExtendWith(MockitoExtension.class)
@@ -46,12 +47,14 @@ class PlaceServiceImplAuditTest {
     private UtilsMappers mappers;
     @Mock
     private AuditPublisher auditPublisher;
+    @Mock
+    private SseService sseService;
 
     private PlaceServiceImpl placeService;
 
     @BeforeEach
     void setUp() {
-        placeService = new PlaceServiceImpl(placeRepository, zoneRepository, mappers, auditPublisher);
+        placeService = new PlaceServiceImpl(placeRepository, zoneRepository, mappers, auditPublisher, sseService);
 
         AuthenticatedUser actor = new AuthenticatedUser("user-1", "jdoe", List.of("admin"));
         SecurityContextHolder.getContext().setAuthentication(

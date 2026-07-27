@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { SSE_URL, fetchEspacios } from '../api';
+import { SSE_URL, ZONES_SSE_URL, fetchEspacios } from '../api';
 
 const POLL_INTERVAL_MS = 30000;
 const SSE_RETRY_MS = 5000;
+// Dos streams: tickets emite cuando un ticket ocupa/libera un espacio, zones
+// emite cuando se crea/edita/elimina un espacio o cambia su estado a mano.
+const SSE_SOURCES = [SSE_URL, ZONES_SSE_URL];
 
 export const useEspacios = () => {
   const [espacios, setEspacios] = useState(null);
@@ -28,43 +31,49 @@ export const useEspacios = () => {
   }, []);
 
   useEffect(() => {
-    let eventSource;
-    let retryTimeout;
+    const cleanups = SSE_SOURCES.map((url) => {
+      let eventSource;
+      let retryTimeout;
 
-    const conectarSSE = () => {
-      eventSource = new EventSource(SSE_URL);
+      const conectarSSE = () => {
+        eventSource = new EventSource(url);
 
-      eventSource.onopen = () => {
-        console.log('SSE: conexión establecida');
-        setConnected(true);
+        eventSource.onopen = () => {
+          console.log(`SSE: conexión establecida (${url})`);
+          setConnected(true);
+        };
+
+        eventSource.onmessage = (event) => {
+          try {
+            JSON.parse(event.data);
+            // Cada vez que recibimos un evento, recargamos todos los espacios
+            // (también sirve para reflejar nuevos espacios insertados)
+            cargarEspaciosRef.current();
+          } catch (e) {
+            console.error('Error al parsear evento SSE:', e);
+          }
+        };
+
+        eventSource.onerror = (error) => {
+          console.error(`SSE error (${url}):`, error);
+          eventSource.close();
+          retryTimeout = setTimeout(conectarSSE, SSE_RETRY_MS);
+        };
       };
 
-      eventSource.onmessage = (event) => {
-        try {
-          JSON.parse(event.data);
-          // Cada vez que recibimos un evento, recargamos todos los espacios
-          // (también sirve para reflejar nuevos espacios insertados)
-          cargarEspaciosRef.current();
-        } catch (e) {
-          console.error('Error al parsear evento SSE:', e);
-        }
-      };
+      conectarSSE();
 
-      eventSource.onerror = (error) => {
-        console.error('SSE error:', error);
-        setConnected(false);
-        eventSource.close();
-        retryTimeout = setTimeout(conectarSSE, SSE_RETRY_MS);
+      return () => {
+        eventSource?.close();
+        clearTimeout(retryTimeout);
       };
-    };
+    });
 
     cargarEspacios();
-    conectarSSE();
     const interval = setInterval(cargarEspacios, POLL_INTERVAL_MS);
 
     return () => {
-      eventSource?.close();
-      clearTimeout(retryTimeout);
+      cleanups.forEach((cleanup) => cleanup());
       clearInterval(interval);
     };
   }, [cargarEspacios]);

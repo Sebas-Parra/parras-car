@@ -16,12 +16,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import ec.edu.espe.zonas.dtos.PlaceRequestDto;
 import ec.edu.espe.zonas.dtos.PlaceResponseDto;
 import ec.edu.espe.zonas.dtos.UpdatePlaceStatusDto;
 import ec.edu.espe.zonas.entidades.enums.StatusOfPlace;
 import ec.edu.espe.zonas.service.PlaceService;
+import ec.edu.espe.zonas.sse.SseService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -32,6 +34,14 @@ import lombok.RequiredArgsConstructor;
 public class PlaceController {
 
     private final PlaceService placeService;
+    private final SseService sseService;
+
+    // Público (permitAll en SecurityConfig, igual que el GET de lugares) —
+    // el dashboard lo consume sin login vía EventSource.
+    @GetMapping("/sse")
+    public SseEmitter streamEvents() {
+        return sseService.subscribe();
+    }
 
     @GetMapping
     public ResponseEntity<List<PlaceResponseDto>> getPlaces(

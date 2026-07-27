@@ -19,6 +19,7 @@ const API_ASIGNACIONES = `${API_BASE}/assignments/assignments`;
 const API_TICKETS = `${API_BASE}/tickets/tickets`;
 const API_AUDITORIA = `${API_BASE}/audit/api/v1/audit`;
 export const SSE_URL = `${API_BASE}/tickets/sse/espacios`;
+export const ZONES_SSE_URL = `${API_BASE}/zones/api/v1/places/sse`;
 export { API_ESPACIOS };
 
 // El microservicio de zonas responde en inglés (code/nameZone/type/status);

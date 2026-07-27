@@ -12,6 +12,7 @@ from app.utils.security import create_access_token, generate_refresh_token, veri
 
 def _build_response(db: Session, user) -> TokenResponse:
     roles = [r.name for r in user.roles]
+    permissions = sorted({p.name for role in user.roles for p in role.permissions})
     access_token = create_access_token(str(user.id_person), user.username, roles)
 
     rt_value = generate_refresh_token()
@@ -25,6 +26,7 @@ def _build_response(db: Session, user) -> TokenResponse:
         user_id=str(user.id_person),
         username=user.username,
         roles=roles,
+        permissions=permissions,
     )
 
 

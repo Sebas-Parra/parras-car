@@ -1,3 +1,8 @@
+from uuid import UUID
+
+from app.entities.user import User
+from app.utils.security import create_access_token
+
 BASE_PERSON = {
     "phone": "0991234567",
     "address": "Calle Falsa 123",
@@ -116,6 +121,35 @@ def test_deactivate_and_activate_user(client, role_ids, admin_auth_headers):
     activate_response = client.patch(f"/users/{person_id}/activate", headers=admin_auth_headers)
     assert activate_response.status_code == 200
     assert activate_response.json()["active"] is True
+
+
+def test_deactivated_user_token_rejected_immediately(client, db_session, role_ids, admin_auth_headers):
+    """A token issued before deactivation must stop working on the very next
+    request — not only after it expires or the user logs in again."""
+    create_response = client.post(
+        "/persons",
+        json={
+            **BASE_PERSON,
+            "cedula": "1616161624",
+            "first_name": "Kicked",
+            "middle_name": "Out",
+            "last_name": "Now",
+            "email": "kickedout@example.com",
+            "role_ids": [role_ids["estudiante"]],
+        },
+    )
+    person_id = create_response.json()["id"]
+    user = db_session.query(User).filter(User.id_person == UUID(person_id)).one()
+    token = create_access_token(user_id=str(user.id_person), username=user.username, roles=["estudiante"])
+    headers = {"Authorization": f"Bearer {token}"}
+
+    assert client.get(f"/users/{person_id}", headers=headers).status_code == 200
+
+    client.patch(f"/users/{person_id}/deactivate", headers=admin_auth_headers)
+
+    response = client.get(f"/users/{person_id}", headers=headers)
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Usuario inactivo. Contacte al administrador."
 
 
 def test_assign_and_remove_role(client, role_ids, admin_auth_headers):

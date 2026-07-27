@@ -22,3 +22,4 @@ class TokenResponse(BaseModel):
     user_id: str
     username: str
     roles: list[str]
+    permissions: list[str]

@@ -38,10 +38,58 @@ def _seed_permissions(db_session) -> dict[str, str]:
         Permission(name="publico", description="Acceso público", is_public=True),
         Permission(name="gestionar_zonas", description="Gestionar zonas", is_public=False),
         Permission(name="gestionar_usuarios", description="Gestionar usuarios", is_public=False),
+        Permission(name="eliminar_zonas", description="Eliminación física de zonas y espacios", is_public=False),
     ]
     db_session.add_all(perms)
     db_session.commit()
     return {p.name: str(p.id) for p in perms}
+
+
+def _seed_custom_role_actor(db_session, role_name: str, permission_names: list[str]) -> User:
+    """A user with a non-admin custom role holding only the given permissions —
+    mirrors a hand-built role like 'auditor' created through the Roles UI."""
+    role = Role(name=role_name, description=role_name.capitalize())
+    db_session.add(role)
+    db_session.flush()
+
+    for name in permission_names:
+        perm = db_session.query(Permission).filter(Permission.name == name).one()
+        role.permissions.append(perm)
+
+    person = Person(
+        cedula=f"0000000{len(role_name):03d}",
+        first_name=role_name.capitalize(),
+        last_name="Actor",
+        email=f"{role_name}-actor@example.com",
+    )
+    db_session.add(person)
+    db_session.flush()
+
+    user = User(id_person=person.id, username=f"{role_name}-actor", password_hash=hash_password("Password123!"))
+    user.roles.append(role)
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user
+
+
+def _seed_root_actor(db_session) -> User:
+    role = db_session.query(Role).filter(Role.name == "root").first()
+    if role is None:
+        role = Role(name="root", description="Root")
+        db_session.add(role)
+        db_session.flush()
+
+    person = Person(cedula="0000000098", first_name="Root", last_name="Actor", email="root-actor@example.com")
+    db_session.add(person)
+    db_session.flush()
+
+    user = User(id_person=person.id, username="root-actor", password_hash=hash_password("Password123!"))
+    user.roles.append(role)
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user
 
 
 def test_list_permissions_returns_catalog(client, db_session):
@@ -124,6 +172,34 @@ def test_update_role_replaces_permission_set(client, db_session):
     assert names == {"gestionar_usuarios"}
 
 
+def test_create_role_with_eliminar_zonas_blocked_for_non_root(client, db_session):
+    actor = _seed_admin_actor(db_session)
+    perm_ids = _seed_permissions(db_session)
+
+    response = client.post(
+        "/roles",
+        json={"name": "soporte", "permission_ids": [perm_ids["eliminar_zonas"]]},
+        headers=_auth_headers_for(actor),
+    )
+
+    assert response.status_code == 403
+
+
+def test_create_role_with_eliminar_zonas_allowed_for_root(client, db_session):
+    actor = _seed_root_actor(db_session)
+    perm_ids = _seed_permissions(db_session)
+
+    response = client.post(
+        "/roles",
+        json={"name": "soporte", "permission_ids": [perm_ids["eliminar_zonas"]]},
+        headers=_auth_headers_for(actor),
+    )
+
+    assert response.status_code == 201
+    names = {p["name"] for p in response.json()["permissions"]}
+    assert names == {"eliminar_zonas"}
+
+
 def test_update_role_without_permission_ids_leaves_permissions_untouched(client, db_session):
     actor = _seed_admin_actor(db_session)
     perm_ids = _seed_permissions(db_session)
@@ -144,3 +220,31 @@ def test_update_role_without_permission_ids_leaves_permissions_untouched(client,
     assert update_response.status_code == 200
     names = {p["name"] for p in update_response.json()["permissions"]}
     assert names == {"publico", "gestionar_zonas"}
+
+
+def test_get_user_permissions_aggregates_across_roles(client, db_session):
+    _seed_permissions(db_session)
+    actor = _seed_custom_role_actor(db_session, "auditor", ["publico", "gestionar_usuarios"])
+
+    response = client.get(f"/users/{actor.id_person}/permissions")
+
+    assert response.status_code == 200
+    assert set(response.json()["permissions"]) == {"publico", "gestionar_usuarios"}
+
+
+def test_list_users_allowed_for_custom_role_with_gestionar_usuarios(client, db_session):
+    _seed_permissions(db_session)
+    actor = _seed_custom_role_actor(db_session, "auditor", ["gestionar_usuarios"])
+
+    response = client.get("/users", headers=_auth_headers_for(actor))
+
+    assert response.status_code == 200
+
+
+def test_list_users_blocked_for_custom_role_without_permission(client, db_session):
+    _seed_permissions(db_session)
+    actor = _seed_custom_role_actor(db_session, "invitado", ["publico"])
+
+    response = client.get("/users", headers=_auth_headers_for(actor))
+
+    assert response.status_code == 403

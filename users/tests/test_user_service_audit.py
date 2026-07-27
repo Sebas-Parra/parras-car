@@ -1,5 +1,8 @@
 from unittest.mock import patch
 
+import pytest
+from fastapi import HTTPException
+
 from app.dto.user import UserUpdate
 from app.entities.role import Role
 from app.services import user_service
@@ -39,14 +42,28 @@ def test_update_user_publishes_the_client_ip_when_provided(mock_publish, db_sess
     assert mock_publish.call_args.kwargs["ip"] == "203.0.113.5"
 
 
+@patch("app.services.user_service.tickets_client.has_active_ticket", return_value=False)
 @patch("app.services.user_service.publish_audit_event")
-def test_deactivate_user_publishes_delete_event(mock_publish, db_session):
+def test_deactivate_user_publishes_delete_event(mock_publish, mock_has_ticket, db_session):
     admin_user = _get_admin_user(db_session)
 
-    user_service.deactivate_user(db_session, admin_user.id_person, CURRENT_USER)
+    user_service.deactivate_user(db_session, admin_user.id_person, CURRENT_USER, token="test-token")
 
     mock_publish.assert_called_once()
     assert mock_publish.call_args.kwargs["accion"] == "DELETE"
+
+
+@patch("app.services.user_service.tickets_client.has_active_ticket", return_value=True)
+@patch("app.services.user_service.publish_audit_event")
+def test_deactivate_user_blocked_when_active_ticket(mock_publish, mock_has_ticket, db_session):
+    admin_user = _get_admin_user(db_session)
+
+    with pytest.raises(HTTPException) as exc_info:
+        user_service.deactivate_user(db_session, admin_user.id_person, CURRENT_USER, token="test-token")
+
+    assert exc_info.value.status_code == 409
+    mock_publish.assert_not_called()
+    assert admin_user.active is True
 
 
 @patch("app.services.user_service.publish_audit_event")

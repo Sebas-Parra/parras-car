@@ -4,6 +4,7 @@ import ZoneFormModal from '../components/ZoneFormModal.jsx';
 import Pagination from '../components/Pagination.jsx';
 import Button from '../components/Button.jsx';
 import { useToast } from '../components/ToastProvider.jsx';
+import { useConfirm } from '../components/ConfirmModal.jsx';
 import { IconPlus, IconEdit, IconTrash } from '../components/icons.jsx';
 import { fetchZonas, deleteZona, TIPO_ZONA_LABELS, toEnumLabel } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -11,6 +12,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 const ZonasPage = () => {
   const { token, hasRole } = useAuth();
   const toast = useToast();
+  const { confirm, confirmModal } = useConfirm();
   const [zonas, setZonas] = useState(null);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -39,7 +41,8 @@ const ZonasPage = () => {
   }, [cargar]);
 
   const handleDelete = async (zona) => {
-    if (!window.confirm(`¿Eliminar la zona "${zona.name}"? Esta acción no se puede deshacer.`)) return;
+    const ok = await confirm(`¿Eliminar la zona "${zona.name}"? Esta acción no se puede deshacer.`, { danger: true });
+    if (!ok) return;
     try {
       await deleteZona(zona.id, token);
       toast.success('Zona eliminada correctamente.');
@@ -125,6 +128,7 @@ const ZonasPage = () => {
       {modal && (
         <ZoneFormModal zona={modal === 'new' ? null : modal} onClose={() => setModal(null)} onSaved={cargar} />
       )}
+      {confirmModal}
     </>
   );
 };

@@ -3,6 +3,7 @@ import PageHeader from '../components/PageHeader.jsx';
 import Button from '../components/Button.jsx';
 import RoleFormModal from '../components/RoleFormModal.jsx';
 import { useToast } from '../components/ToastProvider.jsx';
+import { useConfirm } from '../components/ConfirmModal.jsx';
 import { fetchRoles, fetchPermissions, deleteRole } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { IconPlus, IconEdit, IconTrash } from '../components/icons.jsx';
@@ -10,6 +11,7 @@ import { IconPlus, IconEdit, IconTrash } from '../components/icons.jsx';
 const RolesPage = () => {
   const { token, hasRole } = useAuth();
   const toast = useToast();
+  const { confirm, confirmModal } = useConfirm();
   const [roles, setRoles] = useState(null);
   const [permisos, setPermisos] = useState([]);
   const [modal, setModal] = useState(null); // null | 'new' | rol object para editar
@@ -33,7 +35,8 @@ const RolesPage = () => {
   }, [token, toast]);
 
   const handleDelete = async (rol) => {
-    if (!window.confirm(`¿Eliminar el rol "${rol.name}"? Esta acción no se puede deshacer.`)) return;
+    const ok = await confirm(`¿Eliminar el rol "${rol.name}"? Esta acción no se puede deshacer.`, { danger: true });
+    if (!ok) return;
     try {
       await deleteRole(rol.id, token);
       toast.success('Rol eliminado correctamente.');
@@ -105,6 +108,7 @@ const RolesPage = () => {
           onSaved={cargar}
         />
       )}
+      {confirmModal}
     </>
   );
 };

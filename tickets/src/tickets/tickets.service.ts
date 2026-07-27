@@ -46,6 +46,18 @@ const PLACE_VEHICLE_COMPAT: Record<string, string[]> = {
   BUS: [],
 };
 
+const PLACE_TYPE_LABELS: Record<string, string> = {
+  CAR: 'auto',
+  BIKE: 'moto',
+  BUS: 'bus',
+};
+
+const VEHICLE_TYPE_LABELS: Record<string, string> = {
+  car: 'auto',
+  motocicleta: 'motocicleta',
+  pickupTruck: 'camioneta',
+};
+
 // tarifa = base(tipoEspacio) × multiplicador(tipoZona)
 function computeRate(tipoEspacio?: string, tipoZona?: string): number {
   const base =
@@ -149,9 +161,17 @@ export class TicketsService {
 
     const allowedTipos = PLACE_VEHICLE_COMPAT[place.type] ?? [];
     if (!vehicle.tipo || !allowedTipos.includes(vehicle.tipo)) {
+      const placeLabel = PLACE_TYPE_LABELS[place.type] ?? place.type;
+      const vehicleLabel = vehicle.tipo
+        ? VEHICLE_TYPE_LABELS[vehicle.tipo] ?? vehicle.tipo
+        : 'desconocido';
+      const allowedLabels = allowedTipos
+        .map((t) => VEHICLE_TYPE_LABELS[t] ?? t)
+        .join(' o ');
       throw new ConflictException(
-        `El espacio '${place.code}' es de tipo ${place.type} y no admite ` +
-        `vehículos de tipo '${vehicle.tipo ?? 'desconocido'}'`,
+        `El espacio '${place.code}' es para vehículos de tipo ${placeLabel} ` +
+        `y no admite vehículos de tipo ${vehicleLabel}` +
+        (allowedLabels ? ` (permitido: ${allowedLabels})` : ''),
       );
     }
 

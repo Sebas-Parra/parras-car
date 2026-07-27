@@ -4,6 +4,7 @@ import SearchSelect from '../components/SearchSelect.jsx';
 import Pagination from '../components/Pagination.jsx';
 import Button from '../components/Button.jsx';
 import { useToast } from '../components/ToastProvider.jsx';
+import { useConfirm } from '../components/ConfirmModal.jsx';
 import { IconTrash, IconPlus, IconArrowsRightLeft } from '../components/icons.jsx';
 import {
   fetchFlota,
@@ -26,6 +27,7 @@ const getVehiculoLabel = (v) => `${v.plate} — ${v.brand} ${v.model}`;
 const AsignacionesPage = () => {
   const { token, userId, hasRole } = useAuth();
   const toast = useToast();
+  const { confirm, confirmModal } = useConfirm();
   const canManage = hasRole('admin', 'root');
 
   const [usuarioObjetivo, setUsuarioObjetivo] = useState(userId);
@@ -110,7 +112,8 @@ const AsignacionesPage = () => {
   };
 
   const handleQuitar = async (vehicleId) => {
-    if (!window.confirm('¿Quitar este vehículo de la flota?')) return;
+    const ok = await confirm('¿Quitar este vehículo de la flota?');
+    if (!ok) return;
     try {
       await deleteAsignacion(usuarioObjetivo, vehicleId, token);
       toast.success('Vehículo quitado de la flota.');
@@ -285,6 +288,7 @@ const AsignacionesPage = () => {
           </div>
         )}
       </div>
+      {confirmModal}
     </>
   );
 };

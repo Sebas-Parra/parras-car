@@ -4,6 +4,7 @@ import VehicleFormModal from '../components/VehicleFormModal.jsx';
 import Pagination from '../components/Pagination.jsx';
 import Button from '../components/Button.jsx';
 import { useToast } from '../components/ToastProvider.jsx';
+import { useConfirm } from '../components/ConfirmModal.jsx';
 import { IconPlus, IconEdit, IconTrash, IconCheck } from '../components/icons.jsx';
 import {
   fetchVehiculos,
@@ -20,6 +21,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 const VehiculosPage = () => {
   const { token, hasRole } = useAuth();
   const toast = useToast();
+  const { confirm, confirmModal } = useConfirm();
   const [vehiculos, setVehiculos] = useState(null);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -63,7 +65,8 @@ const VehiculosPage = () => {
         return;
       }
 
-      if (!window.confirm(`¿Desactivar el vehículo ${v.plate}?`)) return;
+      const ok = await confirm(`¿Desactivar el vehículo ${v.plate}?`);
+      if (!ok) return;
       await deleteVehiculo(v.id, token);
       toast.success('Vehículo desactivado correctamente.');
       cargar();
@@ -168,6 +171,7 @@ const VehiculosPage = () => {
       {modal && (
         <VehicleFormModal vehiculo={modal === 'new' ? null : modal} onClose={() => setModal(null)} onSaved={cargar} />
       )}
+      {confirmModal}
     </>
   );
 };

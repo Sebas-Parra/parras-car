@@ -7,6 +7,7 @@ import EspaciosGridView from '../components/EspaciosGridView.jsx';
 import NewPlaceModal from '../components/NewPlaceModal.jsx';
 import Button from '../components/Button.jsx';
 import { useToast } from '../components/ToastProvider.jsx';
+import { useConfirm } from '../components/ConfirmModal.jsx';
 import { IconPlus } from '../components/icons.jsx';
 import { useEspacios } from '../hooks/useEspacios.js';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -19,6 +20,7 @@ const EspaciosPage = () => {
   const { espacios, connected, lastUpdate, refetch } = useEspacios();
   const { token, hasRole } = useAuth();
   const toast = useToast();
+  const { confirm, confirmModal } = useConfirm();
   const [search, setSearch] = useState('');
   const [estadoFiltro, setEstadoFiltro] = useState('TODOS');
   const [zonaFiltro, setZonaFiltro] = useState('TODAS');
@@ -90,7 +92,8 @@ const EspaciosPage = () => {
       toast.warning(`No se puede desactivar ${espacio.nombre}: tiene un ticket activo.`);
       return;
     }
-    if (!window.confirm(`¿Desactivar el espacio ${espacio.nombre}?`)) return;
+    const ok = await confirm(`¿Desactivar el espacio ${espacio.nombre}?`);
+    if (!ok) return;
     try {
       await deleteEspacio(espacio.id, token);
       toast.success('Espacio desactivado correctamente.');
@@ -178,6 +181,7 @@ const EspaciosPage = () => {
       )}
 
       {showNewPlace && <NewPlaceModal onClose={() => setShowNewPlace(false)} onCreated={refetch} />}
+      {confirmModal}
     </>
   );
 };

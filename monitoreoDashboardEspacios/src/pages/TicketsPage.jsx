@@ -5,6 +5,7 @@ import SearchSelect from '../components/SearchSelect.jsx';
 import Pagination from '../components/Pagination.jsx';
 import Button from '../components/Button.jsx';
 import { useToast } from '../components/ToastProvider.jsx';
+import { useConfirm } from '../components/ConfirmModal.jsx';
 import { IconPlus, IconCheck, IconX } from '../components/icons.jsx';
 import {
   fetchTickets,
@@ -85,7 +86,7 @@ const NewTicketModal = ({ onClose, onCreated, token }) => {
             options={espacios}
             value={idEspacio}
             onChange={setIdEspacio}
-            getLabel={(e) => `${e.nombre} — ${e.nombreZona}`}
+            getLabel={(e) => `${e.nombre} — ${e.nombreZona} (${toEnumLabel(e.tipo, TIPO_ESPACIO_LABELS)})`}
             placeholder={loadingOptions ? 'Cargando espacios...' : 'Buscar espacio disponible...'}
           />
           {!loadingOptions && espacios.length === 0 && (
@@ -118,6 +119,7 @@ const NewTicketModal = ({ onClose, onCreated, token }) => {
 const TicketsPage = () => {
   const { token, hasRole } = useAuth();
   const toast = useToast();
+  const { confirm, confirmModal } = useConfirm();
   const [tickets, setTickets] = useState(null);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -155,7 +157,8 @@ const TicketsPage = () => {
   };
 
   const handleAnular = async (id) => {
-    if (!window.confirm('¿Anular este ticket?')) return;
+    const ok = await confirm('¿Anular este ticket?', { danger: true });
+    if (!ok) return;
     try {
       await cancelTicket(id, token);
       toast.success('Ticket anulado correctamente.');
@@ -269,6 +272,7 @@ const TicketsPage = () => {
       )}
 
       {showNew && <NewTicketModal token={token} onClose={() => setShowNew(false)} onCreated={cargar} />}
+      {confirmModal}
     </>
   );
 };

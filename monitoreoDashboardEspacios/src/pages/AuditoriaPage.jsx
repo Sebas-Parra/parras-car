@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react';
 import PageHeader from '../components/PageHeader.jsx';
 import Pagination from '../components/Pagination.jsx';
-import Button from '../components/Button.jsx';
+import { useToast } from '../components/ToastProvider.jsx';
 import { fetchAuditoria } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
 const AuditoriaPage = () => {
   const { token } = useAuth();
+  const toast = useToast();
   const [eventos, setEventos] = useState(null);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [error, setError] = useState('');
 
   useEffect(() => {
     fetchAuditoria(token, page, pageSize)
@@ -19,8 +19,8 @@ const AuditoriaPage = () => {
         setEventos(res.data);
         setTotal(res.total);
       })
-      .catch((err) => setError(err.message || 'No se pudo cargar la auditoría'));
-  }, [token, page, pageSize]);
+      .catch((err) => toast.error(err.message || 'No se pudo cargar la auditoría'));
+  }, [token, page, pageSize, toast]);
 
   const handlePageSizeChange = (size) => {
     setPageSize(size);
@@ -30,15 +30,6 @@ const AuditoriaPage = () => {
   return (
     <>
       <PageHeader title="Auditoría" subtitle="Eventos registrados por todos los microservicios" />
-
-      {error && (
-        <div className="flex items-center justify-between rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
-          <span>{error}</span>
-          <Button variant="link" size="none" onClick={() => setError('')}>
-            Cerrar
-          </Button>
-        </div>
-      )}
 
       {eventos === null ? (
         <div className="rounded-lg border border-slate-200 bg-white p-12 text-center text-sm text-slate-500 shadow-sm">

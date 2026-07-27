@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import Modal from './Modal.jsx';
 import Button from './Button.jsx';
-import { createRole, updateRole } from '../api.js';
+import { useToast } from './ToastProvider.jsx';
+import { createRole, ROLE_LABELS, toEnumLabel, updateRole } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
 const inputClass =
@@ -10,16 +11,16 @@ const labelClass = 'mb-1 block text-xs font-medium uppercase tracking-wide text-
 
 const RoleFormModal = ({ role, permisos, onClose, onSaved }) => {
   const { token } = useAuth();
+  const toast = useToast();
   const isEdit = !!role;
 
   const defaultSelected = isEdit
-    ? new Set(role.permissions.map((p) => p.id))
-    : new Set(permisos.filter((p) => p.is_public).map((p) => p.id));
+    ? new Set((role.permissions ?? []).map((p) => p.id))
+    : new Set((permisos ?? []).filter((p) => p.is_public).map((p) => p.id));
 
   const [name, setName] = useState(role?.name ?? '');
   const [description, setDescription] = useState(role?.description ?? '');
   const [selectedIds, setSelectedIds] = useState(defaultSelected);
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const togglePermission = (permId) => {
@@ -33,7 +34,6 @@ const RoleFormModal = ({ role, permisos, onClose, onSaved }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
     try {
       const payload = { name, description: description || null, permission_ids: Array.from(selectedIds) };
@@ -42,17 +42,18 @@ const RoleFormModal = ({ role, permisos, onClose, onSaved }) => {
       } else {
         await createRole(payload, token);
       }
+      toast.success(isEdit ? 'Rol actualizado correctamente.' : 'Rol creado correctamente.');
       onSaved();
       onClose();
     } catch (err) {
-      setError(err.message || 'No se pudo guardar el rol');
+      toast.error(err.message || 'No se pudo guardar el rol');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Modal title={isEdit ? `Editar rol: ${role.name}` : 'Nuevo rol'} onClose={onClose}>
+    <Modal title={isEdit ? `Editar rol: ${toEnumLabel(role.name, ROLE_LABELS)}` : 'Nuevo rol'} onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-3">
         <div>
           <label className={labelClass}>Nombre</label>
@@ -81,7 +82,7 @@ const RoleFormModal = ({ role, permisos, onClose, onSaved }) => {
             Los permisos públicos vienen marcados por defecto. Agregá o quitá los que necesites.
           </p>
           <div className="max-h-64 space-y-2 overflow-y-auto rounded-md border border-slate-200 p-2">
-            {permisos.map((perm) => (
+            {(permisos ?? []).map((perm) => (
               <label key={perm.id} className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-slate-50">
                 <input
                   type="checkbox"
@@ -101,7 +102,6 @@ const RoleFormModal = ({ role, permisos, onClose, onSaved }) => {
           </div>
         </div>
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
         <Button type="submit" variant="primary" loading={loading} className="w-full">
           {loading ? 'Guardando...' : isEdit ? 'Guardar cambios' : 'Crear rol'}
         </Button>

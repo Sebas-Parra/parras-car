@@ -3,6 +3,7 @@ import PageHeader from '../components/PageHeader.jsx';
 import VehicleFormModal from '../components/VehicleFormModal.jsx';
 import Pagination from '../components/Pagination.jsx';
 import Button from '../components/Button.jsx';
+import { useToast } from '../components/ToastProvider.jsx';
 import { IconPlus, IconEdit, IconTrash, IconCheck } from '../components/icons.jsx';
 import {
   fetchVehiculos,
@@ -10,17 +11,19 @@ import {
   deleteVehiculo,
   fetchTicketsActivos,
   fetchAsignacionPorVehiculo,
+  CLASIFICACION_LABELS,
   TIPO_VEHICULO_LABELS,
+  toEnumLabel,
 } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
 const VehiculosPage = () => {
   const { token, hasRole } = useAuth();
+  const toast = useToast();
   const [vehiculos, setVehiculos] = useState(null);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [error, setError] = useState('');
   const [modal, setModal] = useState(null); // null | 'new' | vehiculo object
 
   const canManage = hasRole('admin', 'root');
@@ -31,8 +34,8 @@ const VehiculosPage = () => {
         setVehiculos(res.data);
         setTotal(res.total);
       })
-      .catch((err) => setError(err.message || 'No se pudieron cargar los vehículos'));
-  }, [token, page, pageSize]);
+      .catch((err) => toast.error(err.message || 'No se pudieron cargar los vehículos'));
+  }, [token, page, pageSize, toast]);
 
   const handlePageSizeChange = (size) => {
     setPageSize(size);
@@ -44,12 +47,11 @@ const VehiculosPage = () => {
   }, [cargar]);
 
   const handleDelete = async (v) => {
-    setError('');
     try {
       const ticketsActivos = await fetchTicketsActivos(token);
       const ticketActivo = ticketsActivos.find((t) => t.idVehiculo === v.id);
       if (ticketActivo) {
-        setError(
+        toast.warning(
           `No se puede desactivar ${v.plate}: está ocupando un espacio ahora mismo (ticket ${ticketActivo.codigo}). Pagá o anulá ese ticket primero.`,
         );
         return;
@@ -57,25 +59,26 @@ const VehiculosPage = () => {
 
       const asignacion = await fetchAsignacionPorVehiculo(v.id, token);
       if (asignacion) {
-        setError(`No se puede desactivar ${v.plate}: tiene un usuario asignado. Quitá la asignación primero desde Asignaciones.`);
+        toast.warning(`No se puede desactivar ${v.plate}: tiene un usuario asignado. Quitá la asignación primero desde Asignaciones.`);
         return;
       }
 
       if (!window.confirm(`¿Desactivar el vehículo ${v.plate}?`)) return;
       await deleteVehiculo(v.id, token);
+      toast.success('Vehículo desactivado correctamente.');
       cargar();
     } catch (err) {
-      setError(err.message || 'No se pudo desactivar el vehículo');
+      toast.error(err.message || 'No se pudo desactivar el vehículo');
     }
   };
 
   const handleActivate = async (v) => {
-    setError('');
     try {
       await activateVehiculo(v.id, token);
+      toast.success('Vehículo reactivado correctamente.');
       cargar();
     } catch (err) {
-      setError(err.message || 'No se pudo reactivar el vehículo');
+      toast.error(err.message || 'No se pudo reactivar el vehículo');
     }
   };
 
@@ -86,15 +89,6 @@ const VehiculosPage = () => {
           Nuevo vehículo
         </Button>
       </PageHeader>
-
-      {error && (
-        <div className="flex items-center justify-between rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
-          <span>{error}</span>
-          <Button variant="link" size="none" onClick={() => setError('')}>
-            Cerrar
-          </Button>
-        </div>
-      )}
 
       {vehiculos === null ? (
         <div className="rounded-lg border border-slate-200 bg-white p-12 text-center text-sm text-slate-500 shadow-sm">
@@ -125,7 +119,7 @@ const VehiculosPage = () => {
                     <td className="px-4 py-3 text-sm text-slate-600">{v.brand}</td>
                     <td className="px-4 py-3 text-sm text-slate-600">{v.model}</td>
                     <td className="px-4 py-3 text-sm text-slate-600">{v.year}</td>
-                    <td className="px-4 py-3 text-sm text-slate-600">{v.clasification}</td>
+                    <td className="px-4 py-3 text-sm text-slate-600">{toEnumLabel(v.clasification, CLASIFICACION_LABELS)}</td>
                     <td className="px-4 py-3">
                       <span
                         className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${

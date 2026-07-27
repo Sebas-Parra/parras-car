@@ -23,11 +23,13 @@ describe('VehiclesService', () => {
   };
   let publisher: { publish: jest.Mock };
   let fetchMock: jest.Mock;
+  let originalFetch: typeof global.fetch;
 
   beforeEach(async () => {
+    originalFetch = global.fetch;
     repo = {
       findOne: jest.fn().mockResolvedValue(null),
-      save: jest.fn((v) => Promise.resolve({ id: 'veh-1', ...v })),
+      save: jest.fn((v) => Promise.resolve({ ...v, id: 'veh-1' })),
       findAndCount: jest.fn(),
       find: jest.fn().mockResolvedValue([]),
       manager: { save: jest.fn((v) => Promise.resolve(v)) },
@@ -49,6 +51,7 @@ describe('VehiclesService', () => {
   });
 
   afterEach(() => {
+    global.fetch = originalFetch;
     jest.restoreAllMocks();
   });
 
@@ -357,6 +360,34 @@ describe('VehiclesService', () => {
     });
   });
 
+  it('forwards the bearer token when auto-assigning a cliente vehicle', async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, statusText: 'Created' } as Response);
+    const dto = {
+      tipo: 'car',
+      datos: { plate: 'CLI-001' },
+    } as unknown as CreateVehicleDto;
+
+    await service.create(
+      dto,
+      { userId: 'user-1', username: 'cliente1', roles: ['cliente'] },
+      undefined,
+      'Bearer client-token',
+    );
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      'http://assignments:8001/assignments',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer client-token',
+        }),
+      }),
+    );
+    expect(JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body)).toEqual({
+      user_id: 'user-1',
+      vehicle_id: 'veh-1',
+    });
+  });
+
   describe('findAll', () => {
     it('paginates the full catalog for non-cliente users', async () => {
       repo.findAndCount.mockResolvedValue([[{ id: 'veh-1' }], 30]);
@@ -366,5 +397,13 @@ describe('VehiclesService', () => {
       expect(repo.findAndCount).toHaveBeenCalledWith({ skip: 10, take: 10 });
       expect(result).toEqual({ data: [{ id: 'veh-1' }], total: 30, page: 2, pageSize: 10 });
     });
+  });
+
+  it('returns a vehicle for assignment validation without checking cliente ownership', async () => {
+    const vehicle = { id: 'veh-1', active: true };
+    repo.findOne.mockResolvedValue(vehicle);
+
+    await expect(service.findForAssignmentValidation('veh-1')).resolves.toEqual({ id: 'veh-1', active: true });
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

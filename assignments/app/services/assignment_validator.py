@@ -26,7 +26,7 @@ class AssignmentValidator:
             )
 
     def require_vehicle_exists(self, vehicle_id: UUID, token: str) -> dict:
-        vehicle = vehicles_client.get_vehicle(vehicle_id, token)
+        vehicle = vehicles_client.get_vehicle_for_assignment_validation(vehicle_id, token)
         if not vehicle:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Vehicle not found")
         return vehicle

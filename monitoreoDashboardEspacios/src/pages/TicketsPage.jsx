@@ -4,8 +4,23 @@ import Modal from '../components/Modal.jsx';
 import SearchSelect from '../components/SearchSelect.jsx';
 import Pagination from '../components/Pagination.jsx';
 import Button from '../components/Button.jsx';
+import { useToast } from '../components/ToastProvider.jsx';
 import { IconPlus, IconCheck, IconX } from '../components/icons.jsx';
-import { fetchTickets, fetchEspacios, fetchVehiculos, createTicket, payTicket, cancelTicket } from '../api.js';
+import {
+  fetchTickets,
+  fetchEspacios,
+  fetchVehiculos,
+  fetchTicketsActivos,
+  createTicket,
+  payTicket,
+  cancelTicket,
+  ESTADO_TICKET_LABELS,
+  TIPO_ESPACIO_LABELS,
+  TIPO_VEHICULO_LABELS,
+  TIPO_ZONA_LABELS,
+  getAvailableTicketSpaces,
+  toEnumLabel,
+} from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
 const inputClass =
@@ -19,38 +34,43 @@ const ESTADO_TICKET_STYLES = {
 };
 
 const NewTicketModal = ({ onClose, onCreated, token }) => {
+  const toast = useToast();
   const [espacios, setEspacios] = useState([]);
   const [vehiculos, setVehiculos] = useState([]);
   const [idEspacio, setIdEspacio] = useState('');
   const [placa, setPlaca] = useState('');
-  const [error, setError] = useState('');
+  const [loadingOptions, setLoadingOptions] = useState(true);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchEspacios().then((data) => setEspacios(data ?? []));
-    fetchVehiculos(token)
-      .then((res) => setVehiculos(res.data))
-      .catch(() => {});
-  }, [token]);
+    setLoadingOptions(true);
+    Promise.all([fetchEspacios(), fetchVehiculos(token), fetchTicketsActivos(token)])
+      .then(([spaces, vehiclesResponse, activeTickets]) => {
+        setEspacios(getAvailableTicketSpaces(spaces ?? [], activeTickets ?? []));
+        setVehiculos(vehiclesResponse.data);
+      })
+      .catch((err) => toast.error(err.message || 'No se pudieron cargar las opciones del ticket'))
+      .finally(() => setLoadingOptions(false));
+  }, [token, toast]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     if (!idEspacio) {
-      setError('Seleccioná un espacio');
+      toast.warning('Seleccioná un espacio');
       return;
     }
     if (!placa) {
-      setError('Seleccioná una placa');
+      toast.warning('Seleccioná una placa');
       return;
     }
     setLoading(true);
     try {
       await createTicket({ idEspacio, placa: placa.toUpperCase() }, token);
+      toast.success('Ticket creado correctamente.');
       onCreated();
       onClose();
     } catch (err) {
-      setError(err.message || 'No se pudo crear el ticket');
+      toast.error(err.message || 'No se pudo crear el ticket');
     } finally {
       setLoading(false);
     }
@@ -66,8 +86,11 @@ const NewTicketModal = ({ onClose, onCreated, token }) => {
             value={idEspacio}
             onChange={setIdEspacio}
             getLabel={(e) => `${e.nombre} — ${e.nombreZona}`}
-            placeholder="Buscar espacio..."
+            placeholder={loadingOptions ? 'Cargando espacios...' : 'Buscar espacio disponible...'}
           />
+          {!loadingOptions && espacios.length === 0 && (
+            <p className="mt-1 text-xs text-slate-500">No hay espacios disponibles para crear un ticket.</p>
+          )}
         </div>
         <div>
           <label className={labelClass}>Placa</label>
@@ -84,7 +107,6 @@ const NewTicketModal = ({ onClose, onCreated, token }) => {
             <input value={placa} onChange={(e) => setPlaca(e.target.value)} required className={inputClass} />
           )}
         </div>
-        {error && <p className="text-sm text-red-600">{error}</p>}
         <Button type="submit" variant="primary" loading={loading} className="w-full">
           {loading ? 'Creando...' : 'Crear ticket'}
         </Button>
@@ -95,11 +117,11 @@ const NewTicketModal = ({ onClose, onCreated, token }) => {
 
 const TicketsPage = () => {
   const { token, hasRole } = useAuth();
+  const toast = useToast();
   const [tickets, setTickets] = useState(null);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [error, setError] = useState('');
   const [showNew, setShowNew] = useState(false);
 
   const canOperar = hasRole('admin', 'root', 'recaudador');
@@ -110,8 +132,8 @@ const TicketsPage = () => {
         setTickets(res.data);
         setTotal(res.total);
       })
-      .catch((err) => setError(err.message || 'No se pudieron cargar los tickets'));
-  }, [token, page, pageSize]);
+      .catch((err) => toast.error(err.message || 'No se pudieron cargar los tickets'));
+  }, [token, page, pageSize, toast]);
 
   const handlePageSizeChange = (size) => {
     setPageSize(size);
@@ -123,23 +145,23 @@ const TicketsPage = () => {
   }, [cargar]);
 
   const handlePagar = async (id) => {
-    setError('');
     try {
       await payTicket(id, token);
+      toast.success('Ticket pagado correctamente.');
       cargar();
     } catch (err) {
-      setError(err.message || 'No se pudo pagar el ticket');
+      toast.error(err.message || 'No se pudo pagar el ticket');
     }
   };
 
   const handleAnular = async (id) => {
     if (!window.confirm('¿Anular este ticket?')) return;
-    setError('');
     try {
       await cancelTicket(id, token);
+      toast.success('Ticket anulado correctamente.');
       cargar();
     } catch (err) {
-      setError(err.message || 'No se pudo anular el ticket');
+      toast.error(err.message || 'No se pudo anular el ticket');
     }
   };
 
@@ -152,15 +174,6 @@ const TicketsPage = () => {
           </Button>
         )}
       </PageHeader>
-
-      {error && (
-        <div className="flex items-center justify-between rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
-          <span>{error}</span>
-          <Button variant="link" size="none" onClick={() => setError('')}>
-            Cerrar
-          </Button>
-        </div>
-      )}
 
       {tickets === null ? (
         <div className="rounded-lg border border-slate-200 bg-white p-12 text-center text-sm text-slate-500 shadow-sm">
@@ -187,8 +200,25 @@ const TicketsPage = () => {
                 {tickets.map((t) => (
                   <tr key={t.id} className="hover:bg-slate-50">
                     <td className="px-4 py-3 text-sm font-medium text-slate-900">{t.codigo}</td>
-                    <td className="px-4 py-3 text-sm text-slate-600">{t.placa}</td>
-                    <td className="px-4 py-3 text-sm text-slate-600">{t.codigoEspacio}</td>
+                    <td className="px-4 py-3 text-sm text-slate-600">
+                      {t.placa}
+                      {t.tipoVehiculo && (
+                        <span className="ml-2 text-xs text-slate-400">{toEnumLabel(t.tipoVehiculo, TIPO_VEHICULO_LABELS)}</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-slate-600">
+                      {t.codigoEspacio}
+                      {(t.tipoEspacio || t.tipoZona) && (
+                        <span className="ml-2 text-xs text-slate-400">
+                          {[
+                            t.tipoEspacio ? toEnumLabel(t.tipoEspacio, TIPO_ESPACIO_LABELS) : null,
+                            t.tipoZona ? toEnumLabel(t.tipoZona, TIPO_ZONA_LABELS) : null,
+                          ]
+                            .filter(Boolean)
+                            .join(' / ')}
+                        </span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-sm text-slate-600">
                       {new Date(t.fechaHoraIngreso).toLocaleString('es-ES', { hour12: false })}
                     </td>
@@ -200,7 +230,7 @@ const TicketsPage = () => {
                           ESTADO_TICKET_STYLES[t.estado] ?? 'bg-slate-100 text-slate-600 ring-slate-500/10'
                         }`}
                       >
-                        {t.estado}
+                        {toEnumLabel(t.estado, ESTADO_TICKET_LABELS)}
                       </span>
                     </td>
                     <td className="space-x-3 px-4 py-3 text-right text-sm">

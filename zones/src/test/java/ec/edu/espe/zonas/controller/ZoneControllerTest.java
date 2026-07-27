@@ -24,6 +24,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ec.edu.espe.zonas.dtos.PagedResponseDto;
 import ec.edu.espe.zonas.dtos.ZoneRequestDto;
 import ec.edu.espe.zonas.dtos.ZoneResponseDto;
 import ec.edu.espe.zonas.entidades.enums.TypeOfZone;
@@ -46,12 +47,17 @@ class ZoneControllerTest {
 
     @Test
     void getAllZonesReturnsOk() throws Exception {
-        when(zoneService.getAllZones()).thenReturn(List.of());
+        when(zoneService.getAllZones(1, 100)).thenReturn(PagedResponseDto.<ZoneResponseDto>builder()
+                .data(List.of())
+                .total(0)
+                .page(1)
+                .pageSize(100)
+                .build());
 
         mockMvc.perform(get("/api/v1/zones"))
                 .andExpect(status().isOk());
 
-        verify(zoneService).getAllZones();
+        verify(zoneService).getAllZones(1, 100);
     }
 
     @Test

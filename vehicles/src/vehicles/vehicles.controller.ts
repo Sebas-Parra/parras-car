@@ -43,7 +43,12 @@ export class VehiclesController {
     @Body() createVehicleDto: CreateVehicleDto,
     @Req() req: AuthenticatedRequest,
   ) {
-    return this.vehiclesService.create(createVehicleDto, req.user, getClientIp(req));
+    return this.vehiclesService.create(
+      createVehicleDto,
+      req.user,
+      getClientIp(req),
+      req.headers.authorization,
+    );
   }
 
   // Cualquier usuario autenticado — consultar catálogo
@@ -69,6 +74,13 @@ export class VehiclesController {
       throw new NotFoundException(`Vehículo con placa '${plate}' no encontrado`);
     }
     return vehicle;
+  }
+
+  // Validación autenticada para assignments: no expone datos completos ni
+  // aplica ownership, porque se usa antes de crear la asignación.
+  @Get('validation/:id')
+  validateForAssignment(@Param('id') id: string) {
+    return this.vehiclesService.findForAssignmentValidation(id);
   }
 
   // Cualquier usuario autenticado — consultar vehículo

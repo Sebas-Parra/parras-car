@@ -2,14 +2,15 @@ import { useCallback, useEffect, useState } from 'react';
 import PageHeader from '../components/PageHeader.jsx';
 import Button from '../components/Button.jsx';
 import RoleFormModal from '../components/RoleFormModal.jsx';
+import { useToast } from '../components/ToastProvider.jsx';
 import { fetchRoles, deleteRole } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { IconPlus, IconEdit, IconTrash } from '../components/icons.jsx';
 
 const RolesPage = () => {
   const { token, hasRole } = useAuth();
+  const toast = useToast();
   const [roles, setRoles] = useState(null);
-  const [error, setError] = useState('');
   const [modal, setModal] = useState(null); // null | 'new' | rol object para editar
 
   const canDelete = hasRole('root');
@@ -17,8 +18,8 @@ const RolesPage = () => {
   const cargar = useCallback(() => {
     fetchRoles(token)
       .then(setRoles)
-      .catch((err) => setError(err.message || 'No se pudieron cargar los roles'));
-  }, [token]);
+      .catch((err) => toast.error(err.message || 'No se pudieron cargar los roles'));
+  }, [token, toast]);
 
   useEffect(() => {
     cargar();
@@ -26,12 +27,12 @@ const RolesPage = () => {
 
   const handleDelete = async (rol) => {
     if (!window.confirm(`¿Eliminar el rol "${rol.name}"? Esta acción no se puede deshacer.`)) return;
-    setError('');
     try {
       await deleteRole(rol.id, token);
+      toast.success('Rol eliminado correctamente.');
       cargar();
     } catch (err) {
-      setError(err.message || 'No se pudo eliminar el rol');
+      toast.error(err.message || 'No se pudo eliminar el rol');
     }
   };
 
@@ -42,15 +43,6 @@ const RolesPage = () => {
           Nuevo rol
         </Button>
       </PageHeader>
-
-      {error && (
-        <div className="flex items-center justify-between rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
-          <span>{error}</span>
-          <Button variant="link" size="none" onClick={() => setError('')}>
-            Cerrar
-          </Button>
-        </div>
-      )}
 
       {roles === null ? (
         <div className="rounded-lg border border-slate-200 bg-white p-12 text-center text-sm text-slate-500 shadow-sm">

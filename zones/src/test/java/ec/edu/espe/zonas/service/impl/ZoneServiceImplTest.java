@@ -19,6 +19,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,6 +30,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.server.ResponseStatusException;
 
 import ec.edu.espe.zonas.audit.AuditPublisher;
+import ec.edu.espe.zonas.dtos.PagedResponseDto;
 import ec.edu.espe.zonas.dtos.ZoneRequestDto;
 import ec.edu.espe.zonas.dtos.ZoneResponseDto;
 import ec.edu.espe.zonas.entidades.Place;
@@ -81,12 +84,16 @@ class ZoneServiceImplTest {
     void getAllZonesMapsEveryZoneToADto() {
         Zone z1 = zone(UUID.randomUUID(), "Norte", 1, 10);
         Zone z2 = zone(UUID.randomUUID(), "Sur", 1, 20);
-        when(zoneRepository.findAll()).thenReturn(List.of(z1, z2));
+        when(zoneRepository.findAll(PageRequest.of(0, 20)))
+                .thenReturn(new PageImpl<>(List.of(z1, z2), PageRequest.of(0, 20), 2));
 
-        List<ZoneResponseDto> result = zoneService.getAllZones();
+        PagedResponseDto<ZoneResponseDto> result = zoneService.getAllZones(1, 20);
 
-        assertThat(result).hasSize(2);
-        assertThat(result).extracting(ZoneResponseDto::getName).containsExactly("Norte", "Sur");
+        assertThat(result.getData()).hasSize(2);
+        assertThat(result.getData()).extracting(ZoneResponseDto::getName).containsExactly("Norte", "Sur");
+        assertThat(result.getTotal()).isEqualTo(2);
+        assertThat(result.getPage()).isEqualTo(1);
+        assertThat(result.getPageSize()).isEqualTo(20);
     }
 
     @Test

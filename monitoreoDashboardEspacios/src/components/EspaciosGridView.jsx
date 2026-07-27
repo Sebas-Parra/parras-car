@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import EstadoSelect from './EstadoSelect.jsx';
 import Button from './Button.jsx';
 import { IconTrash } from './icons.jsx';
-import { ESTADO_MAP_INVERSE } from '../api.js';
+import { ESTADO_MAP_INVERSE, TIPO_ESPACIO_LABELS, toEnumLabel } from '../api.js';
 
 const ESTADO_ICONS = {
   DISPONIBLE: (
@@ -179,7 +179,7 @@ const EspaciosGridView = ({
                 <div className="flex items-center justify-between">
                   <span className={`${config.textColor} opacity-70 font-medium`}>Tipo:</span>
                   <span className={`${config.textColor} font-semibold`}>
-                    {espacio.tipo || 'N/A'}
+                    {toEnumLabel(espacio.tipo, TIPO_ESPACIO_LABELS)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">

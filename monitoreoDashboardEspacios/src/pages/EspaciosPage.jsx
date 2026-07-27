@@ -6,6 +6,7 @@ import EspaciosTable from '../components/EspaciosTable.jsx';
 import EspaciosGridView from '../components/EspaciosGridView.jsx';
 import NewPlaceModal from '../components/NewPlaceModal.jsx';
 import Button from '../components/Button.jsx';
+import { useToast } from '../components/ToastProvider.jsx';
 import { IconPlus } from '../components/icons.jsx';
 import { useEspacios } from '../hooks/useEspacios.js';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -17,11 +18,11 @@ const ESTADOS = ['DISPONIBLE', 'OCUPADO', 'RESERVADO', 'MANTENIMIENTO'];
 const EspaciosPage = () => {
   const { espacios, connected, lastUpdate, refetch } = useEspacios();
   const { token, hasRole } = useAuth();
+  const toast = useToast();
   const [search, setSearch] = useState('');
   const [estadoFiltro, setEstadoFiltro] = useState('TODOS');
   const [zonaFiltro, setZonaFiltro] = useState('TODAS');
   const [showNewPlace, setShowNewPlace] = useState(false);
-  const [actionError, setActionError] = useState('');
   const [espaciosConTicketActivo, setEspaciosConTicketActivo] = useState(new Set());
   const [viewMode, setViewMode] = useState('grid');
 
@@ -75,27 +76,27 @@ const EspaciosPage = () => {
   };
 
   const handleStatusChange = async (id, status) => {
-    setActionError('');
     try {
       await updateEspacioStatus(id, status, token);
+      toast.success('Estado del espacio actualizado.');
       refetch();
     } catch (err) {
-      setActionError(err.message || 'No se pudo actualizar el estado');
+      toast.error(err.message || 'No se pudo actualizar el estado');
     }
   };
 
   const handleDeleteEspacio = async (espacio) => {
-    setActionError('');
     if (espaciosConTicketActivo.has(espacio.id)) {
-      setActionError(`No se puede desactivar ${espacio.nombre}: tiene un ticket activo.`);
+      toast.warning(`No se puede desactivar ${espacio.nombre}: tiene un ticket activo.`);
       return;
     }
     if (!window.confirm(`¿Desactivar el espacio ${espacio.nombre}?`)) return;
     try {
       await deleteEspacio(espacio.id, token);
+      toast.success('Espacio desactivado correctamente.');
       refetch();
     } catch (err) {
-      setActionError(err.message || 'No se pudo desactivar el espacio');
+      toast.error(err.message || 'No se pudo desactivar el espacio');
     }
   };
 
@@ -139,15 +140,6 @@ const EspaciosPage = () => {
           )}
         </div>
       </PageHeader>
-
-      {actionError && (
-        <div className="flex items-center justify-between rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
-          <span>{actionError}</span>
-          <Button variant="link" size="none" onClick={() => setActionError('')}>
-            Cerrar
-          </Button>
-        </div>
-      )}
 
       <StatsRow stats={stats} />
 

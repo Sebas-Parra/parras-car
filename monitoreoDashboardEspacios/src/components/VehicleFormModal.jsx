@@ -7,9 +7,15 @@ import {
   TIPO_VEHICULO_OPTIONS,
   TIPO_VEHICULO_LABELS,
   CLASIFICACION_OPTIONS,
+  CLASIFICACION_LABELS,
   TIPO_MOTO_OPTIONS,
+  TIPO_MOTO_LABELS,
+  CABINA_CAMIONETA_OPTIONS,
+  CABINA_CAMIONETA_LABELS,
+  toEnumLabel,
 } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useToast } from './ToastProvider.jsx';
 
 const inputClass =
   'w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500';
@@ -17,6 +23,7 @@ const labelClass = 'mb-1 block text-xs font-medium uppercase tracking-wide text-
 
 const VehicleFormModal = ({ vehiculo, onClose, onSaved }) => {
   const { token } = useAuth();
+  const toast = useToast();
   const isEdit = !!vehiculo;
   const [tipo, setTipo] = useState(vehiculo?.tipo ?? TIPO_VEHICULO_OPTIONS[0]);
   const [plate, setPlate] = useState(vehiculo?.plate ?? '');
@@ -29,13 +36,11 @@ const VehicleFormModal = ({ vehiculo, onClose, onSaved }) => {
   const [trunkCapacity, setTrunkCapacity] = useState(vehiculo?.trunkCapacity ?? 300);
   const [typeOfMotorbike, setTypeOfMotorbike] = useState(vehiculo?.typeOfMotorbike ?? TIPO_MOTO_OPTIONS[0]);
   const [payloadCapacity, setPayloadCapacity] = useState(vehiculo?.payloadCapacity ?? 500);
-  const [cab, setCab] = useState(vehiculo?.cab ?? '');
-  const [error, setError] = useState('');
+  const [cab, setCab] = useState(vehiculo?.cab ?? CABINA_CAMIONETA_OPTIONS[0]);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
 
     const base = { plate, brand, model, color, year: Number(year), clasification };
@@ -50,10 +55,11 @@ const VehicleFormModal = ({ vehiculo, onClose, onSaved }) => {
       } else {
         await createVehiculo({ tipo, datos }, token);
       }
+      toast.success(isEdit ? 'Vehículo actualizado correctamente.' : 'Vehículo creado correctamente.');
       onSaved();
       onClose();
     } catch (err) {
-      setError(err.message || 'No se pudo guardar el vehículo');
+      toast.error(err.message || 'No se pudo guardar el vehículo');
     } finally {
       setLoading(false);
     }
@@ -98,7 +104,7 @@ const VehicleFormModal = ({ vehiculo, onClose, onSaved }) => {
             <select value={clasification} onChange={(e) => setClasification(e.target.value)} className={inputClass}>
               {CLASIFICACION_OPTIONS.map((c) => (
                 <option key={c} value={c}>
-                  {c}
+                  {toEnumLabel(c, CLASIFICACION_LABELS)}
                 </option>
               ))}
             </select>
@@ -138,7 +144,7 @@ const VehicleFormModal = ({ vehiculo, onClose, onSaved }) => {
             <select value={typeOfMotorbike} onChange={(e) => setTypeOfMotorbike(e.target.value)} className={inputClass}>
               {TIPO_MOTO_OPTIONS.map((t) => (
                 <option key={t} value={t}>
-                  {t}
+                  {toEnumLabel(t, TIPO_MOTO_LABELS)}
                 </option>
               ))}
             </select>
@@ -160,12 +166,17 @@ const VehicleFormModal = ({ vehiculo, onClose, onSaved }) => {
             </div>
             <div>
               <label className={labelClass}>Cabina</label>
-              <input value={cab} onChange={(e) => setCab(e.target.value)} className={inputClass} />
+              <select value={cab} onChange={(e) => setCab(e.target.value)} className={inputClass}>
+                {CABINA_CAMIONETA_OPTIONS.map((c) => (
+                  <option key={c} value={c}>
+                    {toEnumLabel(c, CABINA_CAMIONETA_LABELS)}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         )}
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
         <Button type="submit" variant="primary" loading={loading} className="w-full">
           {loading ? 'Guardando...' : isEdit ? 'Guardar cambios' : 'Crear vehículo'}
         </Button>

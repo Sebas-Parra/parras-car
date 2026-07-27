@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import Modal from './Modal.jsx';
 import SearchSelect from './SearchSelect.jsx';
 import Button from './Button.jsx';
-import { createEspacio, fetchZonas, TIPO_ESPACIO_OPTIONS, ESTADO_OPTIONS } from '../api.js';
+import { useToast } from './ToastProvider.jsx';
+import { createEspacio, fetchZonas, TIPO_ESPACIO_LABELS, TIPO_ESPACIO_OPTIONS, ESTADO_OPTIONS, toEnumLabel } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
 const inputClass =
@@ -11,36 +12,36 @@ const labelClass = 'mb-1 block text-xs font-medium uppercase tracking-wide text-
 
 const NewPlaceModal = ({ onClose, onCreated }) => {
   const { token } = useAuth();
+  const toast = useToast();
   const [zonas, setZonas] = useState([]);
   const [idZone, setIdZone] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState(TIPO_ESPACIO_OPTIONS[0]);
   const [status, setStatus] = useState('AVAILABLE');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingZonas, setLoadingZonas] = useState(true);
 
   useEffect(() => {
     fetchZonas(token)
       .then((res) => setZonas(res.data))
-      .catch((err) => setError(err.message || 'No se pudieron cargar las zonas'))
+      .catch((err) => toast.error(err.message || 'No se pudieron cargar las zonas'))
       .finally(() => setLoadingZonas(false));
-  }, [token]);
+  }, [toast, token]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     if (!idZone) {
-      setError('Seleccioná una zona');
+      toast.warning('Seleccioná una zona');
       return;
     }
     setLoading(true);
     try {
       await createEspacio({ idZone, description: description || undefined, type, status }, token);
+      toast.success('Espacio creado correctamente.');
       onCreated();
       onClose();
     } catch (err) {
-      setError(err.message || 'No se pudo crear el espacio');
+      toast.error(err.message || 'No se pudo crear el espacio');
     } finally {
       setLoading(false);
     }
@@ -73,7 +74,7 @@ const NewPlaceModal = ({ onClose, onCreated }) => {
               <select value={type} onChange={(e) => setType(e.target.value)} className={inputClass}>
                 {TIPO_ESPACIO_OPTIONS.map((t) => (
                   <option key={t} value={t}>
-                    {t}
+                    {toEnumLabel(t, TIPO_ESPACIO_LABELS)}
                   </option>
                 ))}
               </select>
@@ -89,13 +90,11 @@ const NewPlaceModal = ({ onClose, onCreated }) => {
               </select>
             </div>
           </div>
-          {error && <p className="text-sm text-red-600">{error}</p>}
           <Button type="submit" variant="primary" loading={loading} className="w-full">
             {loading ? 'Creando...' : 'Crear espacio'}
           </Button>
         </form>
       )}
-      {error && zonas.length === 0 && <p className="mt-2 text-sm text-red-600">{error}</p>}
     </Modal>
   );
 };

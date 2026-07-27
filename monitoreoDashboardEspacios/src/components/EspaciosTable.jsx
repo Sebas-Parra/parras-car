@@ -2,7 +2,7 @@ import EstadoBadge from './EstadoBadge.jsx';
 import EstadoSelect from './EstadoSelect.jsx';
 import Button from './Button.jsx';
 import { IconTrash } from './icons.jsx';
-import { ESTADO_MAP_INVERSE } from '../api.js';
+import { ESTADO_MAP_INVERSE, TIPO_ESPACIO_LABELS, toEnumLabel } from '../api.js';
 
 const EspaciosTable = ({
   espacios,
@@ -58,7 +58,7 @@ const EspaciosTable = ({
               <tr key={espacio.id} className="hover:bg-slate-50">
                 <td className="px-4 py-3 text-sm font-medium text-slate-900">{espacio.nombre || 'Sin nombre'}</td>
                 <td className="px-4 py-3 text-sm text-slate-600">{espacio.nombreZona || 'N/A'}</td>
-                <td className="px-4 py-3 text-sm text-slate-600">{espacio.tipo || 'N/A'}</td>
+                <td className="px-4 py-3 text-sm text-slate-600">{toEnumLabel(espacio.tipo, TIPO_ESPACIO_LABELS)}</td>
                 <td className="px-4 py-3">
                   {canEditStatus && !espaciosConTicketActivo.has(espacio.id) ? (
                     <EstadoSelect

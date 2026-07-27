@@ -62,7 +62,7 @@ class AssignmentService:
     ) -> AssignmentRead:
         assignment = assignment_repository.get_by_ids(db, user_id, vehicle_id)
         if not assignment or not assignment.active:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Active assignment not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Asignación activa no encontrada")
 
         assignment_repository.soft_delete(db, assignment)  # triggers after_update listener → ELIMINACION audit
         db.commit()

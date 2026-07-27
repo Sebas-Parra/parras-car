@@ -16,7 +16,7 @@ from app.utils.security import hash_password
 def get_person(db: Session, person_id: UUID) -> Person:
     person = person_repository.get_by_id(db, person_id)
     if person is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Person not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Persona no encontrada")
     return person
 
 
@@ -26,7 +26,7 @@ def list_persons(db: Session, skip: int = 0, limit: int = 100) -> list[Person]:
 
 def create_person_with_user(db: Session, data: UserCreate, ip: str | None = None) -> Person:
     if person_repository.get_by_cedula(db, data.cedula):
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Cedula already registered")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="La cédula ya está registrada")
 
     if person_repository.get_by_email(db, data.email):
         raise HTTPException(
@@ -93,7 +93,7 @@ def update_person(
 
     if "email" in update_data and update_data["email"] != person.email:
         if person_repository.get_by_email(db, update_data["email"]):
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="El correo ya está registrado")
 
     for field, value in update_data.items():
         setattr(person, field, value)

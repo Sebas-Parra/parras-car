@@ -70,15 +70,17 @@ describe('TicketsController', () => {
     );
   });
 
-  it('lists all tickets', async () => {
-    const result = await controller.findAll();
-    expect(service.findAll).toHaveBeenCalled();
+  it('lists all tickets, filtering by the requester', async () => {
+    const req = buildRequest();
+    const result = await controller.findAll(1, 20, req);
+    expect(service.findAll).toHaveBeenCalledWith(1, 20, undefined, { userId: 'emp-1', roles: ['recaudador'] }, undefined);
     expect(result).toEqual([{ id: 'tick-1' }]);
   });
 
-  it('finds a single ticket by id', async () => {
-    const result = await controller.findOne('tick-1');
-    expect(service.findOne).toHaveBeenCalledWith('tick-1');
+  it('finds a single ticket by id, scoped to the requester', async () => {
+    const req = buildRequest();
+    const result = await controller.findOne('tick-1', req);
+    expect(service.findOne).toHaveBeenCalledWith('tick-1', { userId: 'emp-1', roles: ['recaudador'] });
     expect(result).toEqual({ id: 'tick-1' });
   });
 

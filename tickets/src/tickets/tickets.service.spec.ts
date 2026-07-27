@@ -1,4 +1,4 @@
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { TicketsService } from './tickets.service';
@@ -32,6 +32,7 @@ describe('TicketsService', () => {
   let sseService: { emitEvent: jest.Mock };
 
   const actingUser = { username: 'jdoe', roles: ['recaudador'] };
+  const staffRequester = { userId: 'empleado-1', roles: ['recaudador'] };
 
   const vehicle = { id: 'veh-1', active: true, tipo: 'car' };
   const place = {
@@ -239,9 +240,10 @@ describe('TicketsService', () => {
     it('paginates using skip/take derived from page and pageSize, newest first', async () => {
       repo.findAndCount.mockResolvedValue([[{ id: 'tick-1' }], 55]);
 
-      const result = await service.findAll(2, 20);
+      const result = await service.findAll(2, 20, undefined, staffRequester);
 
       expect(repo.findAndCount).toHaveBeenCalledWith({
+        where: {},
         order: { fechaHoraIngreso: 'DESC' },
         skip: 20,
         take: 20,
@@ -252,7 +254,7 @@ describe('TicketsService', () => {
     it('returns every matching ticket unpaginated when filtering by estado', async () => {
       repo.find.mockResolvedValue([{ id: 'tick-1' }, { id: 'tick-2' }]);
 
-      const result = await service.findAll(1, 20, EstadoTicket.ACTIVO);
+      const result = await service.findAll(1, 20, EstadoTicket.ACTIVO, staffRequester);
 
       expect(repo.find).toHaveBeenCalledWith({
         where: { estado: EstadoTicket.ACTIVO },
@@ -353,9 +355,37 @@ describe('TicketsService', () => {
   it('throws NotFoundException from findOne when the ticket does not exist', async () => {
     repo.findOne.mockResolvedValue(null);
 
-    await expect(service.findOne('missing')).rejects.toBeInstanceOf(
+    await expect(service.findOne('missing', staffRequester)).rejects.toBeInstanceOf(
       NotFoundException,
     );
+  });
+
+  it('throws ForbiddenException when a cliente requests another user\'s ticket', async () => {
+    repo.findOne.mockResolvedValue({ id: 'tick-1', idUsuario: 'other-user' });
+
+    await expect(
+      service.findOne('tick-1', { userId: 'me', roles: ['cliente'] }),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it('lets a cliente read their own ticket', async () => {
+    repo.findOne.mockResolvedValue({ id: 'tick-1', idUsuario: 'me' });
+
+    const result = await service.findOne('tick-1', { userId: 'me', roles: ['cliente'] });
+    expect(result).toEqual({ id: 'tick-1', idUsuario: 'me' });
+  });
+
+  it('scopes findAll to the requester\'s own tickets when they have no staff role', async () => {
+    repo.findAndCount.mockResolvedValue([[{ id: 'tick-1', idUsuario: 'me' }], 1]);
+
+    await service.findAll(1, 20, undefined, { userId: 'me', roles: ['cliente'] });
+
+    expect(repo.findAndCount).toHaveBeenCalledWith({
+      where: { idUsuario: 'me' },
+      order: { fechaHoraIngreso: 'DESC' },
+      skip: 0,
+      take: 20,
+    });
   });
 
   it('throws ConflictException when paying a ticket that is not active', async () => {

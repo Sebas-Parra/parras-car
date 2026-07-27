@@ -20,18 +20,25 @@ describe('JwtStrategy', () => {
     expect(configService.getOrThrow).toHaveBeenCalledWith('JWT_SECRET');
   });
 
-  it('validate returns userId, username and roles fetched from the users service', async () => {
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: jest.fn().mockResolvedValue({ roles: ['admin'] }),
+  it('validate returns userId, username, roles and permissions fetched from the users service', async () => {
+    global.fetch = jest.fn().mockImplementation((url: string) => {
+      if (url.endsWith('/roles')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({ roles: ['admin'] }) });
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({ permissions: ['ver_auditoria'] }) });
     }) as unknown as typeof fetch;
 
     const result = await strategy.validate({ sub: 'user-1', username: 'jdoe' });
 
-    expect(result).toEqual({ userId: 'user-1', username: 'jdoe', roles: ['admin'] });
+    expect(result).toEqual({
+      userId: 'user-1',
+      username: 'jdoe',
+      roles: ['admin'],
+      permissions: ['ver_auditoria'],
+    });
   });
 
-  it('validate defaults roles to an empty array when the response has none', async () => {
+  it('validate defaults roles and permissions to an empty array when the response has none', async () => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
       json: jest.fn().mockResolvedValue({}),
@@ -40,9 +47,10 @@ describe('JwtStrategy', () => {
     const result = await strategy.validate({ sub: 'user-1', username: 'jdoe' });
 
     expect(result.roles).toEqual([]);
+    expect(result.permissions).toEqual([]);
   });
 
-  it('validate returns empty roles when the users service responds with an error status', async () => {
+  it('validate returns empty roles/permissions when the users service responds with an error status', async () => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: false,
       statusText: 'Not Found',
@@ -50,14 +58,14 @@ describe('JwtStrategy', () => {
 
     const result = await strategy.validate({ sub: 'user-1', username: 'jdoe' });
 
-    expect(result).toEqual({ userId: 'user-1', username: 'jdoe', roles: [] });
+    expect(result).toEqual({ userId: 'user-1', username: 'jdoe', roles: [], permissions: [] });
   });
 
-  it('validate returns empty roles when the fetch call throws', async () => {
+  it('validate returns empty roles/permissions when the fetch call throws', async () => {
     global.fetch = jest.fn().mockRejectedValue(new Error('network down')) as unknown as typeof fetch;
 
     const result = await strategy.validate({ sub: 'user-1', username: 'jdoe' });
 
-    expect(result).toEqual({ userId: 'user-1', username: 'jdoe', roles: [] });
+    expect(result).toEqual({ userId: 'user-1', username: 'jdoe', roles: [], permissions: [] });
   });
 });

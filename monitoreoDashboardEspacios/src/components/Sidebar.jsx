@@ -22,19 +22,19 @@ const NAV_ITEMS = [
     to: "/usuarios",
     label: "Usuarios",
     Icon: IconUsers,
-    roles: ["admin", "root"],
+    permission: "gestionar_usuarios",
   },
   {
     to: "/roles",
     label: "Roles",
     Icon: IconKey,
-    roles: ["admin", "root"],
+    permission: "gestionar_roles",
   },
   {
     to: "/auditoria",
     label: "Auditoría",
     Icon: IconShield,
-    roles: ["admin", "root"],
+    permission: "ver_auditoria",
   },
 ];
 
@@ -46,7 +46,7 @@ const linkClass = ({ isActive }) =>
   }`;
 
 const Sidebar = ({ open = false, onClose }) => {
-  const { hasRole } = useAuth();
+  const { hasPermission } = useAuth();
 
   return (
     <>
@@ -74,7 +74,7 @@ const Sidebar = ({ open = false, onClose }) => {
         </div>
         <nav className="flex-1 space-y-1 px-3 py-4">
           {NAV_ITEMS.filter(
-            (item) => !item.roles || hasRole(...item.roles),
+            (item) => !item.permission || hasPermission(item.permission),
           ).map(({ to, label, Icon }) => (
             <NavLink key={to} to={to} className={linkClass} onClick={onClose}>
               <Icon className="h-4 w-4" />

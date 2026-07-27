@@ -6,18 +6,23 @@ from sqlalchemy.orm import Session
 from app.dto.user import UserUpdate
 from app.entities.user import User
 from app.repositories import role_repository, user_repository
+from app.services import tickets_client
 from app.services.audit_publisher import publish_audit_event
 
 
 def get_user(db: Session, user_id: UUID) -> User:
     user = user_repository.get_by_id(db, user_id)
     if user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado")
     return user
 
 
 def list_users(db: Session, skip: int = 0, limit: int = 100) -> tuple[list[User], int]:
     return user_repository.list_all(db, skip, limit), user_repository.count_all(db)
+
+
+def get_effective_permissions(user: User) -> list[str]:
+    return sorted({p.name for role in user.roles for p in role.permissions})
 
 
 def _actor_role(current_user: dict) -> str:
@@ -33,7 +38,9 @@ def update_user(
 
     if "username" in update_data and update_data["username"] != user.username:
         if user_repository.get_by_username(db, update_data["username"]):
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username already registered")
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, detail="El nombre de usuario ya está registrado"
+            )
 
     for field, value in update_data.items():
         setattr(user, field, value)
@@ -52,8 +59,15 @@ def update_user(
     return user
 
 
-def deactivate_user(db: Session, user_id: UUID, current_user: dict, ip: str | None = None) -> User:
+def deactivate_user(
+    db: Session, user_id: UUID, current_user: dict, token: str, ip: str | None = None
+) -> User:
     user = get_user(db, user_id)
+    if tickets_client.has_active_ticket(str(user_id), token):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="No se puede desactivar: el usuario tiene un ticket activo.",
+        )
     user.active = False
     db.commit()
     db.refresh(user)
@@ -74,7 +88,7 @@ def activate_user(db: Session, user_id: UUID, current_user: dict, ip: str | None
     if not user.person.active:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Cannot activate user while associated person is inactive",
+            detail="No se puede activar el usuario porque la persona asociada está inactiva",
         )
     user.active = True
     db.commit()
@@ -95,9 +109,9 @@ def assign_role(db: Session, user_id: UUID, role_id: UUID, current_user: dict, i
     user = get_user(db, user_id)
     role = role_repository.get_by_id(db, role_id)
     if role is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Rol no encontrado")
     if role in user.roles:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Role already assigned")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="El rol ya está asignado")
     user.roles.append(role)
     db.commit()
     db.refresh(user)
@@ -117,7 +131,7 @@ def remove_role(db: Session, user_id: UUID, role_id: UUID, current_user: dict, i
     user = get_user(db, user_id)
     role = role_repository.get_by_id(db, role_id)
     if role is None or role not in user.roles:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role not assigned to user")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="El rol no está asignado a este usuario")
     user.roles.remove(role)
     db.commit()
     db.refresh(user)

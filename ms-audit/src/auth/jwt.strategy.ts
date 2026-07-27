@@ -23,28 +23,31 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload) {
-    // Roles NO están en el JWT (por seguridad).
+    // Roles y permisos NO están en el JWT (por seguridad).
     // Se obtienen del servidor en este mismo momento.
-    const roles = await this.getUserRoles(payload.sub);
-    return { userId: payload.sub, username: payload.username, roles };
+    const [roles, permissions] = await Promise.all([
+      this.getUserField<string>(payload.sub, 'roles'),
+      this.getUserField<string>(payload.sub, 'permissions'),
+    ]);
+    return { userId: payload.sub, username: payload.username, roles, permissions };
   }
 
-  private async getUserRoles(userId: string): Promise<string[]> {
+  private async getUserField<T>(userId: string, field: 'roles' | 'permissions'): Promise<T[]> {
     try {
-      const response = await fetch(`${USERS_SERVICE_URL}/users/${userId}/roles`, {
+      const response = await fetch(`${USERS_SERVICE_URL}/users/${userId}/${field}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       });
 
       if (!response.ok) {
-        this.logger.warn(`Failed to fetch user roles: ${response.statusText}`);
+        this.logger.warn(`Failed to fetch user ${field}: ${response.statusText}`);
         return [];
       }
 
       const data = await response.json();
-      return data.roles || [];
+      return data[field] || [];
     } catch (error) {
-      this.logger.error(`Error fetching user roles: ${error.message}`);
+      this.logger.error(`Error fetching user ${field}: ${error.message}`);
       return [];
     }
   }

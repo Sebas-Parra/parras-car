@@ -3,35 +3,42 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
-from app.core.deps import get_db, require_admin, require_root
+from app.core.deps import get_db, require_permission, require_root
 from app.dto.role import RoleCreate, RoleRead, RoleUpdate
 from app.services import role_service
 
 router = APIRouter(prefix="/roles", tags=["roles"])
 
 
-# Admin / root only
+# Admin / root, o quien tenga el permiso "gestionar_roles"
 @router.get("", response_model=list[RoleRead])
-def list_roles(db: Session = Depends(get_db), _: dict = Depends(require_admin)):
+def list_roles(db: Session = Depends(get_db), _: dict = Depends(require_permission("gestionar_roles"))):
     return role_service.list_roles(db)
 
 
-# Admin / root only
+# Admin / root, o quien tenga el permiso "gestionar_roles"
 @router.get("/{role_id}", response_model=RoleRead)
-def get_role(role_id: UUID, db: Session = Depends(get_db), _: dict = Depends(require_admin)):
+def get_role(role_id: UUID, db: Session = Depends(get_db), _: dict = Depends(require_permission("gestionar_roles"))):
     return role_service.get_role(db, role_id)
 
 
-# Admin / root only
+# Admin / root, o quien tenga el permiso "gestionar_roles"
 @router.post("", response_model=RoleRead, status_code=status.HTTP_201_CREATED)
-def create_role(data: RoleCreate, db: Session = Depends(get_db), _: dict = Depends(require_admin)):
-    return role_service.create_role(db, data)
+def create_role(
+    data: RoleCreate, db: Session = Depends(get_db), current_user: dict = Depends(require_permission("gestionar_roles"))
+):
+    return role_service.create_role(db, data, current_user)
 
 
-# Admin / root only
+# Admin / root, o quien tenga el permiso "gestionar_roles"
 @router.put("/{role_id}", response_model=RoleRead)
-def update_role(role_id: UUID, data: RoleUpdate, db: Session = Depends(get_db), _: dict = Depends(require_admin)):
-    return role_service.update_role(db, role_id, data)
+def update_role(
+    role_id: UUID,
+    data: RoleUpdate,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(require_permission("gestionar_roles")),
+):
+    return role_service.update_role(db, role_id, data, current_user)
 
 
 # Root only — eliminación física de roles

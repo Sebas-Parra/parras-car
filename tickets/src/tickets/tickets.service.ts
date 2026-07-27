@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -57,6 +58,15 @@ export interface ActingUser {
   username: string;
   roles: string[];
 }
+
+export interface Requester {
+  userId: string;
+  roles: string[];
+}
+
+// Un cliente (sin ningún rol de staff) solo puede ver sus propios tickets.
+const STAFF_ROLES = ['recaudador', 'admin', 'root'];
+const isClienteOnly = (roles: string[]) => !roles.some((r) => STAFF_ROLES.includes(r));
 
 @Injectable()
 export class TicketsService {
@@ -196,21 +206,33 @@ export class TicketsService {
   async findAll(
     page: number,
     pageSize: number,
-    estado?: EstadoTicket,
+    estado: EstadoTicket | undefined,
+    requester: Requester,
+    idUsuario?: string,
   ): Promise<{ data: Ticket[]; total: number; page: number; pageSize: number }> {
+    // Un cliente solo puede ver lo suyo (se ignora cualquier idUsuario que
+    // mande); el staff puede filtrar por un usuario puntual, ej. para
+    // verificar tickets activos de otro usuario antes de desactivarlo.
+    const ownerFilter = isClienteOnly(requester.roles)
+      ? { idUsuario: requester.userId }
+      : idUsuario
+        ? { idUsuario }
+        : {};
+
     // Con filtro por estado (ej. ACTIVO) no paginamos: lo usan otras páginas
     // del dashboard para saber qué vehículos/espacios están ocupados ahora
     // mismo, un conjunto acotado por la capacidad real de estacionamiento,
     // a diferencia del historial completo de tickets.
     if (estado) {
       const data = await this.ticketRepository.find({
-        where: { estado },
+        where: { estado, ...ownerFilter },
         order: { fechaHoraIngreso: 'DESC' },
       });
       return { data, total: data.length, page: 1, pageSize: data.length };
     }
 
     const [data, total] = await this.ticketRepository.findAndCount({
+      where: ownerFilter,
       order: { fechaHoraIngreso: 'DESC' },
       skip: (page - 1) * pageSize,
       take: pageSize,
@@ -218,10 +240,18 @@ export class TicketsService {
     return { data, total, page, pageSize };
   }
 
-  async findOne(id: string): Promise<Ticket> {
+  private async findTicketOrFail(id: string): Promise<Ticket> {
     const ticket = await this.ticketRepository.findOne({ where: { id } });
     if (!ticket) {
       throw new NotFoundException(`Ticket con id '${id}' no encontrado`);
+    }
+    return ticket;
+  }
+
+  async findOne(id: string, requester: Requester): Promise<Ticket> {
+    const ticket = await this.findTicketOrFail(id);
+    if (isClienteOnly(requester.roles) && ticket.idUsuario !== requester.userId) {
+      throw new ForbiddenException('No puedes consultar tickets de otro usuario.');
     }
     return ticket;
   }
@@ -233,7 +263,7 @@ export class TicketsService {
     actingUser: ActingUser,
     ip?: string,
   ): Promise<Ticket> {
-    const ticket = await this.findOne(id);
+    const ticket = await this.findTicketOrFail(id);
     if (ticket.estado !== EstadoTicket.ACTIVO) {
       throw new ConflictException(
         `El ticket '${ticket.codigo}' no está activo (estado: ${ticket.estado})`,
@@ -265,7 +295,7 @@ export class TicketsService {
     actingUser: ActingUser,
     ip?: string,
   ): Promise<Ticket> {
-    const ticket = await this.findOne(id);
+    const ticket = await this.findTicketOrFail(id);
     if (ticket.estado !== EstadoTicket.ACTIVO) {
       throw new ConflictException(
         `El ticket '${ticket.codigo}' no está activo (estado: ${ticket.estado})`,

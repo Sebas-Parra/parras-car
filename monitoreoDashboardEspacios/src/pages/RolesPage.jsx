@@ -3,7 +3,7 @@ import PageHeader from '../components/PageHeader.jsx';
 import Button from '../components/Button.jsx';
 import RoleFormModal from '../components/RoleFormModal.jsx';
 import { useToast } from '../components/ToastProvider.jsx';
-import { fetchRoles, deleteRole } from '../api.js';
+import { fetchRoles, fetchPermissions, deleteRole } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { IconPlus, IconEdit, IconTrash } from '../components/icons.jsx';
 
@@ -11,6 +11,7 @@ const RolesPage = () => {
   const { token, hasRole } = useAuth();
   const toast = useToast();
   const [roles, setRoles] = useState(null);
+  const [permisos, setPermisos] = useState([]);
   const [modal, setModal] = useState(null); // null | 'new' | rol object para editar
 
   const canDelete = hasRole('root');
@@ -24,6 +25,12 @@ const RolesPage = () => {
   useEffect(() => {
     cargar();
   }, [cargar]);
+
+  useEffect(() => {
+    fetchPermissions(token)
+      .then(setPermisos)
+      .catch((err) => toast.error(err.message || 'No se pudieron cargar los permisos'));
+  }, [token, toast]);
 
   const handleDelete = async (rol) => {
     if (!window.confirm(`¿Eliminar el rol "${rol.name}"? Esta acción no se puede deshacer.`)) return;
@@ -70,15 +77,17 @@ const RolesPage = () => {
                   <tr key={r.id} className="hover:bg-slate-50">
                     <td className="px-4 py-3 text-sm font-medium text-slate-900">{r.name}</td>
                     <td className="px-4 py-3 text-sm text-slate-600">{r.description || '--'}</td>
-                    <td className="space-x-2 px-4 py-3 text-right text-sm">
-                      <Button variant="secondary" size="sm" icon={IconEdit} onClick={() => setModal(r)}>
-                        Editar
-                      </Button>
-                      {canDelete && (
-                        <Button variant="danger" size="sm" icon={IconTrash} onClick={() => handleDelete(r)}>
-                          Eliminar
+                    <td className="px-4 py-3 text-right text-sm">
+                      <div className="flex flex-wrap justify-end gap-2">
+                        <Button variant="secondary" size="sm" icon={IconEdit} onClick={() => setModal(r)}>
+                          Editar
                         </Button>
-                      )}
+                        {canDelete && (
+                          <Button variant="danger" size="sm" icon={IconTrash} onClick={() => handleDelete(r)}>
+                            Eliminar
+                          </Button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -89,7 +98,12 @@ const RolesPage = () => {
       )}
 
       {modal && (
-        <RoleFormModal rol={modal === 'new' ? null : modal} onClose={() => setModal(null)} onSaved={cargar} />
+        <RoleFormModal
+          role={modal === 'new' ? null : modal}
+          permisos={permisos}
+          onClose={() => setModal(null)}
+          onSaved={cargar}
+        />
       )}
     </>
   );

@@ -8,12 +8,15 @@ test('getPhoneValidationError accepts empty optional phone numbers', () => {
   assert.equal(getPhoneValidationError('   '), '');
 });
 
-test('getPhoneValidationError rejects non-digit phone numbers', () => {
-  assert.equal(
-    getPhoneValidationError('099abc4567'),
-    'El teléfono solo puede contener números',
-  );
-  assert.equal(getPhoneValidationError('-1'), 'El teléfono solo puede contener números');
+test('getPhoneValidationError rejects characters outside digits/spaces/+-()', () => {
+  const message = 'El teléfono solo puede contener dígitos, espacios y los caracteres: + - ( )';
+  assert.equal(getPhoneValidationError('099abc4567'), message);
+  assert.equal(getPhoneValidationError('099*4567'), message);
+});
+
+test('getPhoneValidationError accepts backend-allowed formats', () => {
+  assert.equal(getPhoneValidationError('+593 99 123 4567'), '');
+  assert.equal(getPhoneValidationError('(02) 123-4567'), '');
 });
 
 test('normalizeOptionalPhone trims valid values and omits empty values', () => {

@@ -20,7 +20,11 @@ def get_role(db: Session, role_id: UUID) -> Role:
     return role
 
 
-def _resolve_permissions(db: Session, permission_ids: list[UUID]) -> list[Permission]:
+# Solo root puede otorgar la eliminación física de zonas/espacios a un rol.
+ROOT_ONLY_PERMISSIONS = {"eliminar_zonas"}
+
+
+def _resolve_permissions(db: Session, permission_ids: list[UUID], current_user: dict) -> list[Permission]:
     permissions = permission_repository.get_by_ids(db, permission_ids)
     found_ids = {p.id for p in permissions}
     missing = set(permission_ids) - found_ids
@@ -29,10 +33,17 @@ def _resolve_permissions(db: Session, permission_ids: list[UUID]) -> list[Permis
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Permisos no encontrados: {', '.join(str(m) for m in missing)}",
         )
+    if "root" not in (current_user.get("roles") or []):
+        blocked = [p.name for p in permissions if p.name in ROOT_ONLY_PERMISSIONS]
+        if blocked:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Solo root puede asignar el/los permiso(s): {', '.join(blocked)}",
+            )
     return permissions
 
 
-def create_role(db: Session, data: RoleCreate) -> Role:
+def create_role(db: Session, data: RoleCreate, current_user: dict) -> Role:
     if role_repository.get_by_name(db, data.name):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -42,11 +53,11 @@ def create_role(db: Session, data: RoleCreate) -> Role:
     if data.permission_ids is None:
         permissions = permission_repository.list_public(db)
     else:
-        permissions = _resolve_permissions(db, data.permission_ids)
+        permissions = _resolve_permissions(db, data.permission_ids, current_user)
     return role_repository.create(db, data.name, data.description, permissions)
 
 
-def update_role(db: Session, role_id: UUID, data: RoleUpdate) -> Role:
+def update_role(db: Session, role_id: UUID, data: RoleUpdate, current_user: dict) -> Role:
     role = get_role(db, role_id)
     update_data = data.model_dump(exclude_unset=True)
 
@@ -66,7 +77,7 @@ def update_role(db: Session, role_id: UUID, data: RoleUpdate) -> Role:
     db.refresh(role)
 
     if permission_ids is not None:
-        permissions = _resolve_permissions(db, permission_ids)
+        permissions = _resolve_permissions(db, permission_ids, current_user)
         role = role_repository.set_permissions(db, role, permissions)
 
     return role

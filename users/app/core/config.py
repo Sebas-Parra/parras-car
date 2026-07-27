@@ -5,6 +5,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     database_url: str = "postgresql+psycopg2://postgres:postgres@localhost:5433/auth_db"
+    tickets_service_url: str = "http://tickets:3000"
 
     jwt_secret: str
     jwt_algorithm: str = "HS256"

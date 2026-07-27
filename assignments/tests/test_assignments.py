@@ -59,7 +59,7 @@ class TestCreateAssignment:
         ):
             response = client.post("/assignments", json={"user_id": USER_ID, "vehicle_id": VEHICLE_ID})
         assert response.status_code == 404
-        assert "User not found" in response.json()["detail"]
+        assert "Usuario no encontrado" in response.json()["detail"]
 
     def test_create_assignment_inactive_user_rejected(self, client):
         with (
@@ -68,7 +68,7 @@ class TestCreateAssignment:
         ):
             response = client.post("/assignments", json={"user_id": USER_ID, "vehicle_id": VEHICLE_ID})
         assert response.status_code == 409
-        assert "not active" in response.json()["detail"]
+        assert "no está activo" in response.json()["detail"]
 
     def test_create_assignment_vehicle_not_found(self, client):
         with (
@@ -77,7 +77,7 @@ class TestCreateAssignment:
         ):
             response = client.post("/assignments", json={"user_id": USER_ID, "vehicle_id": VEHICLE_ID})
         assert response.status_code == 404
-        assert "Vehicle not found" in response.json()["detail"]
+        assert "Vehículo no encontrado" in response.json()["detail"]
 
     def test_create_assignment_inactive_vehicle_rejected(self, client):
         with (
@@ -86,7 +86,7 @@ class TestCreateAssignment:
         ):
             response = client.post("/assignments", json={"user_id": USER_ID, "vehicle_id": VEHICLE_ID})
         assert response.status_code == 409
-        assert "not active" in response.json()["detail"]
+        assert "no está activo" in response.json()["detail"]
 
     def test_create_duplicate_assignment_fails(self, client):
         with (
@@ -106,7 +106,7 @@ class TestCreateAssignment:
             client.post("/assignments", json={"user_id": USER_ID, "vehicle_id": VEHICLE_ID})
             response = client.post("/assignments", json={"user_id": other_user, "vehicle_id": VEHICLE_ID})
         assert response.status_code == 409
-        assert "already assigned to another active owner" in response.json()["detail"]
+        assert "ya está asignado a otro propietario activo" in response.json()["detail"]
 
 
     def test_create_assignment_reactivates_inactive_relation(self, client):
@@ -299,7 +299,7 @@ class TestTransfer:
                 json={"from_user_id": USER_ID, "to_user_id": USER_ID},
             )
         assert response.status_code == 409
-        assert "different users" in response.json()["detail"]
+        assert "usuarios diferentes" in response.json()["detail"]
 
     def test_transfer_inactive_destination_user_rejected(self, client):
         self._create_assignment(client)
@@ -312,7 +312,7 @@ class TestTransfer:
                 json={"from_user_id": USER_ID, "to_user_id": NEW_USER_ID},
             )
         assert response.status_code == 409
-        assert "not active" in response.json()["detail"]
+        assert "no está activo" in response.json()["detail"]
 
     def test_transfer_inactive_vehicle_rejected(self, client):
         self._create_assignment(client)

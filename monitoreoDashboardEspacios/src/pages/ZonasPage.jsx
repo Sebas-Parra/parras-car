@@ -99,17 +99,19 @@ const ZonasPage = () => {
                         {z.status === 1 ? 'Activa' : 'Inactiva'}
                       </span>
                     </td>
-                    <td className="space-x-2 px-4 py-3 text-right text-sm">
-                      {canManage && (
-                        <Button variant="secondary" size="sm" icon={IconEdit} onClick={() => setModal(z)}>
-                          Editar
-                        </Button>
-                      )}
-                      {canDelete && (
-                        <Button variant="danger" size="sm" icon={IconTrash} onClick={() => handleDelete(z)}>
-                          Eliminar
-                        </Button>
-                      )}
+                    <td className="px-4 py-3 text-right text-sm">
+                      <div className="flex flex-wrap justify-end gap-2">
+                        {canManage && (
+                          <Button variant="secondary" size="sm" icon={IconEdit} onClick={() => setModal(z)}>
+                            Editar
+                          </Button>
+                        )}
+                        {canDelete && (
+                          <Button variant="danger" size="sm" icon={IconTrash} onClick={() => handleDelete(z)}>
+                            Eliminar
+                          </Button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

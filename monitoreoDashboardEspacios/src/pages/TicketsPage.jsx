@@ -233,23 +233,25 @@ const TicketsPage = () => {
                         {toEnumLabel(t.estado, ESTADO_TICKET_LABELS)}
                       </span>
                     </td>
-                    <td className="space-x-3 px-4 py-3 text-right text-sm">
-                      {canOperar && t.estado === 'ACTIVO' && (
-                        <>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            icon={IconCheck}
-                            className="!border-emerald-300 !text-emerald-700 hover:!bg-emerald-50"
-                            onClick={() => handlePagar(t.id)}
-                          >
-                            Pagar
-                          </Button>
-                          <Button variant="danger" size="sm" icon={IconX} onClick={() => handleAnular(t.id)}>
-                            Anular
-                          </Button>
-                        </>
-                      )}
+                    <td className="px-4 py-3 text-right text-sm">
+                      <div className="flex flex-wrap justify-end gap-2">
+                        {canOperar && t.estado === 'ACTIVO' && (
+                          <>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              icon={IconCheck}
+                              className="!border-emerald-300 !text-emerald-700 hover:!bg-emerald-50"
+                              onClick={() => handlePagar(t.id)}
+                            >
+                              Pagar
+                            </Button>
+                            <Button variant="danger" size="sm" icon={IconX} onClick={() => handleAnular(t.id)}>
+                              Anular
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

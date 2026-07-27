@@ -131,28 +131,30 @@ const VehiculosPage = () => {
                         {v.active ? 'Activo' : 'Inactivo'}
                       </span>
                     </td>
-                    <td className="space-x-2 px-4 py-3 text-right text-sm">
-                      {canManage && (
-                        <Button variant="secondary" size="sm" icon={IconEdit} onClick={() => setModal(v)}>
-                          Editar
-                        </Button>
-                      )}
-                      {canManage && v.active && (
-                        <Button variant="danger" size="sm" icon={IconTrash} onClick={() => handleDelete(v)}>
-                          Desactivar
-                        </Button>
-                      )}
-                      {canManage && !v.active && (
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          icon={IconCheck}
-                          className="!border-emerald-300 !text-emerald-700 hover:!bg-emerald-50"
-                          onClick={() => handleActivate(v)}
-                        >
-                          Reactivar
-                        </Button>
-                      )}
+                    <td className="px-4 py-3 text-right text-sm">
+                      <div className="flex flex-wrap justify-end gap-2">
+                        {canManage && (
+                          <Button variant="secondary" size="sm" icon={IconEdit} onClick={() => setModal(v)}>
+                            Editar
+                          </Button>
+                        )}
+                        {canManage && v.active && (
+                          <Button variant="danger" size="sm" icon={IconTrash} onClick={() => handleDelete(v)}>
+                            Desactivar
+                          </Button>
+                        )}
+                        {canManage && !v.active && (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            icon={IconCheck}
+                            className="!border-emerald-300 !text-emerald-700 hover:!bg-emerald-50"
+                            onClick={() => handleActivate(v)}
+                          >
+                            Reactivar
+                          </Button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

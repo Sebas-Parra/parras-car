@@ -9,10 +9,15 @@ const inputClass =
   'w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500';
 const labelClass = 'mb-1 block text-xs font-medium uppercase tracking-wide text-slate-500';
 
+// Solo root puede otorgar la eliminación física de zonas/espacios.
+const ROOT_ONLY_PERMISSIONS = new Set(['eliminar_zonas']);
+
 const RoleFormModal = ({ role, permisos, onClose, onSaved }) => {
-  const { token } = useAuth();
+  const { token, hasRole } = useAuth();
   const toast = useToast();
   const isEdit = !!role;
+  const isRoot = hasRole('root');
+  const selectablePermisos = (permisos ?? []).filter((p) => isRoot || !ROOT_ONLY_PERMISSIONS.has(p.name));
 
   const defaultSelected = isEdit
     ? new Set((role.permissions ?? []).map((p) => p.id))
@@ -82,7 +87,7 @@ const RoleFormModal = ({ role, permisos, onClose, onSaved }) => {
             Los permisos públicos vienen marcados por defecto. Agregá o quitá los que necesites.
           </p>
           <div className="max-h-64 space-y-2 overflow-y-auto rounded-md border border-slate-200 p-2">
-            {(permisos ?? []).map((perm) => (
+            {selectablePermisos.map((perm) => (
               <label key={perm.id} className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-slate-50">
                 <input
                   type="checkbox"

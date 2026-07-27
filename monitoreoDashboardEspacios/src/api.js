@@ -131,7 +131,13 @@ const request = async (path, { method = 'GET', token, body } = {}) => {
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
   if (response.status === 204) return null;
-  if (!response.ok) throw new Error(await parseErrorMessage(response));
+  if (!response.ok) {
+    const message = await parseErrorMessage(response);
+    // Token inválido/expirado o usuario desactivado en medio de la sesión:
+    // cerrar sesión ya mismo en vez de esperar a que expire el token.
+    if (response.status === 401 && token) window.dispatchEvent(new CustomEvent('auth:unauthorized'));
+    throw new Error(message);
+  }
   const text = await response.text();
   return text ? JSON.parse(text) : null;
 };
@@ -211,7 +217,10 @@ export const fetchAsignacionPorVehiculo = async (vehicleId, token) => {
   const headers = token ? { Authorization: `Bearer ${token}` } : {};
   const response = await fetch(`${API_ASIGNACIONES}/by-vehicle/${vehicleId}`, { headers });
   if (response.status === 404) return null;
-  if (!response.ok) throw new Error(await parseErrorMessage(response));
+  if (!response.ok) {
+    if (response.status === 401 && token) window.dispatchEvent(new CustomEvent('auth:unauthorized'));
+    throw new Error(await parseErrorMessage(response));
+  }
   return response.json();
 };
 

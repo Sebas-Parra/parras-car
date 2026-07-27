@@ -116,8 +116,9 @@ const RegisterPage = ({ onDone }) => {
                     inputMode="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    pattern="[0-9]*"
-                    title="Solo números"
+                    placeholder="Ej: 0991234567"
+                    pattern="[\d\s+\-()]*"
+                    title="Solo números, espacios y los caracteres: + - ( )"
                     className={inputClass}
                   />
                 </div>

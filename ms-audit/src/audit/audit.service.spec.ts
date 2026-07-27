@@ -6,13 +6,13 @@ import { CreateAuditEventDto } from './dto/create-audit-event.dto';
 
 describe('AuditService', () => {
   let service: AuditService;
-  let repo: { create: jest.Mock; save: jest.Mock; find: jest.Mock; findOne: jest.Mock };
+  let repo: { create: jest.Mock; save: jest.Mock; findAndCount: jest.Mock; findOne: jest.Mock };
 
   beforeEach(async () => {
     repo = {
       create: jest.fn((x) => x),
       save: jest.fn((x) => Promise.resolve({ id: 'evt-1', ...x })),
-      find: jest.fn(),
+      findAndCount: jest.fn(),
       findOne: jest.fn(),
     };
 
@@ -61,12 +61,19 @@ describe('AuditService', () => {
     expect(arg.eventTimestamp.getTime()).toBeGreaterThanOrEqual(before);
   });
 
-  it('findAll returns events ordered by timestamp descending', async () => {
-    const events = [{ id: 'evt-1' }, { id: 'evt-2' }];
-    repo.find.mockResolvedValue(events);
+  describe('findAll', () => {
+    it('paginates using skip/take derived from page and pageSize', async () => {
+      repo.findAndCount.mockResolvedValue([[{ id: 'evt-1' }], 45]);
 
-    await expect(service.findAll()).resolves.toEqual(events);
-    expect(repo.find).toHaveBeenCalledWith({ order: { timestamp: 'DESC' } });
+      const result = await service.findAll(3, 10);
+
+      expect(repo.findAndCount).toHaveBeenCalledWith({
+        order: { timestamp: 'DESC' },
+        skip: 20,
+        take: 10,
+      });
+      expect(result).toEqual({ data: [{ id: 'evt-1' }], total: 45, page: 3, pageSize: 10 });
+    });
   });
 
   it('findOne returns the event matching the given id', async () => {

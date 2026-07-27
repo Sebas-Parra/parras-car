@@ -11,7 +11,7 @@ from app.dto.assignment import (
     FleetResponse,
     FleetVehicleIdsResponse,
 )
-from app.dto.audit import AuditRead
+from app.dto.audit import AuditListResponse, AuditRead
 from app.services.assignment_service import AssignmentService
 from app.services.assignment_validator import AssignmentValidator
 from app.services.audit_service import AuditService
@@ -85,13 +85,18 @@ def get_active_by_vehicle(
 
 
 # Admin / root only
-@router.get("/audit", response_model=list[AuditRead])
+@router.get("/audit", response_model=AuditListResponse)
 def list_audit(
+    page: int = 1,
+    page_size: int = 20,
     db: Session = Depends(get_db),
     svc: AssignmentService = Depends(get_assignment_service),
     _: dict = Depends(require_admin),
 ):
-    return svc.list_audit(db)
+    page = max(1, page)
+    page_size = min(max(1, page_size), 100)
+    data, total = svc.list_audit(db, (page - 1) * page_size, page_size)
+    return AuditListResponse(data=data, total=total, page=page, page_size=page_size)
 
 
 # No auth — internal call from vehicles service (server-to-server, no user token).

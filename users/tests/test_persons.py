@@ -92,6 +92,24 @@ def test_create_person_rejects_invalid_cedula_length(client, role_ids):
     assert response.status_code == 422
 
 
+def test_create_person_rejects_email_without_at_sign(client, role_ids):
+    response = client.post(
+        "/persons",
+        json={
+            **BASE_PERSON,
+            "cedula": "1710000017",
+            "first_name": "Sebastian",
+            "middle_name": "Test",
+            "last_name": "Parra",
+            "email": "separra",
+            "role_ids": [role_ids["estudiante"]],
+        },
+    )
+    assert response.status_code == 422
+    body = response.json()
+    assert any("formato válido" in e["msg"] for e in body["detail"])
+
+
 def test_create_person_rejects_invalid_cedula_algorithm(client, role_ids):
     response = client.post(
         "/persons",

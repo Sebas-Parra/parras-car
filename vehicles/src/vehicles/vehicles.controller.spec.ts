@@ -59,20 +59,28 @@ describe('VehiclesController', () => {
   it('create delegates to the service with the acting user and client ip', () => {
     const req = {
       user: actingUser,
-      headers: { 'x-forwarded-for': '198.51.100.1' },
+      headers: {
+        'x-forwarded-for': '198.51.100.1',
+        authorization: 'Bearer client-token',
+      },
       ip: '127.0.0.1',
     } as any;
     const dto = { tipo: 'car', datos: {} } as any;
 
     controller.create(dto, req);
 
-    expect(service.create).toHaveBeenCalledWith(dto, actingUser, '198.51.100.1');
+    expect(service.create).toHaveBeenCalledWith(
+      dto,
+      actingUser,
+      '198.51.100.1',
+      'Bearer client-token',
+    );
   });
 
   it('findAll delegates to the service with the acting user', () => {
     const req = { user: actingUser } as any;
-    controller.findAll(req);
-    expect(service.findAll).toHaveBeenCalledWith(actingUser);
+    controller.findAll(req, 1, 20);
+    expect(service.findAll).toHaveBeenCalledWith(actingUser, 1, 20);
   });
 
   it('findOne delegates to the service with id and acting user', () => {

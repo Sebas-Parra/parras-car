@@ -46,6 +46,9 @@ class JwtFilterTest {
         ReflectionTestUtils.setField(jwtFilter, "usersServiceUrl", "http://users-service");
         ReflectionTestUtils.setField(jwtFilter, "restTemplate", restTemplate);
         ReflectionTestUtils.invokeMethod(jwtFilter, "initKey");
+
+        restTemplate = mock(RestTemplate.class);
+        ReflectionTestUtils.setField(jwtFilter, "restTemplate", restTemplate);
     }
 
     @AfterEach

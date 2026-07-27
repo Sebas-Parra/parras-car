@@ -17,5 +17,9 @@ def list_all(db: Session, skip: int = 0, limit: int = 100) -> list[User]:
     return db.query(User).order_by(User.id_person).offset(skip).limit(limit).all()
 
 
+def count_all(db: Session) -> int:
+    return db.query(User).count()
+
+
 def username_exists(db: Session, username: str) -> bool:
     return db.query(User).filter(User.username == username).first() is not None

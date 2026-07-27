@@ -17,16 +17,20 @@ describe('VehiclesService', () => {
   let repo: {
     findOne: jest.Mock;
     save: jest.Mock;
+    findAndCount: jest.Mock;
     find: jest.Mock;
     manager: { save: jest.Mock };
   };
   let publisher: { publish: jest.Mock };
   let fetchMock: jest.Mock;
+  let originalFetch: typeof global.fetch;
 
   beforeEach(async () => {
+    originalFetch = global.fetch;
     repo = {
       findOne: jest.fn().mockResolvedValue(null),
-      save: jest.fn((v) => Promise.resolve({ id: 'veh-1', ...v })),
+      save: jest.fn((v) => Promise.resolve({ ...v, id: 'veh-1' })),
+      findAndCount: jest.fn(),
       find: jest.fn().mockResolvedValue([]),
       manager: { save: jest.fn((v) => Promise.resolve(v)) },
     };
@@ -47,6 +51,7 @@ describe('VehiclesService', () => {
   });
 
   afterEach(() => {
+    global.fetch = originalFetch;
     jest.restoreAllMocks();
   });
 
@@ -136,16 +141,16 @@ describe('VehiclesService', () => {
 
   describe('findAll', () => {
     it('returns all vehicles for non-cliente users', async () => {
-      repo.find.mockResolvedValueOnce([{ id: 'v1' }]);
-      const result = await service.findAll({ userId: 'u1', username: 'admin1', roles: ['admin'] });
-      expect(result).toEqual([{ id: 'v1' }]);
+      repo.findAndCount.mockResolvedValueOnce([[{ id: 'v1' }], 1]);
+      const result = await service.findAll({ userId: 'u1', username: 'admin1', roles: ['admin'] }, 1, 20);
+      expect(result).toEqual({ data: [{ id: 'v1' }], total: 1, page: 1, pageSize: 20 });
       expect(fetchMock).not.toHaveBeenCalled();
     });
 
     it('returns all vehicles when no acting user is provided', async () => {
-      repo.find.mockResolvedValueOnce([{ id: 'v1' }]);
-      const result = await service.findAll();
-      expect(result).toEqual([{ id: 'v1' }]);
+      repo.findAndCount.mockResolvedValueOnce([[{ id: 'v1' }], 1]);
+      const result = await service.findAll(undefined, 1, 20);
+      expect(result).toEqual({ data: [{ id: 'v1' }], total: 1, page: 1, pageSize: 20 });
     });
 
     it('returns empty list for cliente with no assigned vehicles', async () => {
@@ -153,8 +158,8 @@ describe('VehiclesService', () => {
         ok: true,
         json: () => Promise.resolve({ vehicle_ids: [] }),
       });
-      const result = await service.findAll({ userId: 'u1', username: 'cliente1', roles: ['cliente'] });
-      expect(result).toEqual([]);
+      const result = await service.findAll({ userId: 'u1', username: 'cliente1', roles: ['cliente'] }, 1, 20);
+      expect(result).toEqual({ data: [], total: 0, page: 1, pageSize: 20 });
     });
 
     it('returns vehicles matching assigned ids for cliente', async () => {
@@ -162,22 +167,22 @@ describe('VehiclesService', () => {
         ok: true,
         json: () => Promise.resolve({ vehicle_ids: ['v1', 'v2'] }),
       });
-      repo.find.mockResolvedValueOnce([{ id: 'v1' }, { id: 'v2' }]);
-      const result = await service.findAll({ userId: 'u1', username: 'cliente1', roles: ['cliente'] });
-      expect(result).toEqual([{ id: 'v1' }, { id: 'v2' }]);
+      repo.findAndCount.mockResolvedValueOnce([[{ id: 'v1' }, { id: 'v2' }], 2]);
+      const result = await service.findAll({ userId: 'u1', username: 'cliente1', roles: ['cliente'] }, 1, 20);
+      expect(result).toEqual({ data: [{ id: 'v1' }, { id: 'v2' }], total: 2, page: 1, pageSize: 20 });
     });
 
     it('throws ServiceUnavailableException when fleet fetch is not ok', async () => {
       fetchMock.mockResolvedValue({ ok: false, statusText: 'Bad Gateway' });
       await expect(
-        service.findAll({ userId: 'u1', username: 'cliente1', roles: ['cliente'] }),
+        service.findAll({ userId: 'u1', username: 'cliente1', roles: ['cliente'] }, 1, 20),
       ).rejects.toThrow(ServiceUnavailableException);
     });
 
     it('throws ServiceUnavailableException when fetch throws', async () => {
       fetchMock.mockRejectedValue(new Error('network down'));
       await expect(
-        service.findAll({ userId: 'u1', username: 'cliente1', roles: ['cliente'] }),
+        service.findAll({ userId: 'u1', username: 'cliente1', roles: ['cliente'] }, 1, 20),
       ).rejects.toThrow(ServiceUnavailableException);
     });
   });
@@ -353,5 +358,52 @@ describe('VehiclesService', () => {
       expect(vehicle.active).toBe(true);
       expect(result).toEqual(expect.objectContaining({ active: true }));
     });
+  });
+
+  it('forwards the bearer token when auto-assigning a cliente vehicle', async () => {
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, statusText: 'Created' } as Response);
+    const dto = {
+      tipo: 'car',
+      datos: { plate: 'CLI-001' },
+    } as unknown as CreateVehicleDto;
+
+    await service.create(
+      dto,
+      { userId: 'user-1', username: 'cliente1', roles: ['cliente'] },
+      undefined,
+      'Bearer client-token',
+    );
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      'http://assignments:8001/assignments',
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer client-token',
+        }),
+      }),
+    );
+    expect(JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body)).toEqual({
+      user_id: 'user-1',
+      vehicle_id: 'veh-1',
+    });
+  });
+
+  describe('findAll', () => {
+    it('paginates the full catalog for non-cliente users', async () => {
+      repo.findAndCount.mockResolvedValue([[{ id: 'veh-1' }], 30]);
+
+      const result = await service.findAll({ userId: 'u1', username: 'jdoe', roles: ['admin'] }, 2, 10);
+
+      expect(repo.findAndCount).toHaveBeenCalledWith({ skip: 10, take: 10 });
+      expect(result).toEqual({ data: [{ id: 'veh-1' }], total: 30, page: 2, pageSize: 10 });
+    });
+  });
+
+  it('returns a vehicle for assignment validation without checking cliente ownership', async () => {
+    const vehicle = { id: 'veh-1', active: true };
+    repo.findOne.mockResolvedValue(vehicle);
+
+    await expect(service.findForAssignmentValidation('veh-1')).resolves.toEqual({ id: 'veh-1', active: true });
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

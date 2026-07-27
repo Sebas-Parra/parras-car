@@ -193,8 +193,29 @@ export class TicketsService {
     return saved;
   }
 
-  findAll(): Promise<Ticket[]> {
-    return this.ticketRepository.find();
+  async findAll(
+    page: number,
+    pageSize: number,
+    estado?: EstadoTicket,
+  ): Promise<{ data: Ticket[]; total: number; page: number; pageSize: number }> {
+    // Con filtro por estado (ej. ACTIVO) no paginamos: lo usan otras páginas
+    // del dashboard para saber qué vehículos/espacios están ocupados ahora
+    // mismo, un conjunto acotado por la capacidad real de estacionamiento,
+    // a diferencia del historial completo de tickets.
+    if (estado) {
+      const data = await this.ticketRepository.find({
+        where: { estado },
+        order: { fechaHoraIngreso: 'DESC' },
+      });
+      return { data, total: data.length, page: 1, pageSize: data.length };
+    }
+
+    const [data, total] = await this.ticketRepository.findAndCount({
+      order: { fechaHoraIngreso: 'DESC' },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    });
+    return { data, total, page, pageSize };
   }
 
   async findOne(id: string): Promise<Ticket> {

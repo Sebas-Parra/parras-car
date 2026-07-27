@@ -52,11 +52,14 @@ export class VehiclesService {
     await this.eventPublisher.publish(event);
   }
 
-  private async autoAssignToClient(vehicleId: string, userId: string) {
+  private async autoAssignToClient(vehicleId: string, userId: string, authHeader?: string) {
     try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (authHeader) headers.Authorization = authHeader;
+
       const res = await fetch(`${ASSIGNMENTS_URL}/assignments`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           user_id: userId,
           vehicle_id: vehicleId,
@@ -73,7 +76,7 @@ export class VehiclesService {
     }
   }
 
-  async create(createVehicleDto: CreateVehicleDto, actingUser: ActingUser, ip?: string): Promise<Vehicle> {
+  async create(createVehicleDto: CreateVehicleDto, actingUser: ActingUser, ip?: string, authHeader?: string): Promise<Vehicle> {
     const exist = await this.repositoryVehicle.findOne({
       where: { plate: createVehicleDto.datos.plate },
     });
@@ -88,13 +91,19 @@ export class VehiclesService {
 
     // Auto-assign to client if role is 'cliente'
     if (actingUser.roles.includes('cliente')) {
-      await this.autoAssignToClient(saved.id, actingUser.userId);
+      await this.autoAssignToClient(saved.id, actingUser.userId, authHeader);
     }
 
     return saved
   }
 
-  async findAll(actingUser?: ActingUser): Promise<Vehicle[]> {
+  async findAll(
+    actingUser: ActingUser | undefined,
+    page: number,
+    pageSize: number,
+  ): Promise<{ data: Vehicle[]; total: number; page: number; pageSize: number }> {
+    const skip = (page - 1) * pageSize;
+
     // If user is 'cliente', only return their assigned vehicles
     if (actingUser?.roles.includes('cliente')) {
       this.logger.debug(`Filtering vehicles for cliente user: ${actingUser.username}`);
@@ -119,15 +128,18 @@ export class VehiclesService {
 
         if (vehicleIds.length === 0) {
           this.logger.debug(`User ${actingUser.username} has no assigned vehicles`);
-          return [];
+          return { data: [], total: 0, page, pageSize };
         }
 
         this.logger.debug(
           `Returning ${vehicleIds.length} vehicles for user ${actingUser.username}`,
         );
-        return this.repositoryVehicle.find({
+        const [data, total] = await this.repositoryVehicle.findAndCount({
           where: { id: In(vehicleIds) },
+          skip,
+          take: pageSize,
         });
+        return { data, total, page, pageSize };
       } catch (error) {
         if (error instanceof ServiceUnavailableException) {
           throw error;
@@ -142,7 +154,24 @@ export class VehiclesService {
 
     // Admins and others see all vehicles
     this.logger.debug(`Returning all vehicles for user: ${actingUser?.username}`);
-    return this.repositoryVehicle.find();
+    const [data, total] = await this.repositoryVehicle.findAndCount({ skip, take: pageSize });
+    return { data, total, page, pageSize };
+  }
+
+  // Búsqueda directa por placa (única) — usada por tickets al emitir un
+  // ticket. Antes se resolvía trayendo TODO el catálogo y filtrando en
+  // memoria; con /vehicles paginado eso se rompía pasado el vehículo #20.
+  async findByPlate(plate: string): Promise<Vehicle | null> {
+    return this.repositoryVehicle.findOne({ where: { plate } });
+  }
+
+  async findForAssignmentValidation(id: string): Promise<Pick<Vehicle, 'id' | 'active'>> {
+    const vehicle = await this.repositoryVehicle.findOne({ where: { id } });
+    if (!vehicle) {
+      this.logger.warn(`Vehicle ${id} not found in database`);
+      throw new NotFoundException(`Vehículo con id '${id}' no encontrado`);
+    }
+    return { id: vehicle.id, active: vehicle.active };
   }
 
   async findOne(id: string, actingUser?: ActingUser): Promise<Vehicle> {

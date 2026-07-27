@@ -19,6 +19,20 @@ def get_vehicle(vehicle_id: UUID, token: str) -> dict | None:
         return None
 
 
+def get_vehicle_for_assignment_validation(vehicle_id: UUID, token: str) -> dict | None:
+    try:
+        response = httpx.get(
+            f"{settings.vehicles_service_url}/vehicles/validation/{vehicle_id}",
+            headers={"Authorization": f"Bearer {token}"},
+            timeout=5.0,
+        )
+        if response.status_code == 200:
+            return response.json()
+        return None
+    except httpx.RequestError:
+        return None
+
+
 def get_user(user_id: UUID, token: str) -> dict | None:
     try:
         response = httpx.get(

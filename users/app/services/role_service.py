@@ -4,8 +4,9 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.dto.role import RoleCreate, RoleUpdate
+from app.entities.permission import Permission
 from app.entities.role import Role
-from app.repositories import role_repository
+from app.repositories import permission_repository, role_repository
 
 
 def list_roles(db: Session) -> list[Role]:
@@ -19,13 +20,30 @@ def get_role(db: Session, role_id: UUID) -> Role:
     return role
 
 
+def _resolve_permissions(db: Session, permission_ids: list[UUID]) -> list[Permission]:
+    permissions = permission_repository.get_by_ids(db, permission_ids)
+    found_ids = {p.id for p in permissions}
+    missing = set(permission_ids) - found_ids
+    if missing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Permisos no encontrados: {', '.join(str(m) for m in missing)}",
+        )
+    return permissions
+
+
 def create_role(db: Session, data: RoleCreate) -> Role:
     if role_repository.get_by_name(db, data.name):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"Ya existe un rol con el nombre '{data.name}'",
         )
-    return role_repository.create(db, data.name, data.description)
+    # Sin selección explícita, el rol arranca solo con los permisos públicos.
+    if data.permission_ids is None:
+        permissions = permission_repository.list_public(db)
+    else:
+        permissions = _resolve_permissions(db, data.permission_ids)
+    return role_repository.create(db, data.name, data.description, permissions)
 
 
 def update_role(db: Session, role_id: UUID, data: RoleUpdate) -> Role:
@@ -39,11 +57,18 @@ def update_role(db: Session, role_id: UUID, data: RoleUpdate) -> Role:
                 detail=f"Ya existe un rol con el nombre '{update_data['name']}'",
             )
 
+    permission_ids = update_data.pop("permission_ids", None)
+
     for field, value in update_data.items():
         setattr(role, field, value)
 
     db.commit()
     db.refresh(role)
+
+    if permission_ids is not None:
+        permissions = _resolve_permissions(db, permission_ids)
+        role = role_repository.set_permissions(db, role, permissions)
+
     return role
 
 

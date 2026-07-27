@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: users
-  namespace: parras-car
+  namespace: yepez-sagnay-parra
 spec:
   replicas: 1
   selector:
@@ -23,7 +23,7 @@ spec:
               until nc -z users-db 5432; do echo "esperando users-db..."; sleep 2; done
               until nc -z rabbitmq 5672; do echo "esperando rabbitmq..."; sleep 2; done
         - name: migrate
-          image: parras-car-users:latest
+          image: yepez-sagnay-parra-users:latest
           imagePullPolicy: Never
           command:
             - sh
@@ -55,7 +55,7 @@ spec:
               valueFrom: { configMapKeyRef: { name: parras-config, key: RABBITMQ_ROUTING_KEY } }
       containers:
         - name: users
-          image: parras-car-users:latest
+          image: yepez-sagnay-parra-users:latest
           imagePullPolicy: Never
           ports:
             - containerPort: 8000
@@ -92,7 +92,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: users
-  namespace: parras-car
+  namespace: yepez-sagnay-parra
 spec:
   selector:
     app: users

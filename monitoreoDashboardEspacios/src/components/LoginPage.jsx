@@ -1,23 +1,23 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
 import Button from "./Button.jsx";
+import { useToast } from "./ToastProvider.jsx";
 import logo from "../assets/logo.webp";
 
 const LoginPage = ({ onRegisterClick }) => {
   const { login } = useAuth();
+  const toast = useToast();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
     setLoading(true);
     try {
       await login(username, password);
     } catch (err) {
-      setError(err.message || "No se pudo iniciar sesión");
+      toast.error(err.message || "No se pudo iniciar sesión");
     } finally {
       setLoading(false);
     }
@@ -60,7 +60,6 @@ const LoginPage = ({ onRegisterClick }) => {
               className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-500"
             />
           </div>
-          {error && <p className="text-sm text-red-600">{error}</p>}
           <Button
             type="submit"
             variant="primary"

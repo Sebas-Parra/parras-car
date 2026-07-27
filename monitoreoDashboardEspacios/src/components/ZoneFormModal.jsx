@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import Modal from './Modal.jsx';
 import Button from './Button.jsx';
-import { createZona, updateZona, TIPO_ZONA_OPTIONS } from '../api.js';
+import { useToast } from './ToastProvider.jsx';
+import { createZona, updateZona, TIPO_ZONA_LABELS, TIPO_ZONA_OPTIONS, toEnumLabel } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
 const inputClass =
@@ -10,17 +11,16 @@ const labelClass = 'mb-1 block text-xs font-medium uppercase tracking-wide text-
 
 const ZoneFormModal = ({ zona, onClose, onSaved }) => {
   const { token } = useAuth();
+  const toast = useToast();
   const isEdit = !!zona;
   const [name, setName] = useState(zona?.name ?? '');
   const [description, setDescription] = useState(zona?.description ?? '');
   const [capacity, setCapacity] = useState(zona?.capacity ?? 10);
   const [type, setType] = useState(zona?.type ?? TIPO_ZONA_OPTIONS[0]);
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
     const payload = { name, description: description || undefined, capacity: Number(capacity), type };
     try {
@@ -29,10 +29,11 @@ const ZoneFormModal = ({ zona, onClose, onSaved }) => {
       } else {
         await createZona(payload, token);
       }
+      toast.success(isEdit ? 'Zona actualizada correctamente.' : 'Zona creada correctamente.');
       onSaved();
       onClose();
     } catch (err) {
-      setError(err.message || 'No se pudo guardar la zona');
+      toast.error(err.message || 'No se pudo guardar la zona');
     } finally {
       setLoading(false);
     }
@@ -79,13 +80,12 @@ const ZoneFormModal = ({ zona, onClose, onSaved }) => {
             <select value={type} onChange={(e) => setType(e.target.value)} className={inputClass}>
               {TIPO_ZONA_OPTIONS.map((t) => (
                 <option key={t} value={t}>
-                  {t}
+                  {toEnumLabel(t, TIPO_ZONA_LABELS)}
                 </option>
               ))}
             </select>
           </div>
         </div>
-        {error && <p className="text-sm text-red-600">{error}</p>}
         <Button type="submit" variant="primary" loading={loading} className="w-full">
           {loading ? 'Guardando...' : isEdit ? 'Guardar cambios' : 'Crear zona'}
         </Button>

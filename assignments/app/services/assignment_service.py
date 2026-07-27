@@ -151,8 +151,8 @@ class AssignmentService:
             )
         return assignment
 
-    def list_audit(self, db: Session) -> list[AssignmentAudit]:
-        return self._audit.list_all(db)
+    def list_audit(self, db: Session, skip: int = 0, limit: int = 100) -> tuple[list[AssignmentAudit], int]:
+        return self._audit.list_all(db, skip, limit)
 
     def get_assignment_audit(self, db: Session, user_id: UUID, vehicle_id: UUID) -> list[AssignmentAudit]:
         return self._audit.list_by_assignment(db, user_id, vehicle_id)

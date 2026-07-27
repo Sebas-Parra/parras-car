@@ -33,11 +33,65 @@ export const ESTADO_MAP_INVERSE = Object.fromEntries(Object.entries(ESTADO_MAP).
 export const ESTADO_OPTIONS = Object.entries(ESTADO_MAP).map(([value, label]) => ({ value, label }));
 
 export const TIPO_ZONA_OPTIONS = ['VIP', 'REGULAR', 'INTERNAL', 'EXTERNAL', 'PREFERENTIAL'];
-export const TIPO_ESPACIO_OPTIONS = ['CAR', 'BIKE', 'BUS'];
+export const TIPO_ZONA_LABELS = {
+  VIP: 'VIP',
+  REGULAR: 'Regular',
+  INTERNAL: 'Interna',
+  EXTERNAL: 'Externa',
+  PREFERENTIAL: 'Preferencial',
+};
+export const TIPO_ESPACIO_OPTIONS = ['CAR', 'BIKE'];
+export const TIPO_ESPACIO_LABELS = { CAR: 'Auto', BIKE: 'Moto', BUS: 'Bus' };
 export const TIPO_VEHICULO_OPTIONS = ['car', 'motocicleta', 'pickupTruck'];
 export const TIPO_VEHICULO_LABELS = { car: 'Auto', motocicleta: 'Motocicleta', pickupTruck: 'Camioneta' };
 export const CLASIFICACION_OPTIONS = ['ELECTRIC', 'HYBRID', 'GASOLINE', 'DIESEL'];
+export const CLASIFICACION_LABELS = {
+  ELECTRIC: 'Eléctrico',
+  HYBRID: 'Híbrido',
+  GASOLINE: 'Gasolina',
+  DIESEL: 'Diésel',
+};
 export const TIPO_MOTO_OPTIONS = ['ENDURO', 'SPORT', 'CRUISER', 'SCOOTER', 'TOURING'];
+export const TIPO_MOTO_LABELS = {
+  ENDURO: 'Enduro',
+  SPORT: 'Deportiva',
+  CRUISER: 'Crucero',
+  SCOOTER: 'Scooter',
+  TOURING: 'Turismo',
+};
+export const CABINA_CAMIONETA_OPTIONS = ['REGULAR', 'EXTENDED', 'DOUBLE'];
+export const CABINA_CAMIONETA_LABELS = {
+  REGULAR: 'Regular',
+  EXTENDED: 'Extendida',
+  DOUBLE: 'Doble',
+};
+export const ESTADO_TICKET_LABELS = {
+  ACTIVO: 'Activo',
+  PAGADO: 'Pagado',
+  ANULADO: 'Anulado',
+};
+export const ROLE_LABELS = {
+  cliente: 'Cliente',
+  recaudador: 'Recaudador',
+  admin: 'Administrador',
+  root: 'Superadministrador',
+};
+
+export const toEnumLabel = (value, labels) => labels[value] ?? value ?? '--';
+
+export const normalizeListResponse = (response) => {
+  if (Array.isArray(response)) return { data: response, total: response.length };
+
+  const data = response?.data ?? response?.items ?? response?.results ?? [];
+  const total = response?.total ?? response?.count ?? response?.totalItems ?? data.length;
+
+  return { data: Array.isArray(data) ? data : [], total };
+};
+
+export const getAvailableTicketSpaces = (spaces = [], activeTickets = []) => {
+  const occupiedSpaceIds = new Set(activeTickets.map((ticket) => ticket.idEspacio).filter(Boolean));
+  return spaces.filter((space) => space.estado === 'DISPONIBLE' && !occupiedSpaceIds.has(space.id));
+};
 
 export const mapEspacio = (place) => ({
   id: place.id,
@@ -51,6 +105,14 @@ const parseErrorMessage = async (response) => {
   try {
     const body = await response.json();
     if (Array.isArray(body.message)) return body.message.join(', ');
+    // FastAPI/Pydantic (users, assignments): errores 422 vienen como un array
+    // de objetos {msg, loc, ...}, no de strings — hay que extraer "msg" de
+    // cada uno. Pydantic v2 antepone "Value error, " a los ValueError propios.
+    if (Array.isArray(body.detail)) {
+      return body.detail
+        .map((e) => (typeof e === 'string' ? e : (e.msg ?? JSON.stringify(e)).replace(/^Value error,\s*/, '')))
+        .join(', ');
+    }
     // "message" trae el motivo específico (ej. NestJS ConflictException); "error"
     // en NestJS es solo la frase genérica del status ("Conflict", "Bad Request").
     return body.message || body.detail || body.error || `Error HTTP ${response.status}`;
@@ -77,7 +139,7 @@ const request = async (path, { method = 'GET', token, body } = {}) => {
 export const fetchEspacios = async () => {
   try {
     const data = await request(API_ESPACIOS);
-    return data.map(mapEspacio);
+    return normalizeListResponse(data).data.map(mapEspacio);
   } catch (error) {
     console.error('Error al obtener espacios:', error);
     return null;
@@ -86,8 +148,13 @@ export const fetchEspacios = async () => {
 
 export const login = (username, password) => request(API_LOGIN, { method: 'POST', body: { username, password } });
 
+// Tamaño de página "traer todo" para buscadores tipo-combobox de otras
+// páginas (catálogos acotados por capacidad física/organizacional real).
+export const ALL_PAGE_SIZE = 500;
+
 // ─── Zonas ──────────────────────────────────────────────────────────────
-export const fetchZonas = (token) => request(API_ZONAS, { token });
+export const fetchZonas = (token, page = 1, pageSize = ALL_PAGE_SIZE) =>
+  request(`${API_ZONAS}?page=${page}&pageSize=${pageSize}`, { token }).then(normalizeListResponse);
 export const createZona = (payload, token) => request(API_ZONAS, { method: 'POST', body: payload, token });
 export const updateZona = (id, payload, token) => request(`${API_ZONAS}/${id}`, { method: 'PUT', body: payload, token });
 export const deleteZona = (id, token) => request(`${API_ZONAS}/${id}`, { method: 'DELETE', token });
@@ -102,7 +169,8 @@ export const deleteEspacio = (id, token) => request(`${API_ESPACIOS}/${id}`, { m
 // ─── Usuarios / Personas / Roles ────────────────────────────────────────
 export const registerPerson = (payload) => request(API_PERSONS, { method: 'POST', body: payload });
 export const fetchPersons = (token) => request(API_PERSONS, { token });
-export const fetchUsers = (token) => request(API_USERS, { token });
+export const fetchUsers = (token, page = 1, pageSize = ALL_PAGE_SIZE) =>
+  request(`${API_USERS}?page=${page}&page_size=${pageSize}`, { token }).then(normalizeListResponse);
 export const fetchUserDetail = (userId, token) => request(`${API_USERS}/${userId}`, { token });
 export const activateUser = (userId, token) => request(`${API_USERS}/${userId}/activate`, { method: 'PATCH', token });
 export const deactivateUser = (userId, token) => request(`${API_USERS}/${userId}/deactivate`, { method: 'PATCH', token });
@@ -117,8 +185,11 @@ export const updateRole = (roleId, payload, token) =>
   request(`${API_ROLES}/${roleId}`, { method: 'PUT', body: payload, token });
 export const deleteRole = (roleId, token) => request(`${API_ROLES}/${roleId}`, { method: 'DELETE', token });
 
+export const fetchPermissions = (token) => request(`${API_BASE}/users/permissions`, { token });
+
 // ─── Vehículos ──────────────────────────────────────────────────────────
-export const fetchVehiculos = (token) => request(API_VEHICULOS, { token });
+export const fetchVehiculos = (token, page = 1, pageSize = ALL_PAGE_SIZE) =>
+  request(`${API_VEHICULOS}?page=${page}&pageSize=${pageSize}`, { token }).then(normalizeListResponse);
 export const createVehiculo = (payload, token) => request(API_VEHICULOS, { method: 'POST', body: payload, token });
 export const updateVehiculo = (id, payload, token) => request(`${API_VEHICULOS}/${id}`, { method: 'PATCH', body: payload, token });
 export const activateVehiculo = (id, token) => request(`${API_VEHICULOS}/${id}/activate`, { method: 'PATCH', token });
@@ -131,7 +202,8 @@ export const deleteAsignacion = (userId, vehicleId, token) =>
   request(`${API_ASIGNACIONES}/${userId}/${vehicleId}`, { method: 'DELETE', token });
 export const transferAsignacion = (vehicleId, payload, token) =>
   request(`${API_ASIGNACIONES}/${vehicleId}/transfer`, { method: 'PATCH', body: payload, token });
-export const fetchAsignacionesAudit = (token) => request(`${API_ASIGNACIONES}/audit`, { token });
+export const fetchAsignacionesAudit = (token, page = 1, pageSize = 10) =>
+  request(`${API_ASIGNACIONES}/audit?page=${page}&page_size=${pageSize}`, { token }).then(normalizeListResponse);
 
 // GET .../by-vehicle/{id} devuelve 404 cuando no hay asignación activa —
 // no es un error real, así que lo tratamos aparte (no usa el helper `request`).
@@ -144,10 +216,16 @@ export const fetchAsignacionPorVehiculo = async (vehicleId, token) => {
 };
 
 // ─── Tickets ────────────────────────────────────────────────────────────
-export const fetchTickets = (token) => request(API_TICKETS, { token });
+export const fetchTickets = (token, page = 1, pageSize = 20) =>
+  request(`${API_TICKETS}?page=${page}&pageSize=${pageSize}`, { token }).then(normalizeListResponse);
+// Sin paginar — acotado por la capacidad real de estacionamiento, no por el
+// historial completo. Lo usan otras páginas para saber qué está ocupado ahora.
+export const fetchTicketsActivos = (token) =>
+  request(`${API_TICKETS}?estado=ACTIVO&pageSize=${ALL_PAGE_SIZE}`, { token }).then((r) => normalizeListResponse(r).data);
 export const createTicket = (payload, token) => request(API_TICKETS, { method: 'POST', body: payload, token });
 export const payTicket = (id, token) => request(`${API_TICKETS}/${id}/pay`, { method: 'PATCH', token });
 export const cancelTicket = (id, token) => request(`${API_TICKETS}/${id}/cancel`, { method: 'PATCH', token });
 
 // ─── Auditoría ──────────────────────────────────────────────────────────
-export const fetchAuditoria = (token) => request(API_AUDITORIA, { token });
+export const fetchAuditoria = (token, page = 1, pageSize = 20) =>
+  request(`${API_AUDITORIA}?page=${page}&pageSize=${pageSize}`, { token }).then(normalizeListResponse);

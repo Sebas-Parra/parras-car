@@ -85,3 +85,10 @@ class UserDetailRead(UserRead):
 
 class PersonWithUserRead(PersonRead):
     user: UserRead | None = None
+
+
+class UserListResponse(BaseModel):
+    data: list[UserRead]
+    total: int
+    page: int
+    page_size: int

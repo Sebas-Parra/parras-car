@@ -126,6 +126,34 @@ class PlaceServiceImplAuditTest {
     }
 
     @Test
+    void createPlaceTrimsSurroundingWhitespaceFromDescription() {
+        UUID zoneId = UUID.randomUUID();
+        Zone zone = Zone.builder().id(zoneId).name("Zona Norte").code("ZON-REG-01")
+                .capacity(10).type(TypeOfZone.REGULAR).status(1).build();
+        when(zoneRepository.findById(zoneId)).thenReturn(Optional.of(zone));
+        when(placeRepository.countByZone(zone)).thenReturn(0L);
+        when(placeRepository.existsByCode(org.mockito.ArgumentMatchers.anyString())).thenReturn(false);
+
+        PlaceRequestDto request = new PlaceRequestDto();
+        request.setIdZone(zoneId);
+        request.setType(TypeOfPlace.CAR);
+        request.setDescription("  con espacios  ");
+
+        Place mappedPlace = new Place();
+        mappedPlace.setId(UUID.randomUUID());
+        mappedPlace.setDescription("  con espacios  ");
+        when(mappers.toEntityPlace(request)).thenReturn(mappedPlace);
+        when(placeRepository.save(any(Place.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(mappers.toPlaceResponseDto(any(Place.class))).thenReturn(null);
+
+        placeService.createPlace(request);
+
+        ArgumentCaptor<Place> captor = ArgumentCaptor.forClass(Place.class);
+        verify(placeRepository).save(captor.capture());
+        assertThat(captor.getValue().getDescription()).isEqualTo("con espacios");
+    }
+
+    @Test
     void deletePlaceByIdPublishesADeleteEvent() {
         UUID id = UUID.randomUUID();
         Place place = new Place();

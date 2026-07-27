@@ -160,7 +160,7 @@ class TestAudit:
 
         response = client.get("/assignments/audit")
         assert response.status_code == 200
-        audits = response.json()
+        audits = response.json()["data"]
         assert len(audits) == 1
         assert audits[0]["action"] == "CREACION"
         assert audits[0]["user_id"] == USER_ID
@@ -253,7 +253,7 @@ class TestTransfer:
             )
 
         response = client.get("/assignments/audit")
-        actions = [a["action"] for a in response.json()]
+        actions = [a["action"] for a in response.json()["data"]]
         assert "MODIFICACION" in actions
         assert "ELIMINACION" in actions
         assert "CREACION" in actions
@@ -270,7 +270,7 @@ class TestTransfer:
                 json={"from_user_id": USER_ID, "to_user_id": NEW_USER_ID},
             )
 
-        audits = client.get("/assignments/audit").json()
+        audits = client.get("/assignments/audit").json()["data"]
         modificacion = next(a for a in audits if a["action"] == "MODIFICACION")
         assert modificacion["previous_data"]["user_id"] == USER_ID
         assert modificacion["new_data"]["user_id"] == NEW_USER_ID

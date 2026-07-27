@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: parras-config
-  namespace: parras-car
+  namespace: yepez-sagnay-parra
 data:
   DB_NAME_USERS: auth_db
   DB_NAME_VEHICLES: vehicles_db

@@ -28,7 +28,10 @@ public class ZoneRequestDto {
 
     @Size(max = 255, message = "La descripción no puede superar los 255 caracteres")
     @Pattern(regexp = "^$|^.*\\S.*$", message = "La descripción no puede contener solo espacios")
-    @Pattern(regexp = "^[^<>]*$", message = "La descripción no puede contener caracteres HTML (< o >)")
+    @Pattern(
+        regexp = "^$|^[\\p{L}0-9\\s,.\\-#/()]+$",
+        message = "La descripción solo puede contener letras, números, espacios y los caracteres: , . - # / ( )"
+    )
     private String description;
 
     @Min(value = 1, message = "La capacidad debe ser al menos 1")

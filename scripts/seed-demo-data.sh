@@ -8,7 +8,7 @@
 #   ./scripts/seed-demo-data.sh
 #   BASE_URL=http://localhost:9000 SEED_USERNAME=admin SEED_PASSWORD=Admin123! ./scripts/seed-demo-data.sh
 
-BASE_URL="${BASE_URL:-http://parras-car.local}"
+BASE_URL="${BASE_URL:-http://yepez-sagnay-parra.local}"
 USERNAME="${SEED_USERNAME:-root}"
 PASSWORD="${SEED_PASSWORD:-Root123!}"
 

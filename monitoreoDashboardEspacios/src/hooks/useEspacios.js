@@ -23,6 +23,10 @@ export const useEspacios = () => {
 
   cargarEspaciosRef.current = cargarEspacios;
 
+  const removeEspacio = useCallback((id) => {
+    setEspacios((prev) => (prev ? prev.filter((e) => e.id !== id) : prev));
+  }, []);
+
   useEffect(() => {
     let eventSource;
     let retryTimeout;
@@ -65,5 +69,5 @@ export const useEspacios = () => {
     };
   }, [cargarEspacios]);
 
-  return { espacios, connected, lastUpdate, refetch: cargarEspacios };
+  return { espacios, connected, lastUpdate, refetch: cargarEspacios, removeEspacio };
 };

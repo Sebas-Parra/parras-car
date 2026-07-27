@@ -223,7 +223,7 @@ const EspaciosGridView = ({
                 {/* Botón de delete */}
                 {canDelete && !hasActiveTicket && (
                   <Button variant="danger" icon={IconTrash} onClick={() => onDelete(espacio)} className="w-full">
-                    Desactivar
+                    Eliminar
                   </Button>
                 )}
 

@@ -17,7 +17,7 @@ const formatDate = (date) => (date ? date.toLocaleString('es-ES', { hour12: fals
 const ESTADOS = ['DISPONIBLE', 'OCUPADO', 'RESERVADO', 'MANTENIMIENTO'];
 
 const EspaciosPage = () => {
-  const { espacios, connected, lastUpdate, refetch } = useEspacios();
+  const { espacios, connected, lastUpdate, refetch, removeEspacio } = useEspacios();
   const { token, hasRole } = useAuth();
   const toast = useToast();
   const { confirm, confirmModal } = useConfirm();
@@ -89,17 +89,20 @@ const EspaciosPage = () => {
 
   const handleDeleteEspacio = async (espacio) => {
     if (espaciosConTicketActivo.has(espacio.id)) {
-      toast.warning(`No se puede desactivar ${espacio.nombre}: tiene un ticket activo.`);
+      toast.warning(`No se puede eliminar ${espacio.nombre}: tiene un ticket activo.`);
       return;
     }
-    const ok = await confirm(`¿Desactivar el espacio ${espacio.nombre}?`);
+    const ok = await confirm(
+      `¿Eliminar el espacio "${espacio.nombre}"? Esta acción no se puede deshacer.`,
+      { danger: true },
+    );
     if (!ok) return;
     try {
       await deleteEspacio(espacio.id, token);
-      toast.success('Espacio desactivado correctamente.');
-      refetch();
+      toast.success('Espacio eliminado correctamente.');
+      removeEspacio(espacio.id);
     } catch (err) {
-      toast.error(err.message || 'No se pudo desactivar el espacio');
+      toast.error(err.message || 'No se pudo eliminar el espacio');
     }
   };
 

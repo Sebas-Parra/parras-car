@@ -81,7 +81,7 @@ const EspaciosTable = ({
                   <td className="px-4 py-3 text-right text-sm">
                     {!espaciosConTicketActivo.has(espacio.id) && (
                       <Button variant="danger" size="sm" icon={IconTrash} onClick={() => onDelete(espacio)}>
-                        Desactivar
+                        Eliminar
                       </Button>
                     )}
                   </td>
